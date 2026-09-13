@@ -19,13 +19,15 @@ export type NavItem = {
   label: string
   icon: LucideIcon
   ownerOnly?: boolean
+  /** 'chat': 안 읽은 대화방 개수 배지 */
+  badge?: 'chat'
 }
 
 /** 모바일 하단 탭 */
 export const TAB_ITEMS: NavItem[] = [
   { to: '/', label: '홈', icon: House },
   { to: '/events', label: '모임', icon: CalendarDays },
-  { to: '/chat', label: '채팅', icon: MessageCircle },
+  { to: '/chat', label: '채팅', icon: MessageCircle, badge: 'chat' },
   { to: '/games', label: '게임', icon: Dices },
   { to: '/more', label: '더보기', icon: Ellipsis },
 ]

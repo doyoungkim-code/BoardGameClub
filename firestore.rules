@@ -24,10 +24,12 @@ service cloud.firestore {
       return /databases/$(database)/documents/users/$(uid);
     }
 
+    function isApproved(uid) {
+      return exists(userPath(uid)) && get(userPath(uid)).data.status == 'approved';
+    }
+
     function isMember() {
-      return signedIn()
-        && exists(userPath(request.auth.uid))
-        && get(userPath(request.auth.uid)).data.status == 'approved';
+      return signedIn() && isApproved(request.auth.uid);
     }
 
     function changedOnly(keys) {
@@ -111,6 +113,126 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['email'])
         && request.resource.data.email == request.auth.token.email;
       allow update, delete: if false;
+    }
+
+    // ---------- 채팅 공통 ----------
+
+    // 메시지를 보낼 때 같은 batch로 방의 마지막 메시지 정보만 갱신
+    function validLastMessageUpdate() {
+      let d = request.resource.data;
+      return changedOnly(['lastMessageAt', 'lastMessagePreview', 'lastSenderId'])
+        && d.lastMessageAt == request.time
+        && d.lastSenderId == request.auth.uid
+        && d.lastMessagePreview is string
+        && d.lastMessagePreview.size() <= 100;
+    }
+
+    function validNewMessage() {
+      let d = request.resource.data;
+      let keys = ['senderId', 'senderNickname', 'text', 'createdAt', 'deleted'];
+      return d.keys().hasOnly(keys) && d.keys().hasAll(keys)
+        && d.senderId == request.auth.uid
+        && validNickname(d.senderNickname)
+        && d.text is string && d.text.size() >= 1 && d.text.size() <= 2000
+        && d.createdAt == request.time
+        && d.deleted == false;
+    }
+
+    // 메시지는 지우지 않고 내용만 비운다(삭제 표시)
+    function validMessageSoftDelete() {
+      return changedOnly(['deleted', 'text'])
+        && request.resource.data.deleted == true
+        && request.resource.data.text == '';
+    }
+
+    // ---------- channels: 단체 채팅방 ----------
+
+    match /channels/{channelId} {
+      allow read: if isMember();
+      allow create: if isOwner() && validNewChannel();
+      allow update: if (isOwner() && changedOnly(['name', 'description', 'order']) && validChannelFields())
+        || (isMember() && validLastMessageUpdate());
+      allow delete: if isOwner();
+
+      function validChannelFields() {
+        let d = request.resource.data;
+        return d.name is string && d.name.size() >= 1 && d.name.size() <= 30
+          && d.description is string && d.description.size() <= 100
+          && d.order is int;
+      }
+
+      function validNewChannel() {
+        let d = request.resource.data;
+        let keys = ['name', 'description', 'order', 'createdAt', 'createdBy',
+                    'lastMessageAt', 'lastMessagePreview', 'lastSenderId'];
+        return d.keys().hasOnly(keys) && d.keys().hasAll(keys)
+          && validChannelFields()
+          && d.createdAt == request.time
+          && d.createdBy == request.auth.uid
+          && d.lastMessageAt == null
+          && d.lastMessagePreview == ''
+          && d.lastSenderId == null;
+      }
+
+      match /messages/{messageId} {
+        allow read: if isMember();
+        allow create: if isMember() && validNewMessage();
+        // 보낸 사람 본인 또는 오너가 삭제 표시
+        allow update: if isMember()
+          && (resource.data.senderId == request.auth.uid || isOwner())
+          && validMessageSoftDelete();
+        allow delete: if false;
+      }
+    }
+
+    // ---------- dms: 1:1 대화 (문서 ID = 두 uid를 정렬해 '_'로 연결) ----------
+
+    function isDmParticipant(dmId) {
+      return isMember() && request.auth.uid in dmId.split('_');
+    }
+
+    match /dms/{dmId} {
+      // 없는 방도 조회할 수 있어야 '있으면 열고 없으면 만들기'가 가능하다
+      allow get: if isDmParticipant(dmId);
+      allow list: if isMember() && request.auth.uid in resource.data.memberIds;
+      allow create: if isDmParticipant(dmId) && validNewDm(dmId);
+      allow update: if isDmParticipant(dmId) && validLastMessageUpdate();
+      allow delete: if false;
+
+      function validNewDm(dmId) {
+        let d = request.resource.data;
+        let keys = ['memberIds', 'createdAt', 'lastMessageAt', 'lastMessagePreview', 'lastSenderId'];
+        return d.keys().hasOnly(keys) && d.keys().hasAll(keys)
+          && d.memberIds is list && d.memberIds.size() == 2
+          && d.memberIds[0] < d.memberIds[1]
+          && dmId == d.memberIds[0] + '_' + d.memberIds[1]
+          && request.auth.uid in d.memberIds
+          && isApproved(d.memberIds[0]) && isApproved(d.memberIds[1])
+          && d.createdAt == request.time
+          && d.lastMessageAt == null
+          && d.lastMessagePreview == ''
+          && d.lastSenderId == null;
+      }
+
+      match /messages/{messageId} {
+        allow read: if isDmParticipant(dmId);
+        allow create: if isDmParticipant(dmId)
+          && exists(/databases/$(database)/documents/dms/$(dmId))
+          && validNewMessage();
+        allow update: if isDmParticipant(dmId)
+          && resource.data.senderId == request.auth.uid
+          && validMessageSoftDelete();
+        allow delete: if false;
+      }
+    }
+
+    // ---------- readStates: 방별 마지막으로 읽은 시각 (안 읽음 표시용) ----------
+
+    match /users/{uid}/readStates/{roomKey} {
+      allow read, delete: if isSelf(uid);
+      allow create, update: if isSelf(uid)
+        && request.resource.data.keys().hasOnly(['lastReadAt'])
+        && request.resource.data.lastReadAt == request.time;
     }
   }
 }

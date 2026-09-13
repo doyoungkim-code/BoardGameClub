@@ -1,15 +1,25 @@
 import { createBrowserRouter } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import { AuthGate, RequireOwner } from '@/components/layout/AuthGate'
+import type { RouteHandle } from '@/components/layout/routeHandle'
 import { PlaceholderPage } from '@/components/PlaceholderPage'
-import { AdminPage } from '@/features/admin/AdminPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { PendingPage } from '@/features/auth/PendingPage'
 import { SignupPage } from '@/features/auth/SignupPage'
 import { HomePage } from '@/features/home/HomePage'
-import { MePage } from '@/features/me/MePage'
+import {
+  AdminPage,
+  ChannelRoomPage,
+  ChatIndexPage,
+  ChatLayout,
+  DmRoomPage,
+  MePage,
+} from '@/features/lazyPages'
 import { MorePage } from '@/features/more/MorePage'
 import { NotFoundPage } from '@/features/NotFoundPage'
+
+const chatHandle: RouteHandle = { layout: 'chat' }
+const roomHandle: RouteHandle = { immersive: true }
 
 // 아직 만들지 않은 기능 화면은 PlaceholderPage로 두고 단계별로 교체한다.
 export const router = createBrowserRouter([
@@ -23,9 +33,16 @@ export const router = createBrowserRouter([
         element: <AppShell />,
         children: [
           { index: true, element: <HomePage /> },
+          {
+            element: <ChatLayout />,
+            handle: chatHandle,
+            children: [
+              { path: 'chat', element: <ChatIndexPage /> },
+              { path: 'chat/:channelId', element: <ChannelRoomPage />, handle: roomHandle },
+              { path: 'dm/:dmId', element: <DmRoomPage />, handle: roomHandle },
+            ],
+          },
           { path: 'events/*', element: <PlaceholderPage title="모임" step={4} /> },
-          { path: 'chat/*', element: <PlaceholderPage title="채팅" step={3} /> },
-          { path: 'dm/*', element: <PlaceholderPage title="DM" step={3} /> },
           { path: 'games/*', element: <PlaceholderPage title="보드게임" step={5} /> },
           { path: 'plays/*', element: <PlaceholderPage title="플레이 기록" step={5} /> },
           { path: 'stats', element: <PlaceholderPage title="통계" step={5} /> },

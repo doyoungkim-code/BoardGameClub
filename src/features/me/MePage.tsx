@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -85,11 +86,45 @@ export function MePage() {
         </CardContent>
       </Card>
 
+      <NotificationSetting />
+
       <p className="text-center text-xs text-muted-foreground">가입 승인일 {formatDateTime(profile.approvedAt)}</p>
 
       <Button variant="outline" className="w-full" onClick={signOutUser}>
         로그아웃
       </Button>
     </div>
+  )
+}
+
+/** 앱이 열려 있을 때 다른 탭을 보고 있어도 새 메시지를 알려주는 브라우저 알림 */
+function NotificationSetting() {
+  const supported = 'Notification' in window
+  const [permission, setPermission] = useState<NotificationPermission>(supported ? Notification.permission : 'denied')
+
+  if (!supported) return null
+
+  return (
+    <Card>
+      <CardContent className="flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <p className="font-medium">브라우저 알림</p>
+          <p className="text-xs text-muted-foreground">앱을 열어둔 채 다른 탭을 보고 있을 때 새 메시지를 알려드려요</p>
+        </div>
+        {permission === 'granted' ? (
+          <Badge variant="secondary">켜짐</Badge>
+        ) : permission === 'denied' ? (
+          <span className="shrink-0 text-right text-xs text-muted-foreground">
+            브라우저 설정에서
+            <br />
+            허용해 주세요
+          </span>
+        ) : (
+          <Button size="sm" onClick={async () => setPermission(await Notification.requestPermission())}>
+            켜기
+          </Button>
+        )}
+      </CardContent>
+    </Card>
   )
 }

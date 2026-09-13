@@ -33,6 +33,13 @@ export function newUserData(overrides: Record<string, unknown> = {}) {
   }
 }
 
+/** 규칙을 끄고 임의 문서를 미리 넣는다 */
+export async function seedDoc(env: RulesTestEnvironment, path: string, data: Record<string, unknown>) {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), path), data)
+  })
+}
+
 /** 규칙을 끄고 users 문서를 미리 넣는다 */
 export async function seedUser(
   env: RulesTestEnvironment,

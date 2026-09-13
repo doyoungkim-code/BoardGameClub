@@ -86,12 +86,16 @@ userPrivate/{uid}                  email            // 본인과 오너만 읽�
 adminMemos/{uid}                   memo, updatedAt  // (7단계) 오너만 읽기·쓰기
 users/{uid}/readStates/{roomId}     lastReadAt        // 채널·DM 안 읽음 배지
 
-channels/{channelId}                name, description, order, createdAt,
-                                    lastMessageAt, lastMessagePreview   // 생성·수정은 오너만
-channels/{channelId}/messages/{id}  senderId, senderNickname, senderPhoto, text, createdAt, deleted
+channels/{channelId}                name, description, order, createdAt, createdBy,
+                                    lastMessageAt, lastMessagePreview, lastSenderId   // 생성·수정·삭제는 오너만
+channels/{channelId}/messages/{id}  senderId, senderNickname, text, createdAt, deleted
+                                    // 닉네임·사진은 회원 목록에서 현재 값을 찾아 표시. senderNickname은 강퇴 등으로 목록에 없을 때 대비
+                                    // 삭제는 deleted=true, text='' 로 표시만 (보낸 사람, 채널은 오너도 가능)
 
-dms/{uidA_uidB}                     memberIds[2](정렬), lastMessageAt, lastMessagePreview
-dms/{dmId}/messages/{id}            (채널 메시지와 같은 구조)           // 읽기·쓰기는 두 참여자만
+dms/{uidA_uidB}                     memberIds[2](정렬), createdAt, lastMessageAt, lastMessagePreview, lastSenderId
+dms/{dmId}/messages/{id}            (채널 메시지와 같은 구조)
+                                    // 읽기·쓰기는 두 참여자만 (오너도 못 읽음). 강퇴되면 참여자도 접근 불가
+                                    // 목록에는 메시지를 한 번이라도 주고받은 방만 표시
 
 events/{eventId}
   type: 'regular'|'flash', title, description, location
@@ -134,7 +138,7 @@ posts/{postId}/comments/{id}        authorId, authorNickname, content, createdAt
 | `/pending` | 승인 대기 / 거절·강퇴 안내 |
 | `/` | 홈: 다가오는 모임, 고정 공지, 최근 플레이, 안 읽은 채팅 |
 | `/events`, `/events/new`, `/events/:id` | 캘린더·리스트 전환, 참석 신청, 출석 체크, 모임 화면에서 바로 플레이 기록 작성 |
-| `/chat`, `/chat/:channelId`, `/dm/:dmId` | 채널·DM 목록(안 읽음 배지), 채팅방(최근 50개 표시, 위로 스크롤하면 더 불러오기) |
+| `/chat`, `/chat/:channelId`, `/dm/:dmId` | 채널·DM 목록(안 읽음 배지), 채팅방(최근 50개 표시, 위로 스크롤하면 더 불러오기). PC는 목록+대화방 2단, 모바일은 대화방에서 하단 탭 숨김. 오너는 채널 추가(+ 기본 채널 전체·번개·잡담 한 번에 만들기)·수정·삭제 |
 | `/games`, `/games/new`, `/games/:id` | 인원·시간·난이도·태그 필터, 상세(플레이 기록·통계·대여) |
 | `/plays`, `/plays/new` | 플레이 기록 목록/작성 |
 | `/stats` | 게임별 인기·승률, 회원별 플레이 수·승수 랭킹 |
@@ -142,11 +146,13 @@ posts/{postId}/comments/{id}        authorId, authorNickname, content, createdAt
 | `/members`, `/members/:uid` | 회원 목록(닉네임 옆에 "OO의 지인"), 프로필(소개자, 소개한 회원, 참석·플레이·승리 통계, DM 보내기) |
 | `/me` | 닉네임 수정, 로그아웃 |
 | `/more` | (모바일) 하단 탭에 없는 메뉴 모음: 플레이 기록, 통계, 게시판, 회원, 내 정보, 관리자 |
-| `/admin` | (오너만) 가입 승인 대기열(입력한 소개자 이름 표시 + 실제 회원 연결), 회원 상태 변경·메모·소개자 수정, 채널 관리, 활동 통계(참석 횟수, 최근 활동일, 30/60일 미활동 표시) |
+| `/admin` | (오너만) 가입 승인 대기열(입력한 소개자 이름 표시 + 실제 회원 연결), 회원 상태 변경·메모·소개자 수정, 활동 통계(참석 횟수, 최근 활동일, 30/60일 미활동 표시) |
 
 ## 7. 알림 (Spark 요금제 제약)
 - 서버 푸시(FCM 발송)는 발송 서버가 필요해서 쓸 수 없음
 - 대신 앱 안의 **안 읽음 배지**(readStates와 lastMessageAt 비교)를 쓰고, 앱이 열려 있을 때는 브라우저 `Notification` API와 탭 제목 카운트로 알림
+  - 안 읽음 = 다른 사람이 보낸 마지막 메시지 시각 > 내가 마지막으로 읽은 시각. 읽은 기록이 없는 방은 가입 승인 시각을 기준으로 계산
+  - 브라우저 알림은 내 정보 화면에서 켬. 앱 탭을 열어둔 채 다른 탭을 보고 있을 때만 뜸(PC 크롬 등). 안드로이드 크롬처럼 페이지에서 직접 알림을 만들 수 없는 환경은 배지만 표시
 
 ## 8. 무료 한도 대응 (읽기 5만/일, 쓰기 2만/일)
 - 채팅은 최근 50개만 실시간 구독하고, 이전 메시지는 페이지네이션으로 불러옴
