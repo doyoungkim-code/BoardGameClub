@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { MemberAdminList } from '@/features/admin/MemberAdminList'
 import { formatRelative, toErrorMessage } from '@/lib/format'
 import { approveUser, getUserPrivate, setUserStatus, toProfile, usersCol } from '@/services/users'
 import { useMembers } from '@/stores/members'
@@ -13,7 +14,7 @@ import type { UserProfile } from '@/types/user'
 
 const NO_REFERRER = 'none'
 
-// 2단계: 가입 승인 대기열과 거절·강퇴 계정 복구. 회원 관리·활동 통계는 7단계에서 추가.
+// 가입 승인 대기열, 회원 관리(7단계), 거절·이용 중지 계정 복구
 export function AdminPage() {
   const [pending, setPending] = useState<UserProfile[] | null>(null)
   const [inactive, setInactive] = useState<UserProfile[]>([])
@@ -51,6 +52,8 @@ export function AdminPage() {
           pending.map((applicant) => <ApplicantCard key={applicant.uid} applicant={applicant} />)
         )}
       </section>
+
+      <MemberAdminList />
 
       {inactive.length > 0 && (
         <section className="space-y-3">

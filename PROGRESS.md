@@ -1,6 +1,6 @@
 # 진행 기록 & 개발 가이드
 
-> 마지막 업데이트: 2026-09-14 (5단계 게임 라이브러리·통계, 첫 Hosting 배포)
+> 마지막 업데이트: 2026-09-14 (6~8단계까지 구현 완료)
 > 기획 전체는 [PLANNING.md](PLANNING.md), 이 문서는 "어디까지 했고 다음에 뭘 하는지"와 "개발 환경 세팅"을 기록한다.
 
 ## 1. 진행 상황
@@ -11,28 +11,47 @@
 | 2 | 구글 로그인, 가입 신청(닉네임·소개자), 오너 승인, 내 정보, users 규칙 | ✅ 완료 (실제 Firebase에서 동작 확인) | `702e06e` |
 | 3 | 채널 단체채팅, 1:1 DM, 안 읽음 배지, 브라우저 알림 | ✅ 구현 완료 · ⚠️ 브라우저 실사용 확인 전 | `6813fb5` |
 | 4 | 모임/일정: 정기모임·번개, 캘린더, 참석 신청, 출석 체크 | ✅ 구현 완료 · ⚠️ 브라우저 실사용 확인 전 | `b6f9666` |
-| 5 | 보드게임 라이브러리 + 통계 (플레이 기록은 제외) | ✅ 구현 완료 · ⚠️ 실사용 확인 전 | |
-| 6 | 게시판/공지 | ⏳ 다음 차례 | |
-| 7 | 회원관리/관리자 (회원 목록·프로필, 활동 통계, 강퇴, 관리자 메모) | | |
-| 8 | GitHub Actions 자동 배포 | 🔶 수동 배포만 함 | |
+| 5 | 보드게임 라이브러리 + 통계 (플레이 기록은 제외) | ✅ 구현 완료 · ⚠️ 실사용 확인 전 | `97ee769` |
+| 6 | 게시판/공지: 공지·자유·후기, 댓글, 좋아요, 고정 | ✅ 구현 완료 · ⚠️ 실사용 확인 전 | |
+| 7 | 회원관리/관리자: 회원 목록·프로필, 활동 통계, 강퇴, 관리자 메모 | ✅ 구현 완료 · ⚠️ 실사용 확인 전 | |
+| 8 | GitHub Actions 자동 배포 | 🔶 워크플로 작성 완료 · **시크릿 등록 필요** | |
 
-- Firestore 보안 규칙은 **5단계까지 실제 프로젝트(`doyou-boardgame`)에 배포 완료**
-- **Hosting 첫 배포 완료: https://doyou-boardgame.web.app** (`npx firebase deploy --only hosting`, 수동).
-  GitHub Actions 자동 배포는 아직 (8단계)
-- 규칙 테스트 114개 통과 (users 34 + chat 31 + events 26 + games 23)
+- Firestore 보안 규칙은 **전 단계 실제 프로젝트(`doyou-boardgame`)에 배포 완료**
+- **배포 주소: https://doyou-boardgame.web.app** — 지금은 수동(`npx firebase deploy`)
+- 규칙 테스트 142개 통과 (users 34 + chat 31 + events 26 + games 23 + posts 28)
+- `firestore.indexes.json`에 posts 복합 색인 1개 (board + pinned + createdAt)
 
 ## 2. 다음에 할 일
 
-1. **5단계 실사용 확인** — 게임 등록·수정·삭제, 인원/시간/난이도/태그 필터, 빌리기·반납, 통계 수치
-2. **3·4단계 실사용 확인** (아직 못 함)
+**기능 구현은 1~8단계가 모두 끝났다. 남은 건 실사용 확인과 배포 자동화 마무리.**
+
+1. **전 기능 실사용 확인** (아직 브라우저로 돌려본 적 없음)
    - 채팅: 기본 채널 만들기 → 메시지 송수신, 안 읽음 배지, DM, 메시지 삭제 후 목록 미리보기
    - 모임: 번개 만들기, 참석 신청·취소, 정원 마감, 취소·삭제, 출석 체크(시작 시각이 지나야 보임), 캘린더
+   - 게임: 등록·수정·삭제, 필터, 빌리기·반납
+   - 게시판: 공지(오너만)·자유·후기 글쓰기, 댓글, 좋아요, 고정
+   - 회원: 목록·프로필, DM 보내기, 관리자에서 강퇴·메모·소개자 수정
    - 모바일 화면에서 키보드가 올라올 때 채팅 입력창 위치
-3. **6단계 게시판/공지** (PLANNING.md 5장 `posts`)
-4. **7단계 회원관리/관리자**
-5. **8단계 GitHub Actions 자동 배포** — 지금은 수동 `firebase deploy`. 자동화하려면
-   `firebase init hosting:github`(대화형)로 `FIREBASE_SERVICE_ACCOUNT` 시크릿을 만들고
-   GitHub Secrets에 `VITE_FIREBASE_*`를 등록해야 한다
+2. **8단계 마무리 — GitHub Secrets 등록** (아래 "자동 배포 켜기" 참고)
+3. 그 뒤에는 PLANNING.md 11장 백로그 (플레이 기록, 이미지 업로드, BGG 검색, 다크모드 …)
+
+## 2-1. 자동 배포 켜기 (8단계 남은 작업)
+
+`.github/workflows/ci.yml`(모든 push·PR)과 `deploy.yml`(main push)은 이미 만들어 뒀다.
+**시크릿만 등록하면 push할 때마다 자동 배포된다.** 등록 전에는 워크플로가 실패하니
+지금처럼 `npm run build` → `npx firebase deploy --only hosting,firestore`로 손수 올리면 된다.
+
+1. 서비스 계정 키 만들기 — 아래 둘 중 하나
+   - `npx firebase init hosting:github` (대화형, 브라우저 인증 필요). 시크릿까지 자동 등록해준다
+   - 또는 [Google Cloud 콘솔](https://console.cloud.google.com/iam-admin/serviceaccounts?project=doyou-boardgame)에서
+     키(JSON)를 직접 만들고, GitHub 저장소 Settings → Secrets → Actions 에 붙여넣기
+2. GitHub Secrets 에 등록할 값
+   - `FIREBASE_SERVICE_ACCOUNT` — 위 JSON 전체
+   - `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`,
+     `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID`, `VITE_FIREBASE_APP_ID`
+     (`.env.local` 의 값과 같다)
+3. 서비스 계정에 필요한 권한: Firebase Hosting 관리자, Cloud Datastore 소유자(규칙·색인 배포용),
+   서비스 사용량 소비자
 
 ### 나중에 손볼 것
 - 채널을 삭제해도 하위 메시지 문서는 남음 (화면에서는 안 보임). 필요하면 Blaze 전환 후 정리
@@ -75,7 +94,16 @@ copy .env.example .env.local
 | `npm run test:rules` | Firestore 에뮬레이터를 띄워 `tests/rules` 보안 규칙 테스트 (Java 21 필요) |
 | `npm run emulators` | Auth/Firestore 에뮬레이터 + UI(http://localhost:4000). 데이터는 `.emulator-data/`에 저장 |
 | `npm run dev:emu` | 에뮬레이터에 연결된 개발 서버 (실제 DB에 영향 없음) |
-| `npx firebase deploy --only firestore:rules` | 보안 규칙을 실제 프로젝트에 배포 |
+| `npx firebase deploy --only firestore:rules` | 보안 규칙만 배포 |
+| `npx firebase deploy --only firestore` | 보안 규칙 + 색인 배포 |
+| `npm run build; npx firebase deploy --only hosting,firestore` | 전체 수동 배포 (자동 배포를 켜기 전까지) |
+
+> 배포하려면 `npx firebase login`으로 **kwat09k@gmail.com** 로그인이 되어 있어야 한다.
+
+### 포트 8080이 이미 쓰이고 있을 때
+다른 프로그램이 8080을 잡고 있으면 에뮬레이터가 뜨지 않는다. 그 경우 `firebase.json`의
+`emulators.firestore.port`와 `tests/rules/helpers.ts`의 `port`를 **같은 값**(예: 8085)으로
+함께 바꿔서 돌리고, 끝나면 되돌린다.
 
 ### 에뮬레이터로 테스트
 - 터미널 1: `npm run emulators`, 터미널 2: `npm run dev:emu`
@@ -98,10 +126,10 @@ $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
 ### 코드 구조
 ```
 src/
-  services/     Firestore 읽기·쓰기 함수 (컬렉션별: users, chat, events ...)
-  stores/       zustand 전역 상태 + 앱 전체에서 한 번만 하는 실시간 구독 (auth, members, chat, events)
+  services/     Firestore 읽기·쓰기 함수 (users, chat, events, games, posts, members)
+  stores/       zustand 전역 상태 + 한 번만 하는 실시간 구독 (auth, members, chat, events, games)
   hooks/        여러 화면에서 쓰는 훅 (useUnreadCount, useChatNotifications)
-  features/     기능별 화면 (auth, home, chat, events, me, admin ...)
+  features/     기능별 화면 (auth, home, chat, events, games, stats, board, members, me, more, admin)
   features/lazyPages.ts   화면별 코드 분할(React.lazy) 목록. 새 기능 화면은 여기에 추가
   components/layout/      AppShell(PC 사이드바/모바일 하단 탭), AuthGate(로그인·승인 가드), nav, routeHandle
   components/ui/          shadcn 컴포넌트
@@ -152,3 +180,16 @@ tests/rules/    보안 규칙 테스트
   rules가 둘의 짝(`club`↔`ownerId == null`)을 검사한다
 - **대여:** 비어 있을 때만 본인 이름으로 빌릴 수 있고, 반납은 빌린 본인·소장자·등록자·오너가 할 수 있다.
   대여 이력은 남기지 않고 현재 상태만 본다(간단형)
+
+### 6~7단계에서 정한 것
+- **게시판 이동 금지:** 글을 쓴 뒤에는 `board`를 바꿀 수 없다(rules). 자유글을 공지로 옮겨
+  공지 작성 권한을 우회하는 걸 막기 위함
+- **댓글은 소프트 삭제하지 않는다.** 채팅 메시지와 달리 문서를 지운다(글쓴이 본인·오너)
+- **`commentCount`는 댓글 문서와 같은 batch로** ±1만 갱신한다(rules가 검사). 음수가 되지 않게 막음
+- **복합 색인 1개 추가:** posts(board, pinned desc, createdAt desc).
+  이걸로 "고정 글을 위로 + 최신순"을 쿼리 하나로 처리하고, 홈 공지 카드도 같은 색인을 쓴다
+- **회원 활동 통계는 모임 참석·출석 기준**(최근 6개월). 통계 화면과 회원 프로필이 같은 계산을 쓴다
+  (`services/members.ts`의 `countActivity`)
+- **관리자 메모(`adminMemos/{uid}`)는 회원 패널을 펼칠 때만 읽는다.** 오너만 접근 가능
+- **강퇴는 `status: 'removed'`**. 관리자 화면 아래쪽 "거절·이용 중지 계정"에서 되돌릴 수 있다
+- `PlaceholderPage`는 모든 화면이 만들어져서 삭제했다

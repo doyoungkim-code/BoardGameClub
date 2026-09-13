@@ -385,6 +385,120 @@ service cloud.firestore {
       }
     }
 
+    // ---------- posts: 공지·자유·후기 게시판 ----------
+
+    match /posts/{postId} {
+      allow read: if isMember();
+      allow create: if isMember() && validNewPost();
+      allow update: if isMember() && (
+        // 글쓴이·오너: 내용 수정
+        (isAuthorOrOwner() && validPostEdit())
+        // 오너: 고정 설정
+        || (isOwner() && changedOnly(['pinned']) && request.resource.data.pinned is bool)
+        // 회원 누구나: 좋아요 토글
+        || validLikeToggle()
+        // 댓글을 쓰거나 지울 때 같은 batch 로 개수만 갱신
+        || validCommentCountChange()
+      );
+      allow delete: if isMember() && isAuthorOrOwner();
+
+      function isAuthorOrOwner() {
+        return resource.data.authorId == request.auth.uid || isOwner();
+      }
+
+      function validPostFields() {
+        let d = request.resource.data;
+        return d.board in ['notice', 'free', 'review']
+          && d.title is string && d.title.size() >= 1 && d.title.size() <= 100
+          && d.content is string && d.content.size() >= 1 && d.content.size() <= 10000;
+      }
+
+      function validNewPost() {
+        let d = request.resource.data;
+        let keys = ['board', 'title', 'content', 'authorId', 'authorNickname', 'pinned',
+                    'likeIds', 'commentCount', 'createdAt', 'updatedAt'];
+        return d.keys().hasOnly(keys) && d.keys().hasAll(keys)
+          && validPostFields()
+          // 공지는 오너만 쓴다
+          && (d.board != 'notice' || isOwner())
+          && d.authorId == request.auth.uid
+          && validNickname(d.authorNickname)
+          // 고정은 오너만 걸 수 있다
+          && (d.pinned == false || isOwner())
+          && d.likeIds == []
+          && d.commentCount == 0
+          && d.createdAt == request.time
+          && d.updatedAt == request.time;
+      }
+
+      function validPostEdit() {
+        // 게시판 이동은 막는다 (공지 권한 우회 방지)
+        return changedOnly(['title', 'content', 'updatedAt'])
+          && validPostFields()
+          && request.resource.data.updatedAt == request.time;
+      }
+
+      function validLikeToggle() {
+        let me = request.auth.uid;
+        let before = resource.data.likeIds;
+        let after = request.resource.data.likeIds;
+        return changedOnly(['likeIds'])
+          && after is list
+          && (
+            (!(me in before) && after.size() == before.size() + 1
+              && after.toSet() == before.toSet().union([me].toSet()))
+            || (me in before && after.size() == before.size() - 1
+              && after.toSet() == before.toSet().difference([me].toSet()))
+          );
+      }
+
+      function validCommentCountChange() {
+        let before = resource.data.commentCount;
+        let after = request.resource.data.commentCount;
+        return changedOnly(['commentCount'])
+          && after is int
+          && (after == before + 1 || (after == before - 1 && after >= 0));
+      }
+
+      match /comments/{commentId} {
+        allow read: if isMember();
+        allow create: if isMember() && validNewComment();
+        allow update: if isMember()
+          && resource.data.authorId == request.auth.uid
+          && changedOnly(['content'])
+          && validCommentContent();
+        // 댓글은 지운 흔적을 남기지 않고 문서를 삭제한다 (글쓴이 본인과 오너)
+        allow delete: if isMember()
+          && (resource.data.authorId == request.auth.uid || isOwner());
+
+        function validCommentContent() {
+          let c = request.resource.data.content;
+          return c is string && c.size() >= 1 && c.size() <= 2000;
+        }
+
+        function validNewComment() {
+          let d = request.resource.data;
+          let keys = ['authorId', 'authorNickname', 'content', 'createdAt'];
+          return d.keys().hasOnly(keys) && d.keys().hasAll(keys)
+            && d.authorId == request.auth.uid
+            && validNickname(d.authorNickname)
+            && validCommentContent()
+            && d.createdAt == request.time;
+        }
+      }
+    }
+
+    // ---------- adminMemos: 오너만 보는 회원 메모 ----------
+
+    match /adminMemos/{uid} {
+      allow read, delete: if isOwner();
+      allow create, update: if isOwner()
+        && request.resource.data.keys().hasOnly(['memo', 'updatedAt'])
+        && request.resource.data.memo is string
+        && request.resource.data.memo.size() <= 1000
+        && request.resource.data.updatedAt == request.time;
+    }
+
     // ---------- readStates: 방별 마지막으로 읽은 시각 (안 읽음 표시용) ----------
 
     match /users/{uid}/readStates/{roomKey} {

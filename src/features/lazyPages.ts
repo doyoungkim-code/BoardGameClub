@@ -36,6 +36,24 @@ export const GameDetailPage = lazy(() =>
 
 export const StatsPage = lazy(() => import('@/features/stats/StatsPage').then((m) => ({ default: m.StatsPage })))
 
+export const BoardPage = lazy(() => import('@/features/board/BoardPage').then((m) => ({ default: m.BoardPage })))
+
+export const PostFormPage = lazy(() =>
+  import('@/features/board/PostFormPage').then((m) => ({ default: m.PostFormPage })),
+)
+
+export const PostDetailPage = lazy(() =>
+  import('@/features/board/PostDetailPage').then((m) => ({ default: m.PostDetailPage })),
+)
+
+export const MembersPage = lazy(() =>
+  import('@/features/members/MembersPage').then((m) => ({ default: m.MembersPage })),
+)
+
+export const MemberProfilePage = lazy(() =>
+  import('@/features/members/MemberProfilePage').then((m) => ({ default: m.MemberProfilePage })),
+)
+
 export const MePage = lazy(() => import('@/features/me/MePage').then((m) => ({ default: m.MePage })))
 
 export const AdminPage = lazy(() => import('@/features/admin/AdminPage').then((m) => ({ default: m.AdminPage })))

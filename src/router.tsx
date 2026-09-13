@@ -2,13 +2,13 @@ import { createBrowserRouter } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import { AuthGate, RequireOwner } from '@/components/layout/AuthGate'
 import type { RouteHandle } from '@/components/layout/routeHandle'
-import { PlaceholderPage } from '@/components/PlaceholderPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { PendingPage } from '@/features/auth/PendingPage'
 import { SignupPage } from '@/features/auth/SignupPage'
 import { HomePage } from '@/features/home/HomePage'
 import {
   AdminPage,
+  BoardPage,
   ChannelRoomPage,
   ChatIndexPage,
   ChatLayout,
@@ -19,7 +19,11 @@ import {
   GameDetailPage,
   GameFormPage,
   GamesPage,
+  MemberProfilePage,
+  MembersPage,
   MePage,
+  PostDetailPage,
+  PostFormPage,
   StatsPage,
 } from '@/features/lazyPages'
 import { MorePage } from '@/features/more/MorePage'
@@ -28,7 +32,6 @@ import { NotFoundPage } from '@/features/NotFoundPage'
 const chatHandle: RouteHandle = { layout: 'chat' }
 const roomHandle: RouteHandle = { immersive: true }
 
-// 아직 만들지 않은 기능 화면은 PlaceholderPage로 두고 단계별로 교체한다.
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
   {
@@ -58,9 +61,12 @@ export const router = createBrowserRouter([
           { path: 'games/:gameId', element: <GameDetailPage /> },
           { path: 'games/:gameId/edit', element: <GameFormPage /> },
           { path: 'stats', element: <StatsPage /> },
-          { path: 'board/*', element: <PlaceholderPage title="게시판" step={6} /> },
-          { path: 'posts/*', element: <PlaceholderPage title="게시글" step={6} /> },
-          { path: 'members/*', element: <PlaceholderPage title="회원" step={7} /> },
+          { path: 'board/:board', element: <BoardPage /> },
+          { path: 'posts/new', element: <PostFormPage /> },
+          { path: 'posts/:postId', element: <PostDetailPage /> },
+          { path: 'posts/:postId/edit', element: <PostFormPage /> },
+          { path: 'members', element: <MembersPage /> },
+          { path: 'members/:uid', element: <MemberProfilePage /> },
           { path: 'me', element: <MePage /> },
           { path: 'more', element: <MorePage /> },
           {

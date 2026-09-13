@@ -1,0 +1,60 @@
+name: Deploy
+
+# main 에 push 되면 빌드·규칙 테스트를 다시 돌리고,
+# 통과했을 때만 Firebase Hosting 과 Firestore(규칙·색인)를 배포한다.
+on:
+  push:
+    branches: [main]
+  # 실패했을 때 수동으로 다시 돌릴 수 있게
+  workflow_dispatch:
+
+# 연달아 push 해도 마지막 것만 배포되게 한다
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - run: npm ci
+
+      - run: npm run lint
+
+      - name: 타입체크 + 빌드
+        run: npm run build
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+
+      # 권한 구멍이 있는 규칙이 올라가지 않도록 배포 전에 반드시 통과해야 한다
+      - name: 보안 규칙 테스트
+        run: npm run test:rules
+
+      # firebase-tools 는 GOOGLE_APPLICATION_CREDENTIALS 가 가리키는 "파일"을 보므로
+      # 시크릿을 임시 파일로 떨군다. printf 로 넘겨서 JSON 안의 따옴표가 깨지지 않게 한다.
+      - name: 서비스 계정 키 파일 만들기
+        env:
+          SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: printf '%s' "$SERVICE_ACCOUNT" > "$RUNNER_TEMP/service-account.json"
+
+      - name: Firebase 배포 (Hosting + 규칙·색인)
+        run: npx firebase deploy --only hosting,firestore --project doyou-boardgame --non-interactive
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/service-account.json
