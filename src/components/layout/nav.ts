@@ -12,6 +12,7 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react'
+import { useIsOwner } from '@/stores/auth'
 
 export type NavItem = {
   to: string
@@ -38,3 +39,9 @@ export const MORE_ITEMS: NavItem[] = [
   { to: '/me', label: '내 정보', icon: UserRound },
   { to: '/admin', label: '관리자', icon: ShieldCheck, ownerOnly: true },
 ]
+
+/** 현재 사용자가 볼 수 있는 MORE_ITEMS (오너 전용 메뉴 포함 여부) */
+export function useMoreItems() {
+  const isOwner = useIsOwner()
+  return MORE_ITEMS.filter((item) => !item.ownerOnly || isOwner)
+}

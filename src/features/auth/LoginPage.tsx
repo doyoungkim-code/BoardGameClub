@@ -1,11 +1,34 @@
+import { useState } from 'react'
+import { Loader2 } from 'lucide-react'
+import { Navigate, useLocation } from 'react-router'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { APP_NAME } from '@/lib/constants'
+import { toErrorMessage } from '@/lib/format'
+import { signInWithGoogle } from '@/services/auth'
+import { useAuth } from '@/stores/auth'
 
 export function LoginPage() {
-  // TODO(2단계): signInWithPopup(auth, googleProvider) 연결, 가입 상태에 따라 이동
-  const handleLogin = () => {
-    toast.info('구글 로그인은 2단계에서 연결돼요')
+  const user = useAuth((s) => s.user)
+  const location = useLocation()
+  const [pending, setPending] = useState(false)
+
+  // 로그인되면 원래 가려던 곳으로. 가입·승인 상태 확인은 AuthGate가 한다.
+  if (user) {
+    const from = (location.state as { from?: string } | null)?.from ?? '/'
+    return <Navigate to={from} replace />
+  }
+
+  const handleLogin = async () => {
+    setPending(true)
+    try {
+      await signInWithGoogle()
+    } catch (error) {
+      console.error(error)
+      toast.error(toErrorMessage(error))
+    } finally {
+      setPending(false)
+    }
   }
 
   return (
@@ -15,8 +38,14 @@ export function LoginPage() {
         <h1 className="text-3xl font-bold text-primary">{APP_NAME}</h1>
         <p className="text-sm text-muted-foreground">회원 전용 공간이에요. 가입은 운영자 승인 후 이용할 수 있어요.</p>
       </div>
-      <Button size="lg" variant="outline" className="h-12 w-full max-w-xs gap-3 bg-card" onClick={handleLogin}>
-        <GoogleIcon />
+      <Button
+        size="lg"
+        variant="outline"
+        className="h-12 w-full max-w-xs gap-3 bg-card"
+        onClick={handleLogin}
+        disabled={pending}
+      >
+        {pending ? <Loader2 className="size-5 animate-spin" /> : <GoogleIcon />}
         Google 계정으로 시작하기
       </Button>
     </div>

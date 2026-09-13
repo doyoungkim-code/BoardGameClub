@@ -1,15 +1,29 @@
-import { NavLink, Outlet } from 'react-router'
-import { MORE_ITEMS, TAB_ITEMS, type NavItem } from '@/components/layout/nav'
+import { useEffect } from 'react'
+import { Link, NavLink, Outlet } from 'react-router'
+import { UserAvatar } from '@/components/UserAvatar'
+import { TAB_ITEMS, useMoreItems, type NavItem } from '@/components/layout/nav'
 import { APP_NAME } from '@/lib/constants'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/stores/auth'
+import { startMembersSync } from '@/stores/members'
 
+/** 승인된 회원에게만 렌더링되는 앱 공통 레이아웃 */
 export function AppShell() {
+  const profile = useAuth((s) => s.profile)!
+
+  useEffect(() => startMembersSync(), [])
+
   return (
     <div className="min-h-dvh md:flex">
       <Sidebar />
       <div className="flex min-h-dvh flex-1 flex-col md:min-w-0">
-        <header className="sticky top-0 z-30 flex h-14 items-center border-b bg-background/90 px-4 backdrop-blur md:hidden">
-          <span className="font-bold text-primary">{APP_NAME}</span>
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background/90 px-4 backdrop-blur md:hidden">
+          <Link to="/" className="font-bold text-primary">
+            {APP_NAME}
+          </Link>
+          <Link to="/me" aria-label="내 정보">
+            <UserAvatar name={profile.nickname} photoURL={profile.photoURL} className="size-8" />
+          </Link>
         </header>
         {/* 모바일에서는 하단 탭(h-16)에 가려지지 않도록 아래 여백 확보 */}
         <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-4 pb-24 md:px-8 md:pt-8 md:pb-8">
@@ -22,13 +36,15 @@ export function AppShell() {
 }
 
 function Sidebar() {
-  // TODO(2단계): 오너 여부에 따라 ownerOnly 메뉴 노출
-  const moreItems = MORE_ITEMS.filter((item) => !item.ownerOnly)
+  const profile = useAuth((s) => s.profile)!
+  const moreItems = useMoreItems()
 
   return (
     <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r bg-sidebar px-3 py-5 md:flex">
-      <div className="mb-6 px-3 text-lg font-bold text-sidebar-primary">{APP_NAME}</div>
-      <nav className="flex flex-1 flex-col gap-1">
+      <Link to="/" className="mb-6 px-3 text-lg font-bold text-sidebar-primary">
+        {APP_NAME}
+      </Link>
+      <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">
         {TAB_ITEMS.filter((item) => item.to !== '/more').map((item) => (
           <SidebarLink key={item.to} item={item} />
         ))}
@@ -37,6 +53,10 @@ function Sidebar() {
           <SidebarLink key={item.to} item={item} />
         ))}
       </nav>
+      <Link to="/me" className="mt-3 flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-sidebar-accent">
+        <UserAvatar name={profile.nickname} photoURL={profile.photoURL} className="size-8" />
+        <span className="truncate text-sm font-medium">{profile.nickname}</span>
+      </Link>
     </aside>
   )
 }

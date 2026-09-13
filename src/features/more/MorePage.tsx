@@ -1,10 +1,9 @@
 import { ChevronRight } from 'lucide-react'
 import { Link } from 'react-router'
-import { MORE_ITEMS } from '@/components/layout/nav'
+import { useMoreItems } from '@/components/layout/nav'
 
 export function MorePage() {
-  // TODO(2단계): 오너 여부에 따라 ownerOnly 메뉴 노출
-  const items = MORE_ITEMS.filter((item) => !item.ownerOnly)
+  const items = useMoreItems()
 
   return (
     <div className="space-y-6">

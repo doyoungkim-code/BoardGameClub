@@ -2,6 +2,7 @@ import { CalendarDays, Megaphone, MessageCircle, NotebookPen } from 'lucide-reac
 import { Link } from 'react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { APP_NAME } from '@/lib/constants'
+import { useAuth } from '@/stores/auth'
 
 const SECTIONS = [
   { title: '다가오는 모임', to: '/events', icon: CalendarDays, empty: '예정된 모임이 없어요' },
@@ -11,11 +12,13 @@ const SECTIONS = [
 ]
 
 export function HomePage() {
+  const nickname = useAuth((s) => s.profile?.nickname)
+
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-sm text-muted-foreground">오늘은 무슨 게임 할까요?</p>
-        <h1 className="text-2xl font-bold">{APP_NAME}</h1>
+        <p className="text-sm text-muted-foreground">{APP_NAME}</p>
+        <h1 className="text-2xl font-bold">{nickname}님, 오늘은 무슨 게임 할까요?</h1>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

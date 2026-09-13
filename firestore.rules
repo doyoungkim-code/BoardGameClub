@@ -1,10 +1,116 @@
 rules_version = '2';
 
-// 1단계(셋업): 모든 접근 차단. 2단계부터 컬렉션별 규칙을 추가한다.
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false;
+
+    // ---------- 공통 ----------
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // 오너 이메일은 src/lib/constants.ts 의 OWNER_EMAIL 과 같아야 한다
+    function isOwner() {
+      return signedIn()
+        && request.auth.token.email == 'kwat09k@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    function userPath(uid) {
+      return /databases/$(database)/documents/users/$(uid);
+    }
+
+    function isMember() {
+      return signedIn()
+        && exists(userPath(request.auth.uid))
+        && get(userPath(request.auth.uid)).data.status == 'approved';
+    }
+
+    function changedOnly(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+
+    function unchangedOrNow(field) {
+      return request.resource.data[field] == resource.data[field]
+        || request.resource.data[field] == request.time;
+    }
+
+    function validNickname(v) {
+      return v is string && v.size() >= 1 && v.size() <= 20;
+    }
+
+    function validReferrerName(v) {
+      return v is string && v.size() <= 30;
+    }
+
+    // ---------- users: 공개 프로필 ----------
+
+    match /users/{uid} {
+      // 승인 전에는 본인 문서만. 승인된 회원과 오너는 전체.
+      allow read: if isSelf(uid) || isMember() || isOwner();
+
+      allow create: if isSelf(uid) && validNewUser();
+
+      // 본인은 닉네임·사진·최근 활동일만, 오너는 상태·승인일·소개자 연결만 바꿀 수 있다
+      allow update: if (isSelf(uid) && validSelfUpdate())
+        || (isOwner() && validOwnerUpdate(uid));
+
+      // 삭제를 막아서 거절·강퇴된 계정이 다시 신청하지 못하게 한다
+      allow delete: if false;
+
+      function validNewUser() {
+        let d = request.resource.data;
+        let keys = ['nickname', 'googleName', 'photoURL', 'role', 'status',
+                    'referrerName', 'referrerId', 'createdAt', 'approvedAt', 'lastActiveAt'];
+        return d.keys().hasOnly(keys) && d.keys().hasAll(keys)
+          && validNickname(d.nickname)
+          && d.googleName is string
+          && (d.photoURL == null || d.photoURL is string)
+          && validReferrerName(d.referrerName)
+          && d.referrerId == null
+          && d.createdAt == request.time
+          && d.lastActiveAt == request.time
+          && (
+            // 일반 신청: 대기 상태 + 소개자 이름 필수
+            (d.role == 'member' && d.status == 'pending' && d.approvedAt == null && d.referrerName.size() >= 1)
+            // 오너 계정: 바로 승인
+            || (isOwner() && d.role == 'owner' && d.status == 'approved' && d.approvedAt == request.time)
+          );
+      }
+
+      function validSelfUpdate() {
+        let d = request.resource.data;
+        return changedOnly(['nickname', 'photoURL', 'googleName', 'lastActiveAt'])
+          && validNickname(d.nickname)
+          && (d.photoURL == null || d.photoURL is string)
+          && d.googleName is string
+          && unchangedOrNow('lastActiveAt');
+      }
+
+      function validOwnerUpdate(uid) {
+        let d = request.resource.data;
+        return changedOnly(['status', 'approvedAt', 'referrerId'])
+          && d.status in ['pending', 'approved', 'rejected', 'removed']
+          // 오너 자신의 상태는 바꿀 수 없다
+          && (uid != request.auth.uid || d.status == resource.data.status)
+          && (d.referrerId == null
+              || (d.referrerId is string && d.referrerId != uid && exists(userPath(d.referrerId))))
+          && unchangedOrNow('approvedAt');
+      }
+    }
+
+    // ---------- userPrivate: 이메일 등 본인·오너만 보는 정보 ----------
+
+    match /userPrivate/{uid} {
+      allow read: if isSelf(uid) || isOwner();
+      allow create: if isSelf(uid)
+        && request.resource.data.keys().hasOnly(['email'])
+        && request.resource.data.email == request.auth.token.email;
+      allow update, delete: if false;
     }
   }
 }

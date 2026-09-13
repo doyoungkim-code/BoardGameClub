@@ -76,12 +76,14 @@
 
 ## 5. Firestore 데이터 모델
 ```
-users/{uid}
-  nickname, googleName, email, photoURL
+users/{uid}                        // 공개 프로필: 승인된 회원 전체가 읽음
+  nickname, googleName, photoURL
   role: 'owner'|'member', status: 'pending'|'approved'|'rejected'|'removed'
   referrerName     // 가입 시 본인이 입력한 소개자 이름 (예: "김철수")
-  referrerId?      // 오너가 승인 시 연결한 소개 회원 uid (오너만 쓰기)
-  createdAt, approvedAt, lastActiveAt, adminMemo(오너만 쓰기)
+  referrerId       // 오너가 승인 시 연결한 소개 회원 uid, 없으면 null (오너만 쓰기)
+  createdAt, approvedAt, lastActiveAt
+userPrivate/{uid}                  email            // 본인과 오너만 읽음. 생성 후 수정 불가
+adminMemos/{uid}                   memo, updatedAt  // (7단계) 오너만 읽기·쓰기
 users/{uid}/readStates/{roomId}     lastReadAt        // 채널·DM 안 읽음 배지
 
 channels/{channelId}                name, description, order, createdAt,
@@ -185,6 +187,7 @@ BoardGameDong/
 6. **게시판/공지**: 댓글, 좋아요, 공지 고정
 7. **회원관리/관리자**: 회원 목록·프로필, 활동 통계, 상태 변경
 8. **배포 자동화**: `firebase init hosting:github`로 서비스 계정 Secret 등록, `ci.yml`/`deploy.yml` 작성, GitHub Secrets에 `VITE_FIREBASE_*` 등록, Auth 승인된 도메인 확인
+   - 배포 빌드의 `VITE_FIREBASE_AUTH_DOMAIN`은 `doyou-boardgame.web.app`(호스팅 도메인)으로 설정. 로그인 도메인과 앱 도메인을 같게 해서 모바일 Safari 등에서 리디렉트 로그인이 막히지 않게 함. 이때 Google Cloud 콘솔 OAuth 클라이언트의 승인된 리디렉션 URI에 `https://doyou-boardgame.web.app/__/auth/handler` 추가
    - 첫 배포를 1단계 직후에 해두고, 이후 단계는 기능이 완성될 때마다 `main`에 머지해서 바로 반영하는 방식도 가능
 
 ## 11. 추후 과제 (백로그)
