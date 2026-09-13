@@ -5,6 +5,7 @@ import { auth } from '@/lib/firebase'
 import { toProfile, touchLastActive, userRef } from '@/services/users'
 import { stopChatSync } from '@/stores/chat'
 import { stopEventsSync } from '@/stores/events'
+import { stopGamesSync } from '@/stores/games'
 import { stopMembersSync } from '@/stores/members'
 import type { UserProfile } from '@/types/user'
 
@@ -36,6 +37,7 @@ export function initAuthListener() {
       stopMembersSync()
       stopChatSync()
       stopEventsSync()
+      stopGamesSync()
       useAuth.setState({ initialized: true, user: null, profile: null })
       return
     }

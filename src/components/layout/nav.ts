@@ -6,7 +6,6 @@ import {
   House,
   Megaphone,
   MessageCircle,
-  NotebookPen,
   ShieldCheck,
   UserRound,
   Users,
@@ -34,7 +33,6 @@ export const TAB_ITEMS: NavItem[] = [
 
 /** 하단 탭에 없는 메뉴 (모바일: 더보기 화면, PC: 사이드바 아래쪽) */
 export const MORE_ITEMS: NavItem[] = [
-  { to: '/plays', label: '플레이 기록', icon: NotebookPen },
   { to: '/stats', label: '통계', icon: ChartColumn },
   { to: '/board/notice', label: '게시판', icon: Megaphone },
   { to: '/members', label: '회원', icon: Users },

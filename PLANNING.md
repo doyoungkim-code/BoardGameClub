@@ -7,7 +7,7 @@
 - 채널형 단체채팅, 1:1 DM
 - 모임 일정(정기모임·번개)
 - 보드게임 라이브러리
-- 플레이 기록·통계
+- 통계 (모임 참석·출석 기준)
 - 공지·게시판
 - 회원관리
 
@@ -110,10 +110,7 @@ games/{gameId}
   borrowerId, borrowedAt              // 대여 현황(간단형)
   createdBy, createdAt
 
-plays/{playId}
-  gameId, gameName, eventId?, playedAt, durationMin, notes, createdBy
-  players: [{ uid?, guestName?, score?, rank?, isWinner }]
-  playerIds[]      // array-contains 쿼리용
+// plays/{playId} — 플레이 기록은 MVP에서 제외 (2026-09-14 결정). 11장 백로그 참고
 
 posts/{postId}
   board: 'notice'|'free'|'review', title, content, authorId, authorNickname
@@ -139,9 +136,8 @@ posts/{postId}/comments/{id}        authorId, authorNickname, content, createdAt
 | `/` | 홈: 다가오는 모임, 고정 공지, 최근 플레이, 안 읽은 채팅 |
 | `/events`, `/events/new`, `/events/:id` | 캘린더·리스트 전환, 참석 신청, 출석 체크, 모임 화면에서 바로 플레이 기록 작성 |
 | `/chat`, `/chat/:channelId`, `/dm/:dmId` | 채널·DM 목록(안 읽음 배지), 채팅방(최근 50개 표시, 위로 스크롤하면 더 불러오기). PC는 목록+대화방 2단, 모바일은 대화방에서 하단 탭 숨김. 오너는 채널 추가(+ 기본 채널 전체·번개·잡담 한 번에 만들기)·수정·삭제 |
-| `/games`, `/games/new`, `/games/:id` | 인원·시간·난이도·태그 필터, 상세(플레이 기록·통계·대여) |
-| `/plays`, `/plays/new` | 플레이 기록 목록/작성 |
-| `/stats` | 게임별 인기·승률, 회원별 플레이 수·승수 랭킹 |
+| `/games`, `/games/new`, `/games/:id` | 인원·시간·난이도·태그 필터, 상세(대여 현황) |
+| `/stats` | 모임 참석·출석 랭킹, 모임 추이, 게임 보유 현황 |
 | `/board/:board`, `/posts/:id`, `/posts/new` | 공지·자유·후기 게시판, 댓글·좋아요 |
 | `/members`, `/members/:uid` | 회원 목록(닉네임 옆에 "OO의 지인"), 프로필(소개자, 소개한 회원, 참석·플레이·승리 통계, DM 보내기) |
 | `/me` | 닉네임 수정, 로그아웃 |
@@ -189,7 +185,7 @@ BoardGameDong/
 2. **인증·가입 승인**: 로그인 → 닉네임·소개자 입력 → 승인 대기 → 오너 승인(소개 회원 연결), 라우트 가드, users rules + 테스트
 3. **채팅**: 채널(오너가 생성) + DM, 안 읽음 배지
 4. **모임/일정**: 정기모임·번개, 캘린더, 참석 신청(정원 제한), 출석 체크
-5. **게임 라이브러리 + 플레이 기록 + 통계**
+5. **게임 라이브러리 + 통계** (플레이 기록은 제외 — 11장 백로그)
 6. **게시판/공지**: 댓글, 좋아요, 공지 고정
 7. **회원관리/관리자**: 회원 목록·프로필, 활동 통계, 상태 변경
 8. **배포 자동화**: `firebase init hosting:github`로 서비스 계정 Secret 등록, `ci.yml`/`deploy.yml` 작성, GitHub Secrets에 `VITE_FIREBASE_*` 등록, Auth 승인된 도메인 확인
@@ -197,6 +193,8 @@ BoardGameDong/
    - 첫 배포를 1단계 직후에 해두고, 이후 단계는 기능이 완성될 때마다 `main`에 머지해서 바로 반영하는 방식도 가능
 
 ## 11. 추후 과제 (백로그)
+- **플레이 기록·승률 통계** (2026-09-14에 MVP에서 제외). 넣게 되면 `plays` 컬렉션과
+  `/plays` 화면을 되살리고, 통계에 게임별 인기·승률과 회원별 플레이 수·승수를 더한다
 - 이미지 업로드 (Blaze 전환 후 Storage 사용, 또는 Cloudinary 연동)
 - BGG 검색 자동완성 (프록시 필요)
 - 서버 푸시 알림 (Blaze + Cloud Functions)

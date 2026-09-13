@@ -16,7 +16,11 @@ import {
   EventDetailPage,
   EventFormPage,
   EventsPage,
+  GameDetailPage,
+  GameFormPage,
+  GamesPage,
   MePage,
+  StatsPage,
 } from '@/features/lazyPages'
 import { MorePage } from '@/features/more/MorePage'
 import { NotFoundPage } from '@/features/NotFoundPage'
@@ -49,9 +53,11 @@ export const router = createBrowserRouter([
           { path: 'events/new', element: <EventFormPage /> },
           { path: 'events/:eventId', element: <EventDetailPage /> },
           { path: 'events/:eventId/edit', element: <EventFormPage /> },
-          { path: 'games/*', element: <PlaceholderPage title="보드게임" step={5} /> },
-          { path: 'plays/*', element: <PlaceholderPage title="플레이 기록" step={5} /> },
-          { path: 'stats', element: <PlaceholderPage title="통계" step={5} /> },
+          { path: 'games', element: <GamesPage /> },
+          { path: 'games/new', element: <GameFormPage /> },
+          { path: 'games/:gameId', element: <GameDetailPage /> },
+          { path: 'games/:gameId/edit', element: <GameFormPage /> },
+          { path: 'stats', element: <StatsPage /> },
           { path: 'board/*', element: <PlaceholderPage title="게시판" step={6} /> },
           { path: 'posts/*', element: <PlaceholderPage title="게시글" step={6} /> },
           { path: 'members/*', element: <PlaceholderPage title="회원" step={7} /> },

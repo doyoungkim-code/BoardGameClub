@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { CalendarDays, Megaphone, MessageCircle, NotebookPen } from 'lucide-react'
+import { CalendarDays, ChartColumn, Megaphone, MessageCircle } from 'lucide-react'
 import { Link } from 'react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useUnreadCount } from '@/hooks/useUnreadCount'
@@ -8,13 +8,16 @@ import { formatEventDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/stores/auth'
 import { startEventsSync, useEvents } from '@/stores/events'
+import { startGamesSync, useGames } from '@/stores/games'
 
 export function HomePage() {
   const nickname = useAuth((s) => s.profile?.nickname)
   const unread = useUnreadCount()
   const { loaded, upcoming } = useEvents()
+  const games = useGames((s) => s.games)
 
   useEffect(() => startEventsSync(), [])
+  useEffect(() => startGamesSync(), [])
 
   // 취소된 모임은 홈에서 감춘다
   const nextEvent = upcoming.find((event) => !event.canceled)
@@ -35,7 +38,12 @@ export function HomePage() {
       text: unread > 0 ? `안 읽은 대화방이 ${unread}개 있어요` : '새 메시지가 없어요',
       highlight: unread > 0,
     },
-    { title: '최근 플레이', to: '/plays', icon: NotebookPen, text: '아직 기록이 없어요' },
+    {
+      title: '통계',
+      to: '/stats',
+      icon: ChartColumn,
+      text: games.length > 0 ? `등록된 게임 ${games.length}개 · 참석 랭킹 보기` : '아직 집계할 기록이 없어요',
+    },
   ]
 
   return (

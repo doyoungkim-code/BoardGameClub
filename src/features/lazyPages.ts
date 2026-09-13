@@ -24,6 +24,18 @@ export const EventDetailPage = lazy(() =>
   import('@/features/events/EventDetailPage').then((m) => ({ default: m.EventDetailPage })),
 )
 
+export const GamesPage = lazy(() => import('@/features/games/GamesPage').then((m) => ({ default: m.GamesPage })))
+
+export const GameFormPage = lazy(() =>
+  import('@/features/games/GameFormPage').then((m) => ({ default: m.GameFormPage })),
+)
+
+export const GameDetailPage = lazy(() =>
+  import('@/features/games/GameDetailPage').then((m) => ({ default: m.GameDetailPage })),
+)
+
+export const StatsPage = lazy(() => import('@/features/stats/StatsPage').then((m) => ({ default: m.StatsPage })))
+
 export const MePage = lazy(() => import('@/features/me/MePage').then((m) => ({ default: m.MePage })))
 
 export const AdminPage = lazy(() => import('@/features/admin/AdminPage').then((m) => ({ default: m.AdminPage })))
