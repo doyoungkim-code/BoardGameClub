@@ -1,6 +1,6 @@
 # 진행 기록 & 개발 가이드
 
-> 마지막 업데이트: 2026-09-13
+> 마지막 업데이트: 2026-09-13 (4단계 모임/일정 구현)
 > 기획 전체는 [PLANNING.md](PLANNING.md), 이 문서는 "어디까지 했고 다음에 뭘 하는지"와 "개발 환경 세팅"을 기록한다.
 
 ## 1. 진행 상황
@@ -10,40 +10,48 @@
 | 1 | 셋업: Vite + React + TS, Tailwind + shadcn/ui, Firebase 연결, 기본 레이아웃 | ✅ 완료 | `f4cc3a6` |
 | 2 | 구글 로그인, 가입 신청(닉네임·소개자), 오너 승인, 내 정보, users 규칙 | ✅ 완료 (실제 Firebase에서 동작 확인) | `702e06e` |
 | 3 | 채널 단체채팅, 1:1 DM, 안 읽음 배지, 브라우저 알림 | ✅ 구현 완료 · ⚠️ 브라우저 실사용 확인 전 | `6813fb5` |
-| 4 | 모임/일정 | ⏳ 다음 차례 | |
-| 5 | 보드게임 라이브러리 + 플레이 기록 + 통계 | | |
+| 4 | 모임/일정: 정기모임·번개, 캘린더, 참석 신청, 출석 체크 | ✅ 구현 완료 · ⚠️ 규칙 테스트 실행·실사용 확인 전 | (커밋 전) |
+| 5 | 보드게임 라이브러리 + 플레이 기록 + 통계 | ⏳ 다음 차례 | |
 | 6 | 게시판/공지 | | |
 | 7 | 회원관리/관리자 (회원 목록·프로필, 활동 통계, 강퇴, 관리자 메모) | | |
 | 8 | GitHub Actions 자동 배포 | | |
 
-- Firestore 보안 규칙은 **3단계까지 실제 프로젝트(`doyou-boardgame`)에 배포 완료**
+- Firestore 보안 규칙은 **3단계까지 실제 프로젝트(`doyou-boardgame`)에 배포 완료**.
+  **4단계(events, 채팅 미리보기) 규칙은 아직 배포 전** — 테스트를 돌린 뒤 배포할 것
 - 아직 Hosting 배포는 안 함 (8단계에서 GitHub Actions로)
-- 규칙 테스트 61개 통과 (users 34 + chat 27)
+- 규칙 테스트: users 34 + chat 31 + events 26 = 91개 (users·chat 61개는 통과 확인, 4단계에서 추가한 30개는 실행 확인 전)
 
 ## 2. 다음에 할 일
 
-1. **3단계 채팅 실사용 확인**
+1. **4단계 검증** — 먼저 Java 21과 Node 22+ 설치 필요 (3장 참고)
+   - `npm run test:rules` 통과 확인 → `npx firebase deploy --only firestore:rules`
+   - 오너/일반 계정으로: 번개 만들기, 참석 신청·취소, 정원 마감, 모임 취소·삭제, 출석 체크, 캘린더 달 이동
+   - 일반 회원 화면에 정기모임 만들기가 안 보이는지 확인
+2. **3단계 채팅 실사용 확인** (아직 못 함)
    - 오너 계정: 채팅 탭 → "기본 채널 만들기" → 메시지 보내기
    - 다른 계정(또는 휴대폰): 실시간 수신, 안 읽음 배지, DM 시작, 메시지 삭제
+   - 마지막 메시지를 지우면 목록 미리보기가 "삭제된 메시지"로 바뀌는지
    - 모바일 화면에서 키보드가 올라올 때 입력창 위치 확인
-2. **4단계 모임/일정** (PLANNING.md 5장 `events`, 6장 `/events`)
-   - 정기모임은 오너만, 번개는 모든 회원이 생성
-   - 캘린더·리스트 전환, 참석 신청(정원 초과를 rules로 차단), 출석 체크(호스트·오너)
-   - 홈 "다가오는 모임" 카드 연결
-   - rules + 테스트 먼저 작성 → 규칙 배포 → 화면
-3. 이후 PLANNING.md 10장 순서대로 5 → 8단계
+3. **5단계 보드게임 라이브러리 + 플레이 기록 + 통계** (PLANNING.md 5장 `games`/`plays`)
+   - `events.gameIds`는 필드만 만들어 두고 UI는 5단계에서 연결
+4. 이후 PLANNING.md 10장 순서대로 6 → 8단계
 
 ### 나중에 손볼 것
 - 채널을 삭제해도 하위 메시지 문서는 남음 (화면에서는 안 보임). 필요하면 Blaze 전환 후 정리
 - 닉네임 중복 방지 없음
 - 로그아웃 시 오프라인 캐시(IndexedDB)를 지우지 않음. 공용 PC 사용이 문제되면 추가
+- 모임을 삭제해도 참석자에게 따로 알려주지 않음 (취소 표시를 권장)
+- 다가오는 모임은 최대 50개까지만 구독 (`stores/events.ts`의 `UPCOMING_LIMIT`)
 
 ## 3. 새 컴퓨터에서 이어서 하기
 
 ### 필요한 프로그램
-- **Node.js 22 이상** (지금까지 v24 사용)
+- **Node.js 22 이상** (지금까지 v24 사용). Vite 8이 Node 20.12 미만에서는 아예 실행되지 않는다
+  (`SyntaxError: ... does not provide an export named 'styleText'`)
 - **Git**
 - **Java 21 이상**: Firestore 에뮬레이터·규칙 테스트에 필요. 앱 실행(`npm run dev`)만 할 거면 없어도 됨
+- 윈도우에서 설치: `winget install OpenJS.NodeJS.LTS` / `winget install Microsoft.OpenJDK.21`
+  (설치 후 터미널을 새로 열어야 PATH가 반영됨)
 
 ### 세팅 순서
 ```powershell
@@ -92,10 +100,10 @@ $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
 ### 코드 구조
 ```
 src/
-  services/     Firestore 읽기·쓰기 함수 (컬렉션별: users, chat ...)
-  stores/       zustand 전역 상태 + 앱 전체에서 한 번만 하는 실시간 구독 (auth, members, chat)
+  services/     Firestore 읽기·쓰기 함수 (컬렉션별: users, chat, events ...)
+  stores/       zustand 전역 상태 + 앱 전체에서 한 번만 하는 실시간 구독 (auth, members, chat, events)
   hooks/        여러 화면에서 쓰는 훅 (useUnreadCount, useChatNotifications)
-  features/     기능별 화면 (auth, home, chat, me, admin ...)
+  features/     기능별 화면 (auth, home, chat, events, me, admin ...)
   features/lazyPages.ts   화면별 코드 분할(React.lazy) 목록. 새 기능 화면은 여기에 추가
   components/layout/      AppShell(PC 사이드바/모바일 하단 탭), AuthGate(로그인·승인 가드), nav, routeHandle
   components/ui/          shadcn 컴포넌트
@@ -117,3 +125,20 @@ tests/rules/    보안 규칙 테스트
 - **DM 방 ID:** 두 uid를 정렬해 `_`로 연결. DM 목록에는 메시지를 주고받은 방만 표시
 - **안 읽음 기준:** 다른 사람의 마지막 메시지 시각 > 내 `readStates` 시각. 읽은 기록이 없으면 가입 승인 시각을 기준으로 함
 - **채널 관리 위치:** 관리자 화면이 아니라 채팅 화면에서 오너가 직접 함
+- **마지막 메시지 삭제:** 방 목록 미리보기가 지운 내용으로 남지 않게, 마지막 메시지를 지우면
+  `lastMessagePreview`만 `'삭제된 메시지'`로 바꾼다 (시각·보낸사람은 그대로라 목록 순서가 흔들리지 않음)
+
+### 4단계에서 정한 것
+- **모임 유형(`type`)은 만들 때만 정함.** 나중에 정기↔번개로 바꿀 수 없다(rules)
+- **취소 vs 삭제:** 취소는 `canceled: true`로 남겨서 참석자가 볼 수 있게 하고, 삭제는 문서를 지움.
+  화면에서는 취소를 먼저 권한다
+- **만든 사람은 자동 참석:** `attendeeIds: [hostId]`로 생성 (rules가 이 값을 요구)
+- **참석 신청은 본인 uid 하나만** 넣고 뺄 수 있다. 오너도 남을 대신 신청시킬 수 없음
+- **출석 체크는 모임이 시작된 뒤부터** 호스트·오너가 함. 참석자 중에서만 고를 수 있음(rules)
+- **정원**은 rules에서 `attendeeIds.size() <= capacity`로 막고, 이미 참석한 인원보다 적게 줄일 수도 없다
+- **색인을 만들지 않으려고** events 쿼리는 `startAt` 한 필드로만 필터·정렬한다.
+  취소 여부 같은 조건은 화면에서 거른다 (`firestore.indexes.json` 비어 있음)
+- **캘린더는 `date-fns`로 직접 그림** (`features/events/EventCalendar.tsx`).
+  기획서에는 shadcn Calendar(react-day-picker)라고 적었지만, 필요한 게 "모임 있는 날에 점 찍기"뿐이라
+  의존성을 늘리지 않았다
+- **`events.gameIds`는 필드만 만들어 둠.** 게임 연결 UI는 5단계

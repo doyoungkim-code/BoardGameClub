@@ -151,6 +151,31 @@ describe('채널 메시지', () => {
       await assertFails(updateDoc(doc(messagesOf('alice'), 'm1'), { text: '고친 내용' }))
       await assertFails(deleteDoc(doc(messagesOf('alice'), 'm1')))
     })
+
+    describe('목록 미리보기 지우기', () => {
+      beforeEach(async () => {
+        await seedDoc(env, 'channels/general', {
+          ...newChannel(),
+          createdAt: Timestamp.now(),
+          lastMessageAt: Timestamp.now(),
+          lastMessagePreview: '안녕하세요',
+          lastSenderId: 'alice',
+        })
+      })
+
+      it('마지막 메시지를 보낸 사람과 오너는 미리보기를 지울 수 있다', async () => {
+        await assertSucceeds(updateDoc(doc(dbAs('alice'), 'channels/general'), { lastMessagePreview: '삭제된 메시지' }))
+        await assertSucceeds(updateDoc(doc(ownerDb(), 'channels/general'), { lastMessagePreview: '삭제된 메시지' }))
+      })
+
+      it('다른 회원은 지울 수 없다', async () => {
+        await assertFails(updateDoc(doc(dbAs('bob'), 'channels/general'), { lastMessagePreview: '삭제된 메시지' }))
+      })
+
+      it('미리보기를 임의의 내용으로 바꿀 수는 없다', async () => {
+        await assertFails(updateDoc(doc(dbAs('alice'), 'channels/general'), { lastMessagePreview: '아무 말' }))
+      })
+    })
   })
 })
 
@@ -224,6 +249,18 @@ describe('dms', () => {
     it('상대 메시지는 삭제할 수 없다', async () => {
       await assertFails(updateDoc(doc(dbAs('bob'), 'dms/alice_bob/messages/m1'), { deleted: true, text: '' }))
       await assertSucceeds(updateDoc(doc(dbAs('alice'), 'dms/alice_bob/messages/m1'), { deleted: true, text: '' }))
+    })
+
+    it('마지막 메시지를 보낸 사람만 미리보기를 지울 수 있다', async () => {
+      await seedDoc(env, 'dms/alice_bob', {
+        ...newDm('alice', 'bob'),
+        createdAt: Timestamp.now(),
+        lastMessageAt: Timestamp.now(),
+        lastMessagePreview: '안녕하세요',
+        lastSenderId: 'alice',
+      })
+      await assertFails(updateDoc(doc(dbAs('bob'), 'dms/alice_bob'), { lastMessagePreview: '삭제된 메시지' }))
+      await assertSucceeds(updateDoc(doc(dbAs('alice'), 'dms/alice_bob'), { lastMessagePreview: '삭제된 메시지' }))
     })
   })
 

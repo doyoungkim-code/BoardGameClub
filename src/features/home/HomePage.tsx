@@ -1,17 +1,32 @@
+import { useEffect } from 'react'
 import { CalendarDays, Megaphone, MessageCircle, NotebookPen } from 'lucide-react'
 import { Link } from 'react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useUnreadCount } from '@/hooks/useUnreadCount'
 import { APP_NAME } from '@/lib/constants'
+import { formatEventDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/stores/auth'
+import { startEventsSync, useEvents } from '@/stores/events'
 
 export function HomePage() {
   const nickname = useAuth((s) => s.profile?.nickname)
   const unread = useUnreadCount()
+  const { loaded, upcoming } = useEvents()
+
+  useEffect(() => startEventsSync(), [])
+
+  // 취소된 모임은 홈에서 감춘다
+  const nextEvent = upcoming.find((event) => !event.canceled)
 
   const sections = [
-    { title: '다가오는 모임', to: '/events', icon: CalendarDays, text: '예정된 모임이 없어요' },
+    {
+      title: '다가오는 모임',
+      to: nextEvent ? `/events/${nextEvent.id}` : '/events',
+      icon: CalendarDays,
+      text: !loaded ? '불러오는 중…' : nextEvent ? `${nextEvent.title} · ${formatEventDate(nextEvent.startAt)}` : '예정된 모임이 없어요',
+      highlight: !!nextEvent,
+    },
     { title: '공지사항', to: '/board/notice', icon: Megaphone, text: '고정된 공지가 없어요' },
     {
       title: '채팅',

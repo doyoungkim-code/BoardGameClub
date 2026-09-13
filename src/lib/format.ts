@@ -32,6 +32,31 @@ export function formatDateDivider(ms: number) {
   return format(ms, 'yyyy년 M월 d일 EEEE', { locale: ko })
 }
 
+/** 모임 목록용: 9월 20일 (토) 오후 2:00 */
+export function formatEventDate(ts: Timestamp) {
+  return format(ts.toDate(), 'M월 d일 (E) a h:mm', { locale: ko })
+}
+
+/** 모임 상세용: 2026년 9월 20일 토요일 오후 2:00 ~ 오후 6:00 */
+export function formatEventRange(startAt: Timestamp, endAt: Timestamp | null) {
+  const start = format(startAt.toDate(), 'yyyy년 M월 d일 EEEE a h:mm', { locale: ko })
+  if (!endAt) return start
+  const end = endAt.toDate()
+  // 같은 날이면 시각만, 날짜를 넘기면 날짜까지 다시 쓴다
+  const endText = isSameDay(startAt.toDate(), end)
+    ? format(end, 'a h:mm', { locale: ko })
+    : format(end, 'M월 d일 a h:mm', { locale: ko })
+  return `${start} ~ ${endText}`
+}
+
+/** 날짜별로 묶을 때 쓰는 키 */
+export const dayKey = (date: Date) => format(date, 'yyyy-MM-dd')
+
+/** <input type="datetime-local"> 에 넣을 값 (로컬 시간 기준) */
+export function toDateTimeLocal(date: Date) {
+  return format(date, "yyyy-MM-dd'T'HH:mm")
+}
+
 /** "OO의 지인". 연결된 회원이 있으면 그 회원의 현재 닉네임, 없으면 가입 때 입력한 이름 */
 export function referrerLabel(profile: UserProfile, byId: Record<string, UserProfile>) {
   const name = (profile.referrerId && byId[profile.referrerId]?.nickname) || profile.referrerName

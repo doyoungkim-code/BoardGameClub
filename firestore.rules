@@ -145,13 +145,22 @@ service cloud.firestore {
         && request.resource.data.text == '';
     }
 
+    // 마지막 메시지를 삭제했을 때 목록에 남는 미리보기만 지운다 (시각·보낸사람은 그대로)
+    function validPreviewClear() {
+      return changedOnly(['lastMessagePreview'])
+        && request.resource.data.lastMessagePreview == '삭제된 메시지';
+    }
+
     // ---------- channels: 단체 채팅방 ----------
 
     match /channels/{channelId} {
       allow read: if isMember();
       allow create: if isOwner() && validNewChannel();
       allow update: if (isOwner() && changedOnly(['name', 'description', 'order']) && validChannelFields())
-        || (isMember() && validLastMessageUpdate());
+        || (isMember() && validLastMessageUpdate())
+        // 마지막 메시지를 지울 수 있는 사람(보낸 사람, 오너)만 미리보기도 지운다
+        || (isMember() && validPreviewClear()
+            && (resource.data.lastSenderId == request.auth.uid || isOwner()));
       allow delete: if isOwner();
 
       function validChannelFields() {
@@ -196,7 +205,9 @@ service cloud.firestore {
       allow get: if isDmParticipant(dmId);
       allow list: if isMember() && request.auth.uid in resource.data.memberIds;
       allow create: if isDmParticipant(dmId) && validNewDm(dmId);
-      allow update: if isDmParticipant(dmId) && validLastMessageUpdate();
+      allow update: if isDmParticipant(dmId)
+        && (validLastMessageUpdate()
+            || (validPreviewClear() && resource.data.lastSenderId == request.auth.uid));
       allow delete: if false;
 
       function validNewDm(dmId) {
@@ -223,6 +234,89 @@ service cloud.firestore {
           && resource.data.senderId == request.auth.uid
           && validMessageSoftDelete();
         allow delete: if false;
+      }
+    }
+
+    // ---------- events: 정기모임·번개 ----------
+
+    match /events/{eventId} {
+      allow read: if isMember();
+      allow create: if isMember() && validNewEvent();
+      allow update: if isMember() && (
+        // 호스트·오너: 내용 수정 / 출석 체크
+        (isHostOrOwner() && (validEventEdit() || validAttendedUpdate()))
+        // 회원 누구나: 본인 참석 신청·취소
+        || validAttendToggle()
+      );
+      allow delete: if isMember() && isHostOrOwner();
+
+      function isHostOrOwner() {
+        return resource.data.hostId == request.auth.uid || isOwner();
+      }
+
+      function validEventFields() {
+        let d = request.resource.data;
+        return d.title is string && d.title.size() >= 1 && d.title.size() <= 50
+          && d.description is string && d.description.size() <= 1000
+          && d.location is string && d.location.size() <= 100
+          && d.startAt is timestamp
+          && (d.endAt == null || (d.endAt is timestamp && d.endAt > d.startAt))
+          && (d.capacity == null || (d.capacity is int && d.capacity >= 1 && d.capacity <= 100))
+          && d.gameIds is list && d.gameIds.size() <= 20
+          && d.canceled is bool;
+      }
+
+      function validNewEvent() {
+        let d = request.resource.data;
+        let keys = ['type', 'title', 'description', 'location', 'startAt', 'endAt', 'capacity',
+                    'hostId', 'gameIds', 'attendeeIds', 'attendedIds', 'canceled', 'createdAt'];
+        return d.keys().hasOnly(keys) && d.keys().hasAll(keys)
+          && validEventFields()
+          // 정기모임은 오너만, 번개는 승인된 회원 누구나
+          && (d.type == 'flash' || (d.type == 'regular' && isOwner()))
+          && d.hostId == request.auth.uid
+          // 만든 사람은 자동으로 참석
+          && d.attendeeIds == [request.auth.uid]
+          && d.attendedIds == []
+          && d.canceled == false
+          && d.createdAt == request.time;
+      }
+
+      function validEventEdit() {
+        let d = request.resource.data;
+        return changedOnly(['title', 'description', 'location', 'startAt', 'endAt',
+                            'capacity', 'gameIds', 'canceled'])
+          && validEventFields()
+          // 정원을 이미 참석 중인 인원보다 적게 줄일 수 없다
+          && (d.capacity == null || d.capacity >= resource.data.attendeeIds.size());
+      }
+
+      // 출석 체크는 참석자 중에서만 고를 수 있다
+      function validAttendedUpdate() {
+        return changedOnly(['attendedIds'])
+          && request.resource.data.attendedIds is list
+          && request.resource.data.attendedIds.hasOnly(resource.data.attendeeIds);
+      }
+
+      // 참석 신청·취소: 본인 uid 하나만 넣거나 뺀다
+      function validAttendToggle() {
+        let me = request.auth.uid;
+        let before = resource.data.attendeeIds;
+        let after = request.resource.data.attendeeIds;
+        return changedOnly(['attendeeIds'])
+          && after is list
+          && resource.data.canceled == false
+          && (
+            // 신청: 정원을 넘지 않을 때만
+            (!(me in before)
+              && after.size() == before.size() + 1
+              && after.toSet() == before.toSet().union([me].toSet())
+              && (resource.data.capacity == null || after.size() <= resource.data.capacity))
+            // 취소
+            || (me in before
+              && after.size() == before.size() - 1
+              && after.toSet() == before.toSet().difference([me].toSet()))
+          );
       }
     }
 

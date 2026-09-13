@@ -14,6 +14,16 @@ export const ChannelRoomPage = lazy(() =>
 
 export const DmRoomPage = lazy(() => import('@/features/chat/DmRoomPage').then((m) => ({ default: m.DmRoomPage })))
 
+export const EventsPage = lazy(() => import('@/features/events/EventsPage').then((m) => ({ default: m.EventsPage })))
+
+export const EventFormPage = lazy(() =>
+  import('@/features/events/EventFormPage').then((m) => ({ default: m.EventFormPage })),
+)
+
+export const EventDetailPage = lazy(() =>
+  import('@/features/events/EventDetailPage').then((m) => ({ default: m.EventDetailPage })),
+)
+
 export const MePage = lazy(() => import('@/features/me/MePage').then((m) => ({ default: m.MePage })))
 
 export const AdminPage = lazy(() => import('@/features/admin/AdminPage').then((m) => ({ default: m.AdminPage })))

@@ -7,8 +7,9 @@ import { Composer } from '@/features/chat/Composer'
 import { MessageList } from '@/features/chat/MessageList'
 import { useMarkRead, useMessages } from '@/features/chat/useMessages'
 import { toErrorMessage } from '@/lib/format'
-import { deleteMessage, roomKey, sendMessage } from '@/services/chat'
+import { deleteMessage, isRoomLastMessage, roomKey, sendMessage } from '@/services/chat'
 import { useAuth } from '@/stores/auth'
+import { useChat } from '@/stores/chat'
 import { useMembers } from '@/stores/members'
 import type { ChatMessage, RoomType } from '@/types/chat'
 
@@ -26,6 +27,7 @@ type Props = {
 export function ChatRoom({ type, roomId, title, subtitle, avatar, actions, disabledReason }: Props) {
   const profile = useAuth((s) => s.profile)!
   const membersById = useMembers((s) => s.byId)
+  const room = useChat((s) => (type === 'channel' ? s.channels : s.dms).find((r) => r.id === roomId))
   const { messages, loaded, hasMore, loadingOlder, loadOlder } = useMessages(type, roomId)
 
   useMarkRead(profile.uid, roomKey(type, roomId), messages)
@@ -45,7 +47,9 @@ export function ChatRoom({ type, roomId, title, subtitle, avatar, actions, disab
 
   const handleDelete = (message: ChatMessage) => {
     if (!window.confirm('메시지를 삭제할까요?')) return
-    deleteMessage(type, roomId, message.id).catch((error) => toast.error(toErrorMessage(error)))
+    deleteMessage(type, roomId, message.id, isRoomLastMessage(room, message)).catch((error) =>
+      toast.error(toErrorMessage(error)),
+    )
   }
 
   return (

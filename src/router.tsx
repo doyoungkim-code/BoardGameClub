@@ -13,6 +13,9 @@ import {
   ChatIndexPage,
   ChatLayout,
   DmRoomPage,
+  EventDetailPage,
+  EventFormPage,
+  EventsPage,
   MePage,
 } from '@/features/lazyPages'
 import { MorePage } from '@/features/more/MorePage'
@@ -42,7 +45,10 @@ export const router = createBrowserRouter([
               { path: 'dm/:dmId', element: <DmRoomPage />, handle: roomHandle },
             ],
           },
-          { path: 'events/*', element: <PlaceholderPage title="모임" step={4} /> },
+          { path: 'events', element: <EventsPage /> },
+          { path: 'events/new', element: <EventFormPage /> },
+          { path: 'events/:eventId', element: <EventDetailPage /> },
+          { path: 'events/:eventId/edit', element: <EventFormPage /> },
           { path: 'games/*', element: <PlaceholderPage title="보드게임" step={5} /> },
           { path: 'plays/*', element: <PlaceholderPage title="플레이 기록" step={5} /> },
           { path: 'stats', element: <PlaceholderPage title="통계" step={5} /> },

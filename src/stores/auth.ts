@@ -4,6 +4,7 @@ import { create } from 'zustand'
 import { auth } from '@/lib/firebase'
 import { toProfile, touchLastActive, userRef } from '@/services/users'
 import { stopChatSync } from '@/stores/chat'
+import { stopEventsSync } from '@/stores/events'
 import { stopMembersSync } from '@/stores/members'
 import type { UserProfile } from '@/types/user'
 
@@ -34,6 +35,7 @@ export function initAuthListener() {
     if (!user) {
       stopMembersSync()
       stopChatSync()
+      stopEventsSync()
       useAuth.setState({ initialized: true, user: null, profile: null })
       return
     }

@@ -156,8 +156,27 @@ export function sendMessage(
   return batch.commit()
 }
 
-export function deleteMessage(type: RoomType, roomId: string, messageId: string) {
-  return updateDoc(doc(messagesCol(type, roomId), messageId), { deleted: true, text: '' })
+/** 마지막 메시지를 지웠을 때 목록에 남는 미리보기 (rules 도 이 값만 허용) */
+export const DELETED_PREVIEW = '삭제된 메시지'
+
+/** 방 목록의 미리보기가 이 메시지 것인지 */
+export const isRoomLastMessage = (
+  room: { lastMessageAt: Timestamp | null; lastSenderId: string | null } | undefined,
+  message: ChatMessage,
+) =>
+  !!room?.lastMessageAt &&
+  room.lastSenderId === message.senderId &&
+  room.lastMessageAt.toMillis() === (message.createdAt?.toMillis() ?? -1)
+
+export function deleteMessage(type: RoomType, roomId: string, messageId: string, clearPreview: boolean) {
+  const messageRef = doc(messagesCol(type, roomId), messageId)
+  if (!clearPreview) return updateDoc(messageRef, { deleted: true, text: '' })
+
+  // 방금 지운 게 마지막 메시지면 목록 미리보기도 같이 지운다 (시각·보낸사람은 그대로)
+  const batch = writeBatch(db)
+  batch.update(messageRef, { deleted: true, text: '' })
+  batch.update(roomRef(type, roomId), { lastMessagePreview: DELETED_PREVIEW })
+  return batch.commit()
 }
 
 export const latestMessagesQuery = (type: RoomType, roomId: string) =>
