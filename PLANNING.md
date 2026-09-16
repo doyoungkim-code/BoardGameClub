@@ -42,13 +42,12 @@
 | 워크플로 | 실행 시점 | 하는 일 |
 |---|---|---|
 | `ci.yml` | 모든 push와 PR | `npm ci` → 타입체크·빌드 → 에뮬레이터로 보안 규칙 테스트 |
-| `deploy.yml` | `main` 브랜치에 push | 빌드와 테스트가 통과하면 `firebase deploy --only hosting,firestore` |
+| `deploy.yml` | `main` 브랜치에 push | 빌드와 테스트가 통과하면 Hosting 배포 (보안 규칙·색인은 수동 배포 — PROGRESS.md 2-1) |
 
 - 규칙 테스트가 실패하면 배포하지 않음. 권한 구멍이 생긴 규칙이 실제 서비스에 올라가는 것을 막기 위함
 - **GitHub Secrets**
-  - `FIREBASE_SERVICE_ACCOUNT`: 배포용 서비스 계정 키. `firebase init hosting:github`를 실행하면 자동으로 등록됨
-  - `VITE_FIREBASE_*`: 빌드할 때 넣는 Firebase 웹 설정값
-- 웹 설정값(`apiKey` 등)은 원래 브라우저에 공개되는 값이라 유출돼도 보안 문제가 아님. 실제 보호는 보안 규칙이 담당. 그래도 관리 편의를 위해 `.env`는 커밋하지 않고 `.env.example`만 올림
+  - `FIREBASE_SERVICE_ACCOUNT_DOYOU_BOARDGAME`: 배포용 서비스 계정 키. `firebase init hosting:github`를 실행하면 자동으로 등록됨
+- 웹 설정값(`apiKey` 등)은 원래 브라우저에 공개되는 값이라 유출돼도 보안 문제가 아님. 실제 보호는 보안 규칙이 담당. 그래서 배포 빌드용 값은 시크릿 대신 `.env.production`으로 커밋한다 (2026-09-16 변경). 로컬 개발용 `.env.local`은 커밋하지 않음
 - 서비스 계정 키 JSON 파일은 절대 커밋하지 않음(`.gitignore`에 등록)
 - 저장소는 공개·비공개 모두 가능. 비공개여도 GitHub Actions 무료 한도(월 2,000분) 안에서 충분함
 - (선택) PR마다 Firebase Hosting 미리보기 URL을 만드는 기능 사용 가능. 단, 미리보기 주소에서 구글 로그인을 하려면 Auth 승인된 도메인 등록이 필요할 수 있음
@@ -163,7 +162,7 @@ BoardGameDong/
   PLANNING.md, README.md, .gitignore
   .github/workflows/        # ci.yml, deploy.yml
   firebase.json, .firebaserc, firestore.rules, firestore.indexes.json
-  .env.example              # VITE_FIREBASE_* 설정값
+  .env.example              # VITE_FIREBASE_* 설정값 양식 (.env.production 은 배포 빌드용 실제 값)
   src/
     main.tsx, App.tsx, router.tsx
     lib/firebase.ts         # 초기화, 에뮬레이터 연결
@@ -188,7 +187,7 @@ BoardGameDong/
 5. **게임 라이브러리 + 통계** (플레이 기록은 제외 — 11장 백로그)
 6. **게시판/공지**: 댓글, 좋아요, 공지 고정
 7. **회원관리/관리자**: 회원 목록·프로필, 활동 통계, 상태 변경
-8. **배포 자동화**: `firebase init hosting:github`로 서비스 계정 Secret 등록, `ci.yml`/`deploy.yml` 작성, GitHub Secrets에 `VITE_FIREBASE_*` 등록, Auth 승인된 도메인 확인
+8. **배포 자동화**: `firebase init hosting:github`로 서비스 계정 Secret 등록, `ci.yml`/`deploy.yml` 작성, Auth 승인된 도메인 확인
    - 배포 빌드의 `VITE_FIREBASE_AUTH_DOMAIN`은 `doyou-boardgame.web.app`(호스팅 도메인)으로 설정. 로그인 도메인과 앱 도메인을 같게 해서 모바일 Safari 등에서 리디렉트 로그인이 막히지 않게 함. 이때 Google Cloud 콘솔 OAuth 클라이언트의 승인된 리디렉션 URI에 `https://doyou-boardgame.web.app/__/auth/handler` 추가
    - 첫 배포를 1단계 직후에 해두고, 이후 단계는 기능이 완성될 때마다 `main`에 머지해서 바로 반영하는 방식도 가능
 

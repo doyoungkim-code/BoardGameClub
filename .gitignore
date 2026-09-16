@@ -15,11 +15,13 @@ dist
 dist-ssr
 *.local
 
-# Env (Firebase 설정값은 .env.local 또는 GitHub Secrets로 관리)
+# Env
+# .env.production 은 공개되는 Firebase 웹 설정값이라 커밋한다 (배포 빌드용)
 .env
 .env.*
 !.env.example
 !.env.emulator
+!.env.production
 
 # Firebase
 .firebase/

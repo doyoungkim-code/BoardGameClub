@@ -14,16 +14,16 @@
 | 5 | 보드게임 라이브러리 + 통계 (플레이 기록은 제외) | ✅ 구현 완료 · ⚠️ 실사용 확인 전 | `97ee769` |
 | 6 | 게시판/공지: 공지·자유·후기, 댓글, 좋아요, 고정 | ✅ 구현 완료 · ⚠️ 실사용 확인 전 | |
 | 7 | 회원관리/관리자: 회원 목록·프로필, 활동 통계, 강퇴, 관리자 메모 | ✅ 구현 완료 · ⚠️ 실사용 확인 전 | |
-| 8 | GitHub Actions 자동 배포 | 🔶 워크플로 작성 완료 · **시크릿 등록 필요** | |
+| 8 | GitHub Actions 자동 배포 | ✅ 완료 (Hosting 자동, 규칙은 수동) | |
 
 - Firestore 보안 규칙은 **전 단계 실제 프로젝트(`doyou-boardgame`)에 배포 완료**
-- **배포 주소: https://doyou-boardgame.web.app** — 지금은 수동(`npx firebase deploy`)
+- **배포 주소: https://doyou-boardgame.web.app** — `main`에 push하면 자동 배포 (아래 2-1)
 - 규칙 테스트 142개 통과 (users 34 + chat 31 + events 26 + games 23 + posts 28)
 - `firestore.indexes.json`에 posts 복합 색인 1개 (board + pinned + createdAt)
 
 ## 2. 다음에 할 일
 
-**기능 구현은 1~8단계가 모두 끝났다. 남은 건 실사용 확인과 배포 자동화 마무리.**
+**1~8단계가 모두 끝났다. 남은 건 실사용 확인과 백로그.**
 
 1. **전 기능 실사용 확인** (아직 브라우저로 돌려본 적 없음)
    - 채팅: 기본 채널 만들기 → 메시지 송수신, 안 읽음 배지, DM, 메시지 삭제 후 목록 미리보기
@@ -32,26 +32,26 @@
    - 게시판: 공지(오너만)·자유·후기 글쓰기, 댓글, 좋아요, 고정
    - 회원: 목록·프로필, DM 보내기, 관리자에서 강퇴·메모·소개자 수정
    - 모바일 화면에서 키보드가 올라올 때 채팅 입력창 위치
-2. **8단계 마무리 — GitHub Secrets 등록** (아래 "자동 배포 켜기" 참고)
-3. 그 뒤에는 PLANNING.md 11장 백로그 (플레이 기록, 이미지 업로드, BGG 검색, 다크모드 …)
+2. 그 뒤에는 PLANNING.md 11장 백로그 (플레이 기록, 이미지 업로드, BGG 검색, 다크모드 …)
 
-## 2-1. 자동 배포 켜기 (8단계 남은 작업)
+## 2-1. 배포 구조
 
-`.github/workflows/ci.yml`(모든 push·PR)과 `deploy.yml`(main push)은 이미 만들어 뒀다.
-**시크릿만 등록하면 push할 때마다 자동 배포된다.** 등록 전에는 워크플로가 실패하니
-지금처럼 `npm run build` → `npx firebase deploy --only hosting,firestore`로 손수 올리면 된다.
+| 무엇 | 어떻게 |
+|---|---|
+| **사이트(Hosting)** | `main`에 push → `deploy.yml`이 린트·빌드·규칙 테스트 통과 시 자동 배포 |
+| **보안 규칙·색인(firestore)** | **수동.** `npm run test:rules` 통과 후 `npx firebase deploy --only firestore` |
+| 모든 push·PR | `ci.yml`이 린트·빌드·규칙 테스트만 돌림 |
 
-1. 서비스 계정 키 만들기 — 아래 둘 중 하나
-   - `npx firebase init hosting:github` (대화형, 브라우저 인증 필요). 시크릿까지 자동 등록해준다
-   - 또는 [Google Cloud 콘솔](https://console.cloud.google.com/iam-admin/serviceaccounts?project=doyou-boardgame)에서
-     키(JSON)를 직접 만들고, GitHub 저장소 Settings → Secrets → Actions 에 붙여넣기
-2. GitHub Secrets 에 등록할 값
-   - `FIREBASE_SERVICE_ACCOUNT` — 위 JSON 전체
-   - `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`,
-     `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID`, `VITE_FIREBASE_APP_ID`
-     (`.env.local` 의 값과 같다)
-3. 서비스 계정에 필요한 권한: Firebase Hosting 관리자, Cloud Datastore 소유자(규칙·색인 배포용),
-   서비스 사용량 소비자
+- 서비스 계정 키는 `npx firebase init hosting:github`로 만들었고, GitHub 시크릿
+  `FIREBASE_SERVICE_ACCOUNT_DOYOU_BOARDGAME`에 자동 등록돼 있다
+- **규칙을 자동 배포하지 않는 이유:** 위 명령이 만든 서비스 계정에는 Hosting 권한만 있다.
+  자동화하려면 Google Cloud IAM에서 그 계정(`github-action-…`)에 "Firebase Rules 관리자"와
+  "Cloud Datastore 색인 관리자" 역할을 더하고 `deploy.yml`에 firestore 배포 단계를 추가하면 된다
+- **규칙을 바꾼 커밋은 순서 주의:** 앱 코드가 새 규칙에 의존하면, push 전에 규칙을 먼저 배포한다
+- Firebase 웹 설정값은 GitHub 시크릿이 아니라 커밋된 `.env.production`에서 읽는다
+  (브라우저에 공개되는 값이라 숨길 필요 없음. 로컬 개발은 `.env.local`이 덮어씀)
+- `firebase init hosting:github`를 다시 실행하면 `firebase.json` 서식을 바꾸고
+  `firebase-hosting-pull-request.yml`을 만든다. 둘 다 되돌리거나 지울 것
 
 ### 나중에 손볼 것
 - 채널을 삭제해도 하위 메시지 문서는 남음 (화면에서는 안 보임). 필요하면 Blaze 전환 후 정리
@@ -96,7 +96,7 @@ copy .env.example .env.local
 | `npm run dev:emu` | 에뮬레이터에 연결된 개발 서버 (실제 DB에 영향 없음) |
 | `npx firebase deploy --only firestore:rules` | 보안 규칙만 배포 |
 | `npx firebase deploy --only firestore` | 보안 규칙 + 색인 배포 |
-| `npm run build; npx firebase deploy --only hosting,firestore` | 전체 수동 배포 (자동 배포를 켜기 전까지) |
+| `npm run build; npx firebase deploy --only hosting` | 사이트 수동 배포 (보통은 push로 자동 배포) |
 
 > 배포하려면 `npx firebase login`으로 **kwat09k@gmail.com** 로그인이 되어 있어야 한다.
 

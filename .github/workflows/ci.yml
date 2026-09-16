@@ -1,7 +1,6 @@
 name: CI
 
-# 모든 push와 PR에서 타입체크·빌드·보안 규칙 테스트를 돌린다.
-# 규칙 테스트가 실패하면 배포되지 않게 하는 것이 목적 (deploy.yml 이 이 워크플로를 기다린다).
+# 모든 push와 PR에서 린트·타입체크·빌드·보안 규칙 테스트를 돌린다.
 on:
   push:
     branches: ['**']
@@ -28,17 +27,9 @@ jobs:
 
       - run: npm run lint
 
-      # 빌드에는 Firebase 설정값이 필요하다. 값이 틀려도 빌드 자체는 통과하지만
-      # 실제 값과 같게 두려고 Secrets 에서 받는다.
+      # Firebase 웹 설정값은 커밋된 .env.production 에서 읽는다
       - name: 타입체크 + 빌드
         run: npm run build
-        env:
-          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
-          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
-          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
-          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
-          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
-          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
 
       - name: 보안 규칙 테스트
         run: npm run test:rules
