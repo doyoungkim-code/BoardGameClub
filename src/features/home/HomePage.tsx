@@ -10,17 +10,14 @@ import { cn } from '@/lib/utils'
 import type { Post } from '@/types/post'
 import { useAuth } from '@/stores/auth'
 import { startEventsSync, useEvents } from '@/stores/events'
-import { startGamesSync, useGames } from '@/stores/games'
 
 export function HomePage() {
   const nickname = useAuth((s) => s.profile?.nickname)
   const unread = useUnreadCount()
   const { loaded, upcoming } = useEvents()
-  const games = useGames((s) => s.games)
   const [notice, setNotice] = useState<Post | null | undefined>(undefined)
 
   useEffect(() => startEventsSync(), [])
-  useEffect(() => startGamesSync(), [])
 
   // 공지는 실시간 구독까지 필요 없어서 홈에서 한 번만 읽는다 (고정 글이 먼저 온다)
   useEffect(() => {
@@ -61,7 +58,7 @@ export function HomePage() {
       title: '통계',
       to: '/stats',
       icon: ChartColumn,
-      text: games.length > 0 ? `등록된 게임 ${games.length}개 · 참석 랭킹 보기` : '아직 집계할 기록이 없어요',
+      text: '모임 참석 랭킹 보기',
     },
   ]
 

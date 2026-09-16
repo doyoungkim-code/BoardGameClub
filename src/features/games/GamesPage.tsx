@@ -1,170 +1,130 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Plus, Search, SlidersHorizontal, X } from 'lucide-react'
-import { Link } from 'react-router'
+import { useMemo, useState } from 'react'
+import { Search, Users, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Skeleton } from '@/components/ui/skeleton'
-import { GameCard } from '@/features/games/GameCard'
-import { EMPTY_FILTER, isFilterActive, matchesFilter, type GameFilter } from '@/services/games'
-import { startGamesSync, useGames } from '@/stores/games'
-import { WEIGHT_LABEL } from '@/types/game'
+import { GAMES, supportsPlayers, type CatalogGame } from '@/data/games'
+import { cn } from '@/lib/utils'
 
-const PLAYER_CHOICES = [2, 3, 4, 5, 6]
-const TIME_CHOICES = [30, 60, 90, 120]
+/** "몇 명이서 할 수 있어?" 필터 버튼 */
+const PLAYER_CHOICES = [2, 3, 4, 5, 6, 7, 8, 10]
 
+/** 동호회에 있는 보드게임 목록 (보기 전용. 목록은 src/data/games.ts) */
 export function GamesPage() {
-  const { loaded, games } = useGames()
-  const [filter, setFilter] = useState<GameFilter>(EMPTY_FILTER)
-  const [showFilters, setShowFilters] = useState(false)
+  const [keyword, setKeyword] = useState('')
+  const [players, setPlayers] = useState<number | null>(null)
 
-  useEffect(() => startGamesSync(), [])
-
-  // 등록된 게임에 실제로 쓰인 태그만 고른다
-  const allTags = useMemo(
-    () => [...new Set(games.flatMap((game) => game.tags))].sort((a, b) => a.localeCompare(b, 'ko')),
-    [games],
-  )
-  const shown = useMemo(() => games.filter((game) => matchesFilter(game, filter)), [games, filter])
-  const active = isFilterActive(filter)
-
-  const patch = (next: Partial<GameFilter>) => setFilter((prev) => ({ ...prev, ...next }))
-  const toggleTag = (tag: string) =>
-    patch({ tags: filter.tags.includes(tag) ? filter.tags.filter((t) => t !== tag) : [...filter.tags, tag] })
+  const shown = useMemo(() => {
+    const clean = keyword.trim().toLowerCase()
+    return GAMES.filter(
+      (game) =>
+        (!clean || `${game.name} ${game.description}`.toLowerCase().includes(clean)) &&
+        (players === null || supportsPlayers(game, players)),
+    )
+  }, [keyword, players])
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-baseline justify-between gap-2">
         <h1 className="text-2xl font-bold">보드게임</h1>
-        <Button asChild size="sm">
-          <Link to="/games/new">
-            <Plus className="size-4" />
-            게임 등록
-          </Link>
-        </Button>
-      </div>
-
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={filter.keyword}
-            onChange={(e) => patch({ keyword: e.target.value })}
-            placeholder="게임 이름 검색"
-            aria-label="게임 이름 검색"
-            className="pl-9"
-          />
-        </div>
-        <Button
-          variant={showFilters || active ? 'default' : 'outline'}
-          size="icon"
-          onClick={() => setShowFilters((v) => !v)}
-          aria-label="필터"
-          aria-expanded={showFilters}
-        >
-          <SlidersHorizontal className="size-4" />
-        </Button>
-      </div>
-
-      {showFilters && (
-        <div className="space-y-3 rounded-xl border p-3">
-          <FilterRow label="인원">
-            {PLAYER_CHOICES.map((n) => (
-              <Chip
-                key={n}
-                active={filter.players === n}
-                onClick={() => patch({ players: filter.players === n ? 0 : n })}
-              >
-                {n}인
-              </Chip>
-            ))}
-          </FilterRow>
-
-          <FilterRow label="플레이 시간">
-            {TIME_CHOICES.map((m) => (
-              <Chip
-                key={m}
-                active={filter.maxTime === m}
-                onClick={() => patch({ maxTime: filter.maxTime === m ? 0 : m })}
-              >
-                {m}분 이하
-              </Chip>
-            ))}
-          </FilterRow>
-
-          <FilterRow label="난이도">
-            {[1, 2, 3, 4, 5].map((w) => (
-              <Chip key={w} active={filter.weight === w} onClick={() => patch({ weight: filter.weight === w ? 0 : w })}>
-                {WEIGHT_LABEL[w]}
-              </Chip>
-            ))}
-          </FilterRow>
-
-          {allTags.length > 0 && (
-            <FilterRow label="태그">
-              {allTags.map((tag) => (
-                <Chip key={tag} active={filter.tags.includes(tag)} onClick={() => toggleTag(tag)}>
-                  {tag}
-                </Chip>
-              ))}
-            </FilterRow>
-          )}
-
-          <FilterRow label="대여">
-            <Chip active={filter.availableOnly} onClick={() => patch({ availableOnly: !filter.availableOnly })}>
-              지금 빌릴 수 있는 것만
-            </Chip>
-          </FilterRow>
-
-          {active && (
-            <Button variant="ghost" size="sm" className="w-full" onClick={() => setFilter({ ...EMPTY_FILTER, keyword: filter.keyword })}>
-              <X className="size-4" />
-              필터 초기화
-            </Button>
-          )}
-        </div>
-      )}
-
-      <p className="text-sm text-muted-foreground">
-        {loaded ? `${shown.length}개` : '불러오는 중…'}
-        {loaded && shown.length !== games.length && ` (전체 ${games.length}개)`}
-      </p>
-
-      {!loaded ? (
-        <div className="space-y-2">
-          <Skeleton className="h-24 w-full rounded-xl" />
-          <Skeleton className="h-24 w-full rounded-xl" />
-        </div>
-      ) : shown.length === 0 ? (
-        <p className="rounded-xl border border-dashed py-10 text-center text-sm text-muted-foreground">
-          {games.length === 0 ? '아직 등록된 게임이 없어요. 첫 게임을 올려보세요!' : '조건에 맞는 게임이 없어요'}
+        <p className="text-sm text-muted-foreground">
+          {shown.length === GAMES.length ? `${GAMES.length}개` : `${shown.length} / ${GAMES.length}개`}
         </p>
-      ) : (
-        <div className="space-y-2">
-          {shown.map((game) => (
-            <GameCard key={game.id} game={game} />
+      </div>
+
+      <div className="relative">
+        <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          placeholder="이름이나 설명으로 검색 (예: 추리, 블러핑)"
+          aria-label="게임 검색"
+          className="pr-9 pl-9"
+        />
+        {keyword && (
+          <button
+            type="button"
+            onClick={() => setKeyword('')}
+            aria-label="검색어 지우기"
+            className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground"
+          >
+            <X className="size-4" />
+          </button>
+        )}
+      </div>
+
+      <div className="space-y-1.5">
+        <p className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+          <Users className="size-3" />
+          몇 명이서 할까요?
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {PLAYER_CHOICES.map((count) => (
+            <button
+              key={count}
+              type="button"
+              onClick={() => setPlayers(players === count ? null : count)}
+              aria-pressed={players === count}
+            >
+              <Badge variant={players === count ? 'default' : 'outline'} className="cursor-pointer px-2.5 py-1 font-normal">
+                {count}명
+              </Badge>
+            </button>
           ))}
         </div>
+      </div>
+
+      {shown.length === 0 ? (
+        <p className="rounded-xl border border-dashed py-10 text-center text-sm text-muted-foreground">
+          조건에 맞는 게임이 없어요
+        </p>
+      ) : (
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {shown.map((game) => (
+            <GameItem key={game.name} game={game} />
+          ))}
+        </ul>
       )}
     </div>
   )
 }
 
-function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
+function GameItem({ game }: { game: CatalogGame }) {
   return (
-    <div className="space-y-1.5">
-      <p className="text-xs font-medium text-muted-foreground">{label}</p>
-      <div className="flex flex-wrap gap-1.5">{children}</div>
-    </div>
+    <li className="flex gap-3 rounded-xl border bg-card p-3">
+      <Cover game={game} />
+      <div className="min-w-0 flex-1 space-y-1">
+        <p className="leading-snug font-semibold">{game.name}</p>
+        <Badge variant="secondary" className="font-normal">
+          {game.players}
+        </Badge>
+        <p className="text-sm leading-relaxed text-muted-foreground">{game.description}</p>
+      </div>
+    </li>
   )
 }
 
-function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+/** 표지. 이미지가 없거나 못 불러오면 이름 첫 글자로 대신한다 */
+function Cover({ game }: { game: CatalogGame }) {
+  const [broken, setBroken] = useState(false)
+  const box = 'flex h-24 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted'
+
+  if (!game.image || broken) {
+    return (
+      <div className={cn(box, 'text-2xl font-bold text-primary')} aria-hidden>
+        {game.name.slice(0, 1)}
+      </div>
+    )
+  }
   return (
-    <button type="button" onClick={onClick} aria-pressed={active}>
-      <Badge variant={active ? 'default' : 'outline'} className="cursor-pointer font-normal">
-        {children}
-      </Badge>
-    </button>
+    <div className={box}>
+      <img
+        src={game.image}
+        alt={`${game.name} 표지`}
+        loading="lazy"
+        decoding="async"
+        onError={() => setBroken(true)}
+        className="size-full object-contain"
+      />
+    </div>
   )
 }

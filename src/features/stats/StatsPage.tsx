@@ -4,10 +4,9 @@ import { CalendarDays, Dices, Trophy, Users } from 'lucide-react'
 import { UserAvatar } from '@/components/UserAvatar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { GAMES } from '@/data/games'
 import { cn } from '@/lib/utils'
 import { fetchEventsBetween, toEvent } from '@/services/events'
-import { isBorrowed } from '@/services/games'
-import { startGamesSync, useGames } from '@/stores/games'
 import { useMembers } from '@/stores/members'
 import type { ClubEvent } from '@/types/event'
 
@@ -16,11 +15,7 @@ const MONTHS = 6
 
 export function StatsPage() {
   const [events, setEvents] = useState<ClubEvent[] | null>(null)
-  const { loaded: gamesLoaded, games } = useGames()
-  const members = useMembers((s) => s.members)
   const membersById = useMembers((s) => s.byId)
-
-  useEffect(() => startGamesSync(), [])
 
   useEffect(() => {
     const from = subMonths(new Date(), MONTHS)
@@ -55,8 +50,6 @@ export function StatsPage() {
     }
   }, [events, membersById])
 
-  const borrowed = games.filter(isBorrowed).length
-
   return (
     <div className="space-y-6">
       <div>
@@ -67,8 +60,8 @@ export function StatsPage() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat icon={CalendarDays} label="열린 모임" value={summary ? `${summary.heldCount}회` : null} />
         <Stat icon={Users} label="평균 참석" value={summary ? `${summary.averageAttendees}명` : null} />
-        <Stat icon={Dices} label="등록된 게임" value={gamesLoaded ? `${games.length}개` : null} />
-        <Stat icon={Trophy} label="대여 중" value={gamesLoaded ? `${borrowed}개` : null} />
+        <Stat icon={Trophy} label="참석한 회원" value={summary ? `${summary.ranking.length}명` : null} />
+        <Stat icon={Dices} label="보유 게임" value={`${GAMES.length}개`} />
       </div>
 
       <Card>
@@ -104,36 +97,6 @@ export function StatsPage() {
                 )
               })}
             </ol>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">게임 소장 현황</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {!gamesLoaded ? (
-            <Skeleton className="h-10 w-full" />
-          ) : games.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">아직 등록된 게임이 없어요</p>
-          ) : (
-            <ul className="divide-y text-sm">
-              <li className="flex items-center justify-between py-2">
-                <span>동호회 공용</span>
-                <span className="font-medium">{games.filter((g) => g.ownership === 'club').length}개</span>
-              </li>
-              {members.map((member) => {
-                const count = games.filter((game) => game.ownerId === member.uid).length
-                if (count === 0) return null
-                return (
-                  <li key={member.uid} className="flex items-center justify-between py-2">
-                    <span>{member.nickname}님 소장</span>
-                    <span className="font-medium">{count}개</span>
-                  </li>
-                )
-              })}
-            </ul>
           )}
         </CardContent>
       </Card>

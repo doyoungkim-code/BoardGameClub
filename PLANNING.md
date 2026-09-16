@@ -21,14 +21,14 @@
 | 서버 코드 | 없음. Cloud Functions를 쓸 수 없어서 권한·검증은 전부 **Firestore Security Rules**로 처리 |
 | 기기 | 모바일 기준 반응형 웹(PWA 설치 기능 없음), PC에서도 사용 |
 | 역할 | **오너 / 일반회원** 2단계. 오너 = `kwat09k@gmail.com` (rules에 고정) |
-| 생성 권한 | 공지·채팅 채널·정기모임은 오너만. 번개·게시글·게임 등록·플레이 기록은 승인된 회원 누구나 |
+| 생성 권한 | 공지·채팅 채널·정기모임은 오너만. 번개·게시글은 승인된 회원 누구나. 보드게임 목록은 오너가 파일로 관리 |
 | 채팅 | 채널형 단체방 여러 개 + 1:1 DM |
 | 코드 저장소 | **GitHub** — https://github.com/doyoungkim-code/BoardGameClub |
 | 호스팅·배포 | **Firebase Hosting** + **GitHub Actions 자동 배포** (`main`에 push하면 배포. GitHub Pages를 쓰지 않는 이유는 3장 참고) |
 | 가입 정보 | 구글 이름·이메일·사진(자동 수집) + **닉네임** + **소개해준 사람**("OO의 지인") |
 | 회원관리 부가 기능 | 출석/활동 통계 (+ 기본 승인/거절/강퇴) |
 | 이미지 업로드 | **MVP에서 제외**. 프로필은 구글 사진만 사용 (Spark 요금제에서는 신규 프로젝트가 Storage를 쓸 수 없음) |
-| 게임 정보 | 직접 입력 + BGG 링크 칸. BGG 자동완성은 추후 과제 |
+| 게임 정보 | 보기 전용 목록: 이름·인원·한 줄 설명 + 표지 이미지. 오너가 정리한 목록을 코드(`src/data/games.ts`)에 넣음 |
 
 ## 3. 기술 스택
 - `firebase` v12 modular SDK. Firestore `persistentLocalCache`를 켜서 읽기 횟수를 줄임
@@ -103,11 +103,9 @@ events/{eventId}
   attendedIds[]    // 출석 체크. 호스트·오너만 수정 → 출석 통계에 사용
   canceled, createdAt
 
-games/{gameId}
-  name, altName, minPlayers, maxPlayers, playTimeMin, weight(1~5), tags[]
-  description, bggUrl, ownership: 'club'|'member', ownerId
-  borrowerId, borrowedAt              // 대여 현황(간단형)
-  createdBy, createdAt
+// 보드게임 목록은 Firestore 에 두지 않는다 (2026-09-16 변경).
+// 오너가 정리한 목록을 src/data/games.ts 에 그대로 넣고, 표지는 public/games/ 이미지 파일.
+// 회원은 보기만 한다 (등록·대여 기능 없음). 추가·수정은 파일을 고쳐 push 하면 자동 배포된다.
 
 // plays/{playId} — 플레이 기록은 MVP에서 제외 (2026-09-14 결정). 11장 백로그 참고
 
@@ -135,8 +133,8 @@ posts/{postId}/comments/{id}        authorId, authorNickname, content, createdAt
 | `/` | 홈: 다가오는 모임, 고정 공지, 최근 플레이, 안 읽은 채팅 |
 | `/events`, `/events/new`, `/events/:id` | 캘린더·리스트 전환, 참석 신청, 출석 체크, 모임 화면에서 바로 플레이 기록 작성 |
 | `/chat`, `/chat/:channelId`, `/dm/:dmId` | 채널·DM 목록(안 읽음 배지), 채팅방(최근 50개 표시, 위로 스크롤하면 더 불러오기). PC는 목록+대화방 2단, 모바일은 대화방에서 하단 탭 숨김. 오너는 채널 추가(+ 기본 채널 전체·번개·잡담 한 번에 만들기)·수정·삭제 |
-| `/games`, `/games/new`, `/games/:id` | 인원·시간·난이도·태그 필터, 상세(대여 현황) |
-| `/stats` | 모임 참석·출석 랭킹, 모임 추이, 게임 보유 현황 |
+| `/games` | 보드게임 목록 (보기 전용): 표지, 인원, 한 줄 설명. 검색 + "몇 명이서" 필터 |
+| `/stats` | 모임 참석·출석 랭킹, 열린 모임 수, 평균 참석, 보유 게임 수 |
 | `/board/:board`, `/posts/:id`, `/posts/new` | 공지·자유·후기 게시판, 댓글·좋아요 |
 | `/members`, `/members/:uid` | 회원 목록(닉네임 옆에 "OO의 지인"), 프로필(소개자, 소개한 회원, 참석·플레이·승리 통계, DM 보내기) |
 | `/me` | 닉네임 수정, 로그아웃 |
@@ -170,10 +168,11 @@ BoardGameDong/
     types/                  # User, Event, Game, Play, Post, Message ...
     stores/auth.ts          # 로그인 + users 문서 구독, 라우트 가드
     hooks/                  # useCollection/useDoc(onSnapshot 래퍼), useUnread ...
-    services/               # 컬렉션별 CRUD (users, chat, events, games, plays, posts)
+    services/               # 컬렉션별 CRUD (users, chat, events, posts, members)
+    data/games.ts           # 보드게임 목록 (보기 전용, 표지는 public/games/)
     components/ui/          # shadcn
     components/layout/      # AppShell, BottomTabs, Sidebar, RequireMember, RequireOwner
-    features/{auth,home,chat,events,games,plays,stats,board,members,admin}/
+    features/{auth,home,chat,events,games,stats,board,members,admin}/
   tests/rules/              # 보안 규칙 테스트
 ```
 
@@ -184,7 +183,7 @@ BoardGameDong/
 2. **인증·가입 승인**: 로그인 → 닉네임·소개자 입력 → 승인 대기 → 오너 승인(소개 회원 연결), 라우트 가드, users rules + 테스트
 3. **채팅**: 채널(오너가 생성) + DM, 안 읽음 배지
 4. **모임/일정**: 정기모임·번개, 캘린더, 참석 신청(정원 제한), 출석 체크
-5. **게임 라이브러리 + 통계** (플레이 기록은 제외 — 11장 백로그)
+5. **게임 목록 + 통계** (플레이 기록은 제외, 게임은 보기 전용 목록 — 11장 백로그)
 6. **게시판/공지**: 댓글, 좋아요, 공지 고정
 7. **회원관리/관리자**: 회원 목록·프로필, 활동 통계, 상태 변경
 8. **배포 자동화**: `firebase init hosting:github`로 서비스 계정 Secret 등록, `ci.yml`/`deploy.yml` 작성, Auth 승인된 도메인 확인
@@ -195,7 +194,8 @@ BoardGameDong/
 - **플레이 기록·승률 통계** (2026-09-14에 MVP에서 제외). 넣게 되면 `plays` 컬렉션과
   `/plays` 화면을 되살리고, 통계에 게임별 인기·승률과 회원별 플레이 수·승수를 더한다
 - 이미지 업로드 (Blaze 전환 후 Storage 사용, 또는 Cloudinary 연동)
-- BGG 검색 자동완성 (프록시 필요)
+- 게임 대여 관리·회원 등록 (2026-09-16에 보기 전용 목록으로 바꾸며 제외. 되살리면 Firestore `games` 컬렉션 필요)
+- BGG 검색 자동완성 (프록시 필요. BGG 공식 API는 2025년부터 인증 토큰이 필요함)
 - 서버 푸시 알림 (Blaze + Cloud Functions)
 - PWA 설치, 다크모드
 - 회비 관리, 회원 명부 CSV 내보내기, 경고/정지 단계

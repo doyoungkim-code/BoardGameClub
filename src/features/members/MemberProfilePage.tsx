@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { subMonths } from 'date-fns'
-import { CalendarCheck, CalendarDays, ChevronLeft, Dices, MessageCircle } from 'lucide-react'
+import { CalendarCheck, CalendarDays, ChevronLeft, MessageCircle } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { PageSpinner } from '@/components/PageSpinner'
@@ -13,7 +13,6 @@ import { openDm } from '@/services/chat'
 import { fetchEventsBetween, toEvent } from '@/services/events'
 import { countActivity, introducedBy, type MemberActivity } from '@/services/members'
 import { useAuth } from '@/stores/auth'
-import { startGamesSync, useGames } from '@/stores/games'
 import { useMembers } from '@/stores/members'
 
 /** 활동 통계 집계 기간 */
@@ -24,13 +23,10 @@ export function MemberProfilePage() {
   const navigate = useNavigate()
   const me = useAuth((s) => s.profile)!
   const { loaded, members, byId } = useMembers()
-  const games = useGames((s) => s.games)
   // 누구의 집계인지 같이 담아 둔다. 보고 있는 회원과 다르면 아직 불러오는 중
   const [counted, setCounted] = useState<{ uid: string; value: MemberActivity } | null>(null)
   const activity = counted && counted.uid === uid ? counted.value : null
   const [opening, setOpening] = useState(false)
-
-  useEffect(() => startGamesSync(), [])
 
   useEffect(() => {
     if (!uid) return
@@ -65,7 +61,6 @@ export function MemberProfilePage() {
 
   const referrer = referrerLabel(member, byId)
   const introduced = introducedBy(members, member.uid)
-  const ownedGames = games.filter((game) => game.ownerId === member.uid)
   const isMe = member.uid === me.uid
 
   const startDm = async () => {
@@ -117,10 +112,9 @@ export function MemberProfilePage() {
 
       <section className="space-y-2">
         <h2 className="font-semibold">활동 (최근 {MONTHS}개월)</h2>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <Stat icon={CalendarDays} label="참석 신청" value={activity ? `${activity.joined}회` : null} />
           <Stat icon={CalendarCheck} label="출석" value={activity ? `${activity.attended}회` : null} />
-          <Stat icon={Dices} label="소장 게임" value={`${ownedGames.length}개`} />
         </div>
         <p className="text-xs text-muted-foreground">가입일 {formatDateTime(member.approvedAt ?? member.createdAt)}</p>
       </section>
@@ -141,26 +135,11 @@ export function MemberProfilePage() {
         </section>
       )}
 
-      {ownedGames.length > 0 && (
-        <section className="space-y-2">
-          <h2 className="font-semibold">소장 게임</h2>
-          <ul className="divide-y overflow-hidden rounded-xl border bg-card">
-            {ownedGames.map((game) => (
-              <li key={game.id}>
-                <Link to={`/games/${game.id}`} className="flex items-center gap-3 px-4 py-3 active:bg-muted">
-                  <span className="min-w-0 flex-1 truncate text-sm">{game.name}</span>
-                  {game.borrowerId && <Badge variant="secondary">대여 중</Badge>}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
     </div>
   )
 }
 
-function Stat({ icon: Icon, label, value }: { icon: typeof Dices; label: string; value: string | null }) {
+function Stat({ icon: Icon, label, value }: { icon: typeof CalendarDays; label: string; value: string | null }) {
   return (
     <div className="rounded-xl border px-3 py-3">
       <p className="flex items-center gap-1 text-xs text-muted-foreground">

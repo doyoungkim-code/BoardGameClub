@@ -11,14 +11,14 @@
 | 2 | 구글 로그인, 가입 신청(닉네임·소개자), 오너 승인, 내 정보, users 규칙 | ✅ 완료 (실제 Firebase에서 동작 확인) | `702e06e` |
 | 3 | 채널 단체채팅, 1:1 DM, 안 읽음 배지, 브라우저 알림 | ✅ 구현 완료 · ⚠️ 브라우저 실사용 확인 전 | `6813fb5` |
 | 4 | 모임/일정: 정기모임·번개, 캘린더, 참석 신청, 출석 체크 | ✅ 구현 완료 · ⚠️ 브라우저 실사용 확인 전 | `b6f9666` |
-| 5 | 보드게임 라이브러리 + 통계 (플레이 기록은 제외) | ✅ 구현 완료 · ⚠️ 실사용 확인 전 | `97ee769` |
+| 5 | 보드게임 목록(보기 전용) + 통계 (플레이 기록은 제외) | ✅ 완료 · 게임은 9/16에 보기 전용으로 교체 | `97ee769` |
 | 6 | 게시판/공지: 공지·자유·후기, 댓글, 좋아요, 고정 | ✅ 구현 완료 · ⚠️ 실사용 확인 전 | |
 | 7 | 회원관리/관리자: 회원 목록·프로필, 활동 통계, 강퇴, 관리자 메모 | ✅ 구현 완료 · ⚠️ 실사용 확인 전 | |
 | 8 | GitHub Actions 자동 배포 | ✅ 완료 (Hosting 자동, 규칙은 수동) | |
 
 - Firestore 보안 규칙은 **전 단계 실제 프로젝트(`doyou-boardgame`)에 배포 완료**
 - **배포 주소: https://doyou-boardgame.web.app** — `main`에 push하면 자동 배포 (아래 2-1)
-- 규칙 테스트 142개 통과 (users 34 + chat 31 + events 26 + games 23 + posts 28)
+- 규칙 테스트 119개 통과 (users 34 + chat 31 + events 26 + posts 28)
 - `firestore.indexes.json`에 posts 복합 색인 1개 (board + pinned + createdAt)
 
 ## 2. 다음에 할 일
@@ -28,7 +28,7 @@
 1. **전 기능 실사용 확인** (아직 브라우저로 돌려본 적 없음)
    - 채팅: 기본 채널 만들기 → 메시지 송수신, 안 읽음 배지, DM, 메시지 삭제 후 목록 미리보기
    - 모임: 번개 만들기, 참석 신청·취소, 정원 마감, 취소·삭제, 출석 체크(시작 시각이 지나야 보임), 캘린더
-   - 게임: 등록·수정·삭제, 필터, 빌리기·반납
+   - 게임: 목록 39개와 표지, 검색, "몇 명이서" 필터
    - 게시판: 공지(오너만)·자유·후기 글쓰기, 댓글, 좋아요, 고정
    - 회원: 목록·프로필, DM 보내기, 관리자에서 강퇴·메모·소개자 수정
    - 모바일 화면에서 키보드가 올라올 때 채팅 입력창 위치
@@ -126,8 +126,9 @@ $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
 ### 코드 구조
 ```
 src/
-  services/     Firestore 읽기·쓰기 함수 (users, chat, events, games, posts, members)
-  stores/       zustand 전역 상태 + 한 번만 하는 실시간 구독 (auth, members, chat, events, games)
+  services/     Firestore 읽기·쓰기 함수 (users, chat, events, posts, members)
+  stores/       zustand 전역 상태 + 한 번만 하는 실시간 구독 (auth, members, chat, events)
+  data/games.ts 보드게임 목록 (Firestore 아님. 표지 이미지는 public/games/)
   hooks/        여러 화면에서 쓰는 훅 (useUnreadCount, useChatNotifications)
   features/     기능별 화면 (auth, home, chat, events, games, stats, board, members, me, more, admin)
   features/lazyPages.ts   화면별 코드 분할(React.lazy) 목록. 새 기능 화면은 여기에 추가
@@ -174,12 +175,25 @@ tests/rules/    보안 규칙 테스트
   홈의 "최근 플레이" 카드도 "통계"로 바꿨다. 되살릴 때 필요한 내용은 PLANNING.md 11장에 적어둠
 - **통계 기준:** 플레이 기록이 없으므로 **모임 참석·출석**으로 집계한다.
   출석 체크를 한 모임은 `attendedIds`, 안 한 모임은 `attendeeIds`를 센다. 최근 6개월만 읽음
-- **게임 목록은 전부 구독하고 필터는 화면에서** 건다 (`stores/games.ts`).
-  동호회 규모상 게임 수가 많지 않아서, 색인·쿼리를 늘리지 않고 필터 UX를 자유롭게 하기 위함
-- **소장 구분:** 폼에서 소장자를 고르면 `ownership: 'member'`, 안 고르면 `'club'`.
-  rules가 둘의 짝(`club`↔`ownerId == null`)을 검사한다
-- **대여:** 비어 있을 때만 본인 이름으로 빌릴 수 있고, 반납은 빌린 본인·소장자·등록자·오너가 할 수 있다.
-  대여 이력은 남기지 않고 현재 상태만 본다(간단형)
+
+### 보드게임 목록 (2026-09-16 교체)
+처음엔 회원이 게임을 등록·대여하는 Firestore 기능(`games` 컬렉션)으로 만들었지만,
+**"어떤 게임이 있는지만 알면 된다"**는 결정으로 보기 전용 목록으로 바꿨다.
+등록·수정·대여 화면, `services/stores/types`의 games 코드, `games` 보안 규칙과 테스트를 모두 지웠다.
+
+- **데이터:** `src/data/games.ts`의 `GAME_LIST`에 오너가 정리한 텍스트를 **그대로** 붙여넣었다.
+  `이름 (인원) - 설명` 한 줄 형식을 코드가 읽어서 나눈다. Firestore 읽기가 없어서 무료 한도도 안 쓴다
+- **게임 추가하는 법:** `GAME_LIST`에 같은 형식으로 한 줄 추가 → push → 자동 배포.
+  형식이 틀린 줄은 개발 서버 콘솔에 경고가 뜨고 목록에서 빠진다
+- **인원 표기:** `2~4인`, `2인`, `4인 이상`, `4~8인 이상`을 읽어 "몇 명이서" 필터에 쓴다.
+  "이상"이 붙으면 상한 없음. 화면에는 원래 적힌 글자를 그대로 보여준다
+- **표지 이미지:** BoardGameGeek(BGG)에서 한 번 내려받아 `public/games/<BGG번호>.png|jpg`로 커밋했다
+  (39개, 총 0.75MB). 앱이 실행 중에 BGG를 부르지 않는다 — BGG 공식 API는 인증이 필요하고
+  브라우저에서 직접 부를 수 없어서다. 노터치크라켄·프로포즈·애니모크레이지는 한국판 표지
+- **새 게임 표지 받는 법:** `https://api.geekdo.com/api/geekitems?objectid=<BGG번호>&objecttype=thing`
+  응답의 `item.imageurl`을 내려받아 `public/games/`에 두고 `GAME_IMAGES`에 `이름: 파일명` 추가.
+  (한국판 표지는 BGG "버전" 번호 + `objecttype=version`) 이미지가 없으면 이름 첫 글자 표지가 나온다
+- 예전 기능으로 Firestore `games` 컬렉션에 문서를 만들어 뒀다면 이제 규칙상 아무도 못 읽는 채로 남는다
 
 ### 6~7단계에서 정한 것
 - **게시판 이동 금지:** 글을 쓴 뒤에는 `board`를 바꿀 수 없다(rules). 자유글을 공지로 옮겨
