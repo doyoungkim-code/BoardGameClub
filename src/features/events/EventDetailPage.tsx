@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { BackButton } from '@/components/BackButton'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { MemberName } from '@/components/MemberName'
 import { PageSpinner } from '@/components/PageSpinner'
 import { UserAvatar } from '@/components/UserAvatar'
 import { Badge } from '@/components/ui/badge'
@@ -34,6 +35,7 @@ import {
 } from '@/services/events'
 import { useAuth, useIsOwner } from '@/stores/auth'
 import { useMembers } from '@/stores/members'
+import { scheduleProgressRefresh } from '@/stores/progress'
 import type { ClubEvent } from '@/types/event'
 
 export function EventDetailPage() {
@@ -70,7 +72,6 @@ export function EventDetailPage() {
 function EventDetail({ event }: { event: ClubEvent }) {
   const profile = useAuth((s) => s.profile)!
   const isOwner = useIsOwner()
-  const membersById = useMembers((s) => s.byId)
   const navigate = useNavigate()
   const [busy, setBusy] = useState(false)
   const [confirm, setConfirm] = useState<'cancel' | 'delete' | null>(null)
@@ -78,7 +79,6 @@ function EventDetail({ event }: { event: ClubEvent }) {
   const manageable = canManage(event, profile.uid, isOwner)
   const attending = event.attendeeIds.includes(profile.uid)
   const past = isPast(event)
-  const host = membersById[event.hostId]
   // 장소 이름이 지도에 등록된 카페와 같으면 지도로 연결한다
   const places = usePlaces()
   const place = places?.find((p) => p.name === event.location.trim())
@@ -178,7 +178,7 @@ function EventDetail({ event }: { event: ClubEvent }) {
           </div>
         </dl>
         <p className="text-sm text-muted-foreground">
-          주최 {host?.nickname ?? '알 수 없음'}
+          주최 <MemberName uid={event.hostId} fallback="알 수 없음" />
         </p>
       </div>
 
@@ -234,10 +234,13 @@ function Attendees({ event, manageable }: { event: ClubEvent; manageable: boolea
   const checking = manageable && hasStarted(event) && !event.canceled
 
   const toggleAttended = (uid: string, attended: boolean) => {
-    setAttended(event.id, uid, attended).catch((error) => {
-      console.error('출석 체크 실패', error)
-      toast.error(toErrorMessage(error))
-    })
+    setAttended(event.id, uid, attended)
+      // 출석 횟수가 바뀌었으니 티어를 다시 센다 (연달아 체크하면 한 번만)
+      .then(scheduleProgressRefresh)
+      .catch((error) => {
+        console.error('출석 체크 실패', error)
+        toast.error(toErrorMessage(error))
+      })
   }
 
   return (
@@ -263,7 +266,7 @@ function Attendees({ event, manageable }: { event: ClubEvent; manageable: boolea
             const row = (
               <>
                 <UserAvatar name={member?.nickname ?? '?'} photoURL={member?.photoURL ?? null} className="size-8" />
-                <span className="min-w-0 flex-1 truncate text-sm">{member?.nickname ?? '알 수 없는 회원'}</span>
+                <MemberName uid={uid} className="flex-1 text-sm" />
                 {uid === event.hostId && <Badge variant="secondary">주최</Badge>}
                 {attended && (
                   <span className="flex items-center gap-1 text-xs font-medium text-primary">

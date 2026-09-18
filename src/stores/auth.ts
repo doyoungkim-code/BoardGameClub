@@ -6,6 +6,7 @@ import { toProfile, touchLastActive, userRef } from '@/services/users'
 import { stopChatSync } from '@/stores/chat'
 import { stopEventsSync } from '@/stores/events'
 import { stopMembersSync } from '@/stores/members'
+import { stopProgressSync } from '@/stores/progress'
 import type { UserProfile } from '@/types/user'
 
 type AuthState = {
@@ -36,6 +37,7 @@ export function initAuthListener() {
       stopMembersSync()
       stopChatSync()
       stopEventsSync()
+      stopProgressSync()
       useAuth.setState({ initialized: true, user: null, profile: null })
       return
     }

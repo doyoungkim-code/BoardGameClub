@@ -20,7 +20,7 @@
 
 - Firestore 보안 규칙은 **전부 실제 프로젝트(`doyou-boardgame`)에 배포 완료**
 - **배포 주소: https://doyou-boardgame.web.app** — `main`에 push하면 자동 배포 (아래 2-1)
-- 규칙 테스트 130개 통과 (users 34 + chat 31 + events 31 + posts 28 + places 6)
+- 규칙 테스트 137개 통과 (users 41 + chat 31 + events 31 + posts 28 + places 6)
 - `firestore.indexes.json`에 posts 복합 색인 1개 (board + pinned + createdAt)
 
 ## 2. 다음에 할 일
@@ -35,7 +35,8 @@
    - 회원: 목록·프로필, DM 보내기, 관리자에서 강퇴·메모·소개자 수정
    - 지도: 주변 보드게임카페 자동 표시(지도 이동·확대 시 다시 뽑기), 지역으로 이동, 오너 즐겨찾기·메모, 길찾기
    - 관리자: 지난 모임을 만들고 "참석자 관리"로 회원 넣기 → 그 회원 프로필의 출석·업적에 반영되는지
-   - 업적·활동 기록: 회원 프로필, 내 정보 → "내 업적·활동 기록 보기"
+   - 티어·업적·칭호: 내 정보 → "내 티어·업적·칭호 보기", 대표 칭호 고르기, 채팅·게시판에서 방패·칭호 표시,
+     관리자 화면에서 칭호 주기, 통계 티어 랭킹
    - 홈 화면 앱: 안드로이드 "앱 설치" 버튼, 아이폰 홈 화면에 추가 → 설치한 앱에서 구글 로그인 되는지(특히 아이폰),
      카카오톡에서 링크 열었을 때 "다른 브라우저로 열기"
    - 모바일 화면에서 키보드가 올라올 때 채팅 입력창 위치
@@ -136,7 +137,8 @@ src/
   services/     Firestore 읽기·쓰기 함수 (users, chat, events, posts, members)
   stores/       zustand 전역 상태 + 한 번만 하는 실시간 구독 (auth, members, chat, events)
   data/games.ts 보드게임 목록 (Firestore 아님. 표지 이미지는 public/games/)
-  data/achievements.ts  업적 목록 (조건·아이콘·이름. 여기만 고치면 된다)
+  data/achievements.ts  출석 업적·경험치·티어 숫자 (여기만 고치면 된다)
+  data/titles.ts        자동 칭호 목록
   hooks/        여러 화면에서 쓰는 훅 (useUnreadCount, useChatNotifications)
   features/     기능별 화면 (auth, home, chat, events, games, stats, board, members, me, more, admin)
   features/lazyPages.ts   화면별 코드 분할(React.lazy) 목록. 새 기능 화면은 여기에 추가
@@ -256,11 +258,33 @@ tests/rules/    보안 규칙 테스트
 - **저장하지 않고 매번 계산한다.** 서버가 없어서 클라이언트가 쓰는 업적은 조작을 막을 수 없기 때문.
   이미 rules로 검증된 기록(모임 참석·주최, 게시글, 가입일)에서 센다 (`services/activity.ts`)
 - **출석 기준은 앱 전체에서 하나**(`countsAsAttended`): 시작했고 취소되지 않은 모임에 참석자로 있고,
-  출석 체크를 한 모임이면 체크된 경우만. 통계 화면 랭킹도 같은 함수를 쓴다
-- 업적 목록은 `src/data/achievements.ts`. 쓸 수 있는 수치는 attended, regularAttended, flashAttended,
-  hosted, flashHosted, posts, reviews, memberDays. 새 수치가 필요하면 `ActivityStats`에 추가
+  출석 체크를 한 모임이면 체크된 경우만. 통계 화면 랭킹·티어도 같은 함수를 쓴다
 - 프로필 하나를 열 때 쿼리 3개(참석 모임, 연 모임, 쓴 글). 모두 한 필드 조건이라 색인 추가 없음
-- 댓글 수는 업적에 넣지 않았다 (회원별 댓글을 세려면 collection group 색인이 필요)
+
+### 출석 업적 · 경험치 · 티어 · 칭호 (2026-09-19 개편)
+처음 만든 업적 14개(출석·주최·게시글·가입일 섞음)를 비우고 다시 짰다.
+- **숫자는 파일 두 개만 고치면 된다**
+  - `src/data/achievements.ts`: 출석 업적 14개(1·2·3·5·7·10·15·20·25·30·40·50·70·100회, 보너스 XP),
+    `XP_PER_ATTENDANCE`(10), 티어 7개(`TIERS`: 기준 XP·색)
+  - `src/data/titles.ts`: 자동 칭호(`AUTO_TITLES`: 조건 수치·목표). id는 회원이 고른 값으로 저장되니 바꾸지 말 것
+- **경험치** = 출석 1회 10XP + 달성한 출석 업적 보너스. 티어 기준은 대략 출석 2회 실버 · 5회 골드 · 10회 플래티넘 ·
+  20회 다이아 · 30회 마스터 · 50회 챌린저 (오너 요청 "빨리 오르게")
+- **칭호**
+  - 자동 칭호 9개 초안(번개 주최·정모/번개 출석·게시글·후기·가입 1년·4주 연속 출석). 형용사 칭호 4개는 조건을 받으면 추가
+  - 관리자가 주는 칭호: 관리자 화면 회원 패널에서 이름을 적어 준다 → `users.grantedTitles` (`granted:<이름>`)
+  - 대표 칭호: 본인이 프로필에서 고른다 → `users.titleId`. 닉네임 앞에 붙는다 ("번개의 신 홍길동")
+  - rules: `titleId`는 본인만, `grantedTitles`는 오너만. 수여 칭호는 받은 것만 고를 수 있게 검사하지만,
+    **자동 칭호는 계산 결과라 rules로 검증할 수 없다** (개발자 도구로 못 얻은 자동 칭호를 고를 수는 있음.
+    화면은 프로필에서 조건을 다시 확인한다. 동호회 규모라 허용)
+- **닉네임 옆 티어**(`components/MemberName.tsx`, `TierShield.tsx`): 채팅·게시판·모임 참석자·회원 목록·통계
+  - 모든 회원 출석 수는 `stores/progress.ts`가 모임 전체를 읽어 센다. **무료 한도 때문에 기기에 저장해 두고
+    6시간에 한 번만** 다시 읽는다 → 다른 회원 티어는 최대 6시간 늦게 반영될 수 있다
+  - 참석자 관리·출석 체크 직후에는 그 기기에서 3초 뒤 다시 센다 (`scheduleProgressRefresh`)
+  - 읽기 비용: 모임 수(N) × 기기 수 × 하루 최대 4번. 모임이 수백 개로 늘어 한도가 걱정되면 주기를 늘릴 것
+- **NEW 표시**: 본인 프로필에서, 지난번 본 이후 새로 생긴 업적·칭호·티어. 기기별 저장(`seenProgress:<uid>`).
+  내 정보 화면 버튼의 빨간 점은 출석 업적·티어만 본다 (칭호는 다른 기록이 필요해서)
+- **통계**: 맨 위 "티어 랭킹"(전체 기간 XP), 그 아래 기존 최근 6개월 참석 랭킹
+- 댓글 수는 칭호 조건에 넣지 않았다 (회원별 댓글을 세려면 collection group 색인이 필요)
 
 ### 홈 화면 앱 (PWA, 2026-09-19)
 - 스토어 앱 대신 **PWA**로 했다. 비용·심사가 없고 push하면 설치한 앱에도 바로 반영된다.

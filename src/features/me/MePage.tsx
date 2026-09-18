@@ -13,11 +13,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { FieldError } from '@/features/auth/SignupPage'
+import { hasUnseenAttendanceProgress } from '@/features/members/seenProgress'
 import { formatDateTime, referrerLabel, toErrorMessage } from '@/lib/format'
 import { signOutUser } from '@/services/auth'
 import { updateNickname } from '@/services/users'
 import { useAuth } from '@/stores/auth'
 import { useMembers } from '@/stores/members'
+import { useProgress } from '@/stores/progress'
 
 const schema = z.object({
   nickname: z.string().trim().min(1, '닉네임을 입력해 주세요').max(20, '20자 이하로 입력해 주세요'),
@@ -28,6 +30,10 @@ export function MePage() {
   const user = useAuth((s) => s.user)!
   const profile = useAuth((s) => s.profile)!
   const byId = useMembers((s) => s.byId)
+  // 새로 달성한 출석 업적·티어가 있으면 점 표시 (칭호는 프로필에서만 확인)
+  const progressLoaded = useProgress((s) => s.loaded)
+  const attended = useProgress((s) => s.attendedById[profile.uid] ?? 0)
+  const hasNew = progressLoaded && hasUnseenAttendanceProgress(profile.uid, attended)
 
   const {
     register,
@@ -69,10 +75,13 @@ export function MePage() {
         </CardContent>
       </Card>
 
-      <Button asChild variant="outline" className="h-11 w-full">
+      <Button asChild variant="outline" className="relative h-11 w-full">
         <Link to={`/members/${profile.uid}`}>
           <Trophy className="size-4" />
-          내 업적·활동 기록 보기
+          내 티어·업적·칭호 보기
+          {hasNew && (
+            <span className="absolute top-2 right-3 size-2 rounded-full bg-destructive" aria-label="새로 얻은 것이 있어요" />
+          )}
         </Link>
       </Button>
 

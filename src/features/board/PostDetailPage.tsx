@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { BackButton } from '@/components/BackButton'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { MemberName } from '@/components/MemberName'
 import { PageSpinner } from '@/components/PageSpinner'
 import { UserAvatar } from '@/components/UserAvatar'
 import { Badge } from '@/components/ui/badge'
@@ -140,7 +141,7 @@ function PostDetail({ post }: { post: Post }) {
             className="size-8"
           />
           <div className="text-xs">
-            <p className="font-medium">{author?.nickname ?? post.authorNickname}</p>
+            <MemberName uid={post.authorId} fallback={post.authorNickname} className="font-medium" />
             <p className="text-muted-foreground">
               {formatDateTime(post.createdAt)}
               {edited && ' (수정됨)'}
@@ -241,7 +242,7 @@ function Comments({ postId, count }: { postId: string; count: number }) {
                 />
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center gap-2 text-xs">
-                    <span className="font-medium">{member?.nickname ?? comment.authorNickname}</span>
+                    <MemberName uid={comment.authorId} fallback={comment.authorNickname} className="font-medium" />
                     <span className="text-muted-foreground">{formatRelative(comment.createdAt)}</span>
                   </p>
                   <p className="mt-0.5 text-sm whitespace-pre-wrap">{comment.content}</p>

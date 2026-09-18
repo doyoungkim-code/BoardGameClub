@@ -86,22 +86,35 @@ service cloud.firestore {
 
       function validSelfUpdate() {
         let d = request.resource.data;
-        return changedOnly(['nickname', 'photoURL', 'googleName', 'lastActiveAt'])
+        return changedOnly(['nickname', 'photoURL', 'googleName', 'lastActiveAt', 'titleId'])
           && validNickname(d.nickname)
           && (d.photoURL == null || d.photoURL is string)
           && d.googleName is string
-          && unchangedOrNow('lastActiveAt');
+          && unchangedOrNow('lastActiveAt')
+          && validTitleChoice(d);
+      }
+
+      // 대표 칭호: 'auto:<id>' (조건 달성 칭호, 계산 결과라 여기서 검증할 수 없음)
+      // 또는 'granted:<이름>' (오너가 준 칭호, grantedTitles 안에 있어야 함). 필드가 없거나 null 이면 칭호 없음
+      function validTitleChoice(d) {
+        return !('titleId' in d) || d.titleId == null
+          || (d.titleId is string && d.titleId.size() <= 40
+              && (d.titleId.matches('auto:[a-z0-9-]+')
+                  || (d.titleId.matches('granted:.+')
+                      && ('grantedTitles' in d) && d.titleId in d.grantedTitles)));
       }
 
       function validOwnerUpdate(uid) {
         let d = request.resource.data;
-        return changedOnly(['status', 'approvedAt', 'referrerId'])
+        return changedOnly(['status', 'approvedAt', 'referrerId', 'grantedTitles'])
           && d.status in ['pending', 'approved', 'rejected', 'removed']
           // 오너 자신의 상태는 바꿀 수 없다
           && (uid != request.auth.uid || d.status == resource.data.status)
           && (d.referrerId == null
               || (d.referrerId is string && d.referrerId != uid && exists(userPath(d.referrerId))))
-          && unchangedOrNow('approvedAt');
+          && unchangedOrNow('approvedAt')
+          // 오너가 주는 칭호 ('granted:<이름>' 목록)
+          && (!('grantedTitles' in d) || (d.grantedTitles is list && d.grantedTitles.size() <= 20));
       }
     }
 

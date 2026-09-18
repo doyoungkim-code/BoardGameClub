@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { QueryDocumentSnapshot } from 'firebase/firestore'
 import { Heart, MessageSquare, Pin, Plus } from 'lucide-react'
 import { Link, Navigate, useParams } from 'react-router'
+import { MemberName } from '@/components/MemberName'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -128,7 +129,7 @@ function PostRow({ post }: { post: Post }) {
           </div>
           <p className="line-clamp-2 text-sm text-muted-foreground">{post.content}</p>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-            <span>{post.authorNickname}</span>
+            <MemberName uid={post.authorId} fallback={post.authorNickname} showTitle={false} />
             <span>{formatChatListTime(post.createdAt)}</span>
             {post.likeIds.length > 0 && (
               <span className="flex items-center gap-1">

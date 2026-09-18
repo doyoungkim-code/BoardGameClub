@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input'
 import { toErrorMessage } from '@/lib/format'
 import { hasStarted, setAttendeesByOwner } from '@/services/events'
 import { useMembers } from '@/stores/members'
+import { scheduleProgressRefresh } from '@/stores/progress'
 import type { ClubEvent } from '@/types/event'
 
 type Props = {
@@ -73,6 +74,8 @@ function ManagerContent({ event, onDone }: { event: ClubEvent; onDone: () => voi
     setSaving(true)
     try {
       await setAttendeesByOwner(event.id, attendeeIds, attendedIds)
+      // 출석 횟수가 바뀌었으니 티어를 다시 센다
+      scheduleProgressRefresh()
       toast.success('참석자를 바꿨어요')
       onDone()
     } catch (error) {

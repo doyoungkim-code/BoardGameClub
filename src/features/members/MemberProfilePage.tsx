@@ -1,18 +1,22 @@
-import { useEffect, useState } from 'react'
-import { CalendarCheck, MessageCircle, PenLine, Trophy, Zap } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { CalendarCheck, MessageCircle, PenLine, Zap } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { BackButton } from '@/components/BackButton'
+import { MemberName } from '@/components/MemberName'
 import { PageSpinner } from '@/components/PageSpinner'
 import { UserAvatar } from '@/components/UserAvatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ACHIEVEMENTS, isUnlocked } from '@/data/achievements'
+import { AUTO_TITLES, autoTitleKey, titleText } from '@/data/titles'
 import { AchievementList } from '@/features/members/AchievementList'
 import { ActivityHistory } from '@/features/members/ActivityHistory'
+import { progressKeys, readSeen, writeSeen } from '@/features/members/seenProgress'
+import { TierCard } from '@/features/members/TierCard'
+import { TitleSection } from '@/features/members/TitleSection'
 import { formatDateTime, referrerLabel, toErrorMessage } from '@/lib/format'
-import { fetchMemberActivity, type MemberActivity } from '@/services/activity'
+import { fetchMemberActivity, progressFor, type MemberActivity } from '@/services/activity'
 import { openDm } from '@/services/chat'
 import { introducedBy } from '@/services/members'
 import { useAuth } from '@/stores/auth'
@@ -28,8 +32,10 @@ export function MemberProfilePage() {
   const activity = loadedFor && loadedFor.uid === uid ? loadedFor.value : null
   const [opening, setOpening] = useState(false)
 
-  const joined = uid ? byId[uid]?.approvedAt ?? byId[uid]?.createdAt : null
+  const member = uid ? byId[uid] : undefined
+  const joined = member?.approvedAt ?? member?.createdAt
   const joinedAt = joined ? joined.toMillis() : null
+  const isMe = uid === me.uid
 
   useEffect(() => {
     if (!uid || !loaded) return
@@ -47,9 +53,30 @@ export function MemberProfilePage() {
     }
   }, [uid, loaded, joinedAt])
 
+  const progress = useMemo(() => (activity ? progressFor(activity.stats) : null), [activity])
+
+  // 가진 칭호 값 전부 ('granted:…' + 조건을 채운 'auto:…')
+  const grantedTitles = member?.grantedTitles
+  const ownedTitleKeys = useMemo(
+    () =>
+      progress
+        ? [
+            ...(grantedTitles ?? []),
+            ...AUTO_TITLES.filter((t) => progress.earnedAutoIds.has(t.id)).map(autoTitleKey),
+          ]
+        : [],
+    [progress, grantedTitles],
+  )
+
+  // NEW 표시: 본인 프로필에서, 지난번에 본 것과 비교한다. 화면을 그린 뒤 지금 것을 "봤음"으로 저장
+  const seenBefore = useMemo(() => (isMe && uid && progress ? readSeen(uid) : null), [isMe, uid, progress])
+  useEffect(() => {
+    if (!isMe || !uid || !progress) return
+    writeSeen(uid, progressKeys(progress, ownedTitleKeys))
+  }, [isMe, uid, progress, ownedTitleKeys])
+
   if (!loaded) return <PageSpinner />
 
-  const member = uid ? byId[uid] : undefined
   if (!member) {
     return (
       <div className="space-y-4 text-center">
@@ -63,7 +90,11 @@ export function MemberProfilePage() {
 
   const referrer = referrerLabel(member, byId)
   const introduced = introducedBy(members, member.uid)
-  const isMe = member.uid === me.uid
+  const title = titleText(member.titleId, member.grantedTitles, progress?.earnedAutoIds)
+
+  const isNew = (key: string) => !!seenBefore && !seenBefore.has(key)
+  const newGoals = progress ? new Set(progress.unlockedGoals.filter((goal) => isNew(`ach:${goal}`))) : undefined
+  const newTitleKeys = new Set(ownedTitleKeys.filter((key) => isNew(`title:${key}`)))
 
   const startDm = async () => {
     setOpening(true)
@@ -88,8 +119,9 @@ export function MemberProfilePage() {
       <div className="flex items-center gap-4">
         <UserAvatar name={member.nickname} photoURL={member.photoURL} className="size-16" />
         <div className="min-w-0 flex-1">
+          {title && <p className="truncate text-sm font-medium text-primary">{title}</p>}
           <p className="flex items-center gap-1.5 text-xl font-bold">
-            {member.nickname}
+            <span className="truncate">{member.nickname}</span>
             {member.role === 'owner' && <Badge variant="secondary">오너</Badge>}
           </p>
           <p className="truncate text-sm text-muted-foreground">{member.googleName}</p>
@@ -108,27 +140,26 @@ export function MemberProfilePage() {
         </Button>
       )}
 
-      <section className="space-y-2">
-        <div className="grid grid-cols-4 gap-2">
-          <Stat icon={CalendarCheck} label="출석" value={activity && `${activity.stats.attended}`} />
-          <Stat icon={Zap} label="번개 주최" value={activity && `${activity.stats.flashHosted}`} />
-          <Stat icon={PenLine} label="게시글" value={activity && `${activity.stats.posts}`} />
-          <Stat
-            icon={Trophy}
-            label="업적"
-            value={activity && `${ACHIEVEMENTS.filter((a) => isUnlocked(a, activity.stats)).length}`}
-          />
-        </div>
-        <p className="text-xs text-muted-foreground">가입일 {formatDateTime(member.approvedAt ?? member.createdAt)}</p>
-      </section>
-
-      {activity ? (
+      {activity && progress ? (
         <>
-          <AchievementList stats={activity.stats} />
+          <TierCard progress={progress} isNew={isNew(`tier:${progress.tier.id}`)} />
+
+          <section className="space-y-2">
+            <div className="grid grid-cols-3 gap-2">
+              <Stat icon={CalendarCheck} label="출석" value={`${activity.stats.attended}`} />
+              <Stat icon={Zap} label="번개 주최" value={`${activity.stats.flashHosted}`} />
+              <Stat icon={PenLine} label="게시글" value={`${activity.stats.posts}`} />
+            </div>
+            <p className="text-xs text-muted-foreground">가입일 {formatDateTime(member.approvedAt ?? member.createdAt)}</p>
+          </section>
+
+          <TitleSection member={member} stats={activity.stats} progress={progress} isMe={isMe} newKeys={newTitleKeys} />
+          <AchievementList progress={progress} newGoals={newGoals} />
           <ActivityHistory items={activity.history} />
         </>
       ) : (
         <div className="space-y-2">
+          <Skeleton className="h-24 w-full rounded-xl" />
           <Skeleton className="h-32 w-full rounded-xl" />
           <Skeleton className="h-32 w-full rounded-xl" />
         </div>
@@ -142,26 +173,25 @@ export function MemberProfilePage() {
               <li key={person.uid}>
                 <Link to={`/members/${person.uid}`} className="flex items-center gap-3 px-4 py-3 active:bg-muted">
                   <UserAvatar name={person.nickname} photoURL={person.photoURL} className="size-8" />
-                  <span className="min-w-0 flex-1 truncate text-sm">{person.nickname}</span>
+                  <MemberName uid={person.uid} className="flex-1 text-sm" />
                 </Link>
               </li>
             ))}
           </ul>
         </section>
       )}
-
     </div>
   )
 }
 
-function Stat({ icon: Icon, label, value }: { icon: typeof Trophy; label: string; value: string | null }) {
+function Stat({ icon: Icon, label, value }: { icon: typeof Zap; label: string; value: string }) {
   return (
     <div className="rounded-xl border px-2 py-2.5 text-center">
       <p className="flex items-center justify-center gap-1 text-[11px] text-muted-foreground">
         <Icon className="size-3" />
         {label}
       </p>
-      {value === null ? <Skeleton className="mx-auto mt-1 h-6 w-8" /> : <p className="mt-0.5 text-lg font-bold">{value}</p>}
+      <p className="mt-0.5 text-lg font-bold">{value}</p>
     </div>
   )
 }

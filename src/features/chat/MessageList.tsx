@@ -2,6 +2,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode 
 import { isSameDay } from 'date-fns'
 import { Copy, Loader2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { MemberName } from '@/components/MemberName'
 import { UserAvatar } from '@/components/UserAvatar'
 import {
   DropdownMenu,
@@ -167,7 +168,13 @@ function MessageItem({ message, mine, sender, showSender, showTime, canDelete, o
         </div>
       )}
       <div className={cn('flex max-w-[78%] min-w-0 flex-col', mine ? 'items-end' : 'items-start')}>
-        {!mine && showSender && <span className="mb-1 px-1 text-xs text-muted-foreground">{name}</span>}
+        {!mine && showSender && (
+          <MemberName
+            uid={message.senderId}
+            fallback={message.senderNickname}
+            className="mb-1 max-w-full px-1 text-xs text-muted-foreground"
+          />
+        )}
         <div className={cn('flex items-end gap-1.5', mine && 'flex-row-reverse')}>
           {message.deleted ? (
             <div className="rounded-2xl border border-dashed px-3.5 py-2 text-sm text-muted-foreground italic">

@@ -214,6 +214,50 @@ describe('users 오너 관리', () => {
   })
 })
 
+describe('칭호', () => {
+  beforeEach(async () => {
+    await seedUser(env, 'owner', { role: 'owner', status: 'approved', referrerName: '' })
+    await seedUser(env, 'alice', { status: 'approved' })
+    await seedUser(env, 'bob', { status: 'approved' })
+  })
+
+  const ownerDb = () => dbAs('owner', ownerAuth)
+
+  it('오너는 회원에게 칭호를 주고 뺄 수 있다', async () => {
+    await assertSucceeds(updateDoc(doc(ownerDb(), 'users/alice'), { grantedTitles: ['granted:올해의 MVP'] }))
+    await assertSucceeds(updateDoc(doc(ownerDb(), 'users/alice'), { grantedTitles: [] }))
+  })
+
+  it('칭호는 20개까지만 줄 수 있다', async () => {
+    const many = Array.from({ length: 21 }, (_, i) => `granted:칭호${i}`)
+    await assertFails(updateDoc(doc(ownerDb(), 'users/alice'), { grantedTitles: many }))
+  })
+
+  it('회원은 스스로 칭호를 받을 수 없다', async () => {
+    await assertFails(updateDoc(doc(dbAs('alice'), 'users/alice'), { grantedTitles: ['granted:셀프 칭호'] }))
+  })
+
+  it('본인은 대표 칭호를 고르고 없앨 수 있다', async () => {
+    await assertSucceeds(updateDoc(doc(dbAs('alice'), 'users/alice'), { titleId: 'auto:flash-host-5' }))
+    await assertSucceeds(updateDoc(doc(dbAs('alice'), 'users/alice'), { titleId: null }))
+  })
+
+  it('남의 대표 칭호는 바꿀 수 없다', async () => {
+    await assertFails(updateDoc(doc(dbAs('bob'), 'users/alice'), { titleId: 'auto:flash-host-5' }))
+  })
+
+  it('받은 칭호만 대표로 고를 수 있다', async () => {
+    await seedUser(env, 'alice', { status: 'approved', grantedTitles: ['granted:올해의 MVP'] })
+    await assertSucceeds(updateDoc(doc(dbAs('alice'), 'users/alice'), { titleId: 'granted:올해의 MVP' }))
+    await assertFails(updateDoc(doc(dbAs('alice'), 'users/alice'), { titleId: 'granted:받은 적 없는 칭호' }))
+  })
+
+  it('정해진 모양이 아닌 칭호 값은 거부된다', async () => {
+    await assertFails(updateDoc(doc(dbAs('alice'), 'users/alice'), { titleId: '아무 말' }))
+    await assertFails(updateDoc(doc(dbAs('alice'), 'users/alice'), { titleId: `auto:${'a'.repeat(40)}` }))
+  })
+})
+
 describe('userPrivate', () => {
   beforeEach(async () => {
     await seedUser(env, 'member1', { status: 'approved' })

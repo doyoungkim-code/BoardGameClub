@@ -46,6 +46,11 @@ export function updateNickname(uid: string, nickname: string) {
   return updateDoc(userRef(uid), { nickname })
 }
 
+/** 대표 칭호 고르기 (null = 칭호 없음) */
+export function setMyTitle(uid: string, titleId: string | null) {
+  return updateDoc(userRef(uid), { titleId })
+}
+
 export function touchLastActive(uid: string) {
   return updateDoc(userRef(uid), { lastActiveAt: serverTimestamp() })
 }
@@ -67,4 +72,9 @@ export function setUserStatus(uid: string, status: Exclude<UserStatus, 'approved
 
 export function updateReferrer(uid: string, referrerId: string | null) {
   return updateDoc(userRef(uid), { referrerId })
+}
+
+/** 관리자가 주는 칭호 목록 ('granted:<이름>') 통째로 저장 */
+export function setGrantedTitles(uid: string, grantedTitles: string[]) {
+  return updateDoc(userRef(uid), { grantedTitles })
 }

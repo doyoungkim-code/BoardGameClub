@@ -19,6 +19,10 @@ export type UserProfile = {
   createdAt: Timestamp | null
   approvedAt: Timestamp | null
   lastActiveAt: Timestamp | null
+  /** 대표 칭호 ('auto:<id>' 또는 'granted:<이름>'). 본인만 바꾼다. 예전 문서엔 없다 */
+  titleId?: string | null
+  /** 오너가 준 칭호 목록 ('granted:<이름>'). 오너만 바꾼다. 예전 문서엔 없다 */
+  grantedTitles?: string[]
 }
 
 /** userPrivate/{uid} — 본인과 오너만 읽을 수 있는 정보 */

@@ -1,12 +1,15 @@
+import { differenceInCalendarWeeks, startOfWeek } from 'date-fns'
 import { getDocs, query, where } from 'firebase/firestore'
+import { ATTENDANCE_ACHIEVEMENTS, nextTier, tierFor, xpFor, type Tier } from '@/data/achievements'
+import { AUTO_TITLES } from '@/data/titles'
 import { eventsCol, hasStarted, toEvent } from '@/services/events'
 import { postsCol, toPost } from '@/services/posts'
 import type { ClubEvent, EventType } from '@/types/event'
 import type { BoardId } from '@/types/post'
 
 /**
- * 업적 계산에 쓰는 누적 수치 (가입 후 전체 기간).
- * 업적 조건(src/data/achievements.ts)은 이 이름들 중 하나를 골라 목표치를 정한다.
+ * 업적·칭호 계산에 쓰는 누적 수치 (가입 후 전체 기간).
+ * 출석 업적·티어는 attended 로, 자동 칭호(src/data/titles.ts)는 이 이름들 중 하나로 조건을 정한다.
  */
 export type ActivityStats = {
   /** 모임 출석 (정기 + 번개) */
@@ -25,6 +28,48 @@ export type ActivityStats = {
   reviews: number
   /** 가입(승인) 후 지난 날 수 */
   memberDays: number
+  /** 가장 길게 이어진 주 단위 연속 출석 (월요일 시작 주마다 한 번 이상 출석) */
+  longestWeekStreak: number
+}
+
+/** 출석 기록으로 계산한 성장 상태 */
+export type Progress = {
+  attended: number
+  xp: number
+  tier: Tier
+  /** 다음 티어. 챌린저면 null */
+  next: Tier | null
+  /** 달성한 출석 업적 (goal 값) */
+  unlockedGoals: number[]
+  /** 조건을 채운 자동 칭호 id */
+  earnedAutoIds: Set<string>
+}
+
+export function progressFor(stats: ActivityStats): Progress {
+  const xp = xpFor(stats.attended)
+  return {
+    attended: stats.attended,
+    xp,
+    tier: tierFor(xp),
+    next: nextTier(xp),
+    unlockedGoals: ATTENDANCE_ACHIEVEMENTS.filter((a) => stats.attended >= a.goal).map((a) => a.goal),
+    earnedAutoIds: new Set(AUTO_TITLES.filter((t) => stats[t.metric] >= t.goal).map((t) => t.id)),
+  }
+}
+
+/** 출석한 날짜들에서, 월요일 시작 주 단위로 가장 길게 이어진 주 수 */
+export function longestWeekStreak(dates: Date[]) {
+  const weekOptions = { weekStartsOn: 1 } as const
+  const weeks = [...new Set(dates.map((d) => startOfWeek(d, weekOptions).getTime()))].sort((a, b) => a - b)
+  let best = 0
+  let run = 0
+  let prev: number | null = null
+  for (const week of weeks) {
+    run = prev !== null && differenceInCalendarWeeks(week, prev, weekOptions) === 1 ? run + 1 : 1
+    best = Math.max(best, run)
+    prev = week
+  }
+  return best
 }
 
 export type ActivityItem =
@@ -82,6 +127,7 @@ export async function fetchMemberActivity(uid: string, joinedAt: number | null):
     posts: posts.length,
     reviews: posts.filter((p) => p.board === 'review').length,
     memberDays: joinedAt ? Math.floor((Date.now() - joinedAt) / DAY) : 0,
+    longestWeekStreak: longestWeekStreak(attendedEvents.map((e) => e.startAt.toDate())),
   }
 
   // 활동 기록: 이미 시작한 모임(출석했거나 연 것)과 쓴 글. 최근 것부터

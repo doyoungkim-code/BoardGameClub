@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react'
+import { X } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { UserAvatar } from '@/components/UserAvatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { grantedTitleKey, grantedTitleName, MAX_GRANTED_TITLE_LENGTH } from '@/data/titles'
 import { formatRelative, referrerLabel, toErrorMessage } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { daysSinceActive, fetchAdminMemo, saveAdminMemo } from '@/services/members'
-import { setUserStatus, updateReferrer } from '@/services/users'
+import { setGrantedTitles, setUserStatus, updateReferrer } from '@/services/users'
 import { useMembers } from '@/stores/members'
 import type { UserProfile } from '@/types/user'
 
@@ -73,6 +76,85 @@ function IdleBadge({ member }: { member: UserProfile }) {
     >
       {formatRelative(member.lastActiveAt)}
     </span>
+  )
+}
+
+/**
+ * 관리자가 주는 칭호 (특별한 때만. 예: "2026 올해의 MVP").
+ * 이름을 적어 추가하면 회원이 자기 프로필에서 대표 칭호로 고를 수 있다
+ */
+function GrantedTitlesEditor({ member }: { member: UserProfile }) {
+  const [draft, setDraft] = useState('')
+  const [saving, setSaving] = useState(false)
+  const granted = member.grantedTitles ?? []
+
+  /** 저장했으면 true */
+  const save = async (next: string[], message: string) => {
+    setSaving(true)
+    try {
+      await setGrantedTitles(member.uid, next)
+      toast.success(message)
+      return true
+    } catch (error) {
+      console.error('칭호 저장 실패', error)
+      toast.error(toErrorMessage(error))
+      return false
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const add = () => {
+    const name = draft.trim()
+    if (!name) return
+    const key = grantedTitleKey(name)
+    if (granted.includes(key)) {
+      toast('이미 준 칭호예요')
+      return
+    }
+    void save([...granted, key], `'${name}' 칭호를 줬어요`).then((ok) => ok && setDraft(''))
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <p className="text-xs font-medium text-muted-foreground">관리자가 주는 칭호</p>
+      {granted.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {granted.map((key) => (
+            <Badge key={key} variant="secondary" className="gap-1 font-normal">
+              {grantedTitleName(key)}
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => void save(granted.filter((k) => k !== key), '칭호를 뺐어요')}
+                aria-label={`${grantedTitleName(key)} 칭호 빼기`}
+              >
+                <X className="size-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      )}
+      <div className="flex gap-2">
+        <Input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+              e.preventDefault()
+              add()
+            }
+          }}
+          maxLength={MAX_GRANTED_TITLE_LENGTH}
+          placeholder="예: 2026 올해의 MVP"
+          className="bg-card"
+          aria-label="줄 칭호 이름"
+        />
+        <Button size="sm" variant="outline" className="h-9 shrink-0" disabled={saving || !draft.trim()} onClick={add}>
+          주기
+        </Button>
+      </div>
+    </div>
   )
 }
 
@@ -159,6 +241,8 @@ function MemberAdminPanel({ member }: { member: UserProfile }) {
           메모 저장
         </Button>
       </div>
+
+      <GrantedTitlesEditor member={member} />
 
       {member.role !== 'owner' && (
         <Button variant="destructive" size="sm" className="w-full" onClick={() => setConfirmRemove(true)}>

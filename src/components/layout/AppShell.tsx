@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils'
 import { useAuth } from '@/stores/auth'
 import { startChatSync } from '@/stores/chat'
 import { startMembersSync } from '@/stores/members'
+import { startProgressSync } from '@/stores/progress'
 
 /** 승인된 회원에게만 렌더링되는 앱 공통 레이아웃 */
 export function AppShell() {
@@ -20,6 +21,8 @@ export function AppShell() {
   const fullHeight = layout === 'chat'
 
   useEffect(() => startMembersSync(), [])
+  // 닉네임 옆 티어 표시용 (모든 회원 출석 횟수, 6시간마다 새로)
+  useEffect(() => startProgressSync(), [])
   useEffect(() => startChatSync(profile.uid), [profile.uid])
   useChatNotifications()
   // 뒤로가기: 탭에서는 홈으로, 홈에서는 두 번 눌러 종료 (설치한 앱)

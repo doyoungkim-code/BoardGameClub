@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Search } from 'lucide-react'
 import { Link } from 'react-router'
+import { MemberName } from '@/components/MemberName'
 import { UserAvatar } from '@/components/UserAvatar'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -54,8 +55,8 @@ export function MembersPage() {
                 <Link to={`/members/${member.uid}`} className="flex items-center gap-3 px-4 py-3 active:bg-muted">
                   <UserAvatar name={member.nickname} photoURL={member.photoURL} className="size-10" />
                   <div className="min-w-0 flex-1">
-                    <p className="flex items-center gap-1.5 truncate font-medium">
-                      {member.nickname}
+                    <p className="flex min-w-0 items-center gap-1.5 font-medium">
+                      <MemberName uid={member.uid} />
                       {member.role === 'owner' && <Badge variant="secondary">오너</Badge>}
                     </p>
                     {referrer && <p className="truncate text-xs text-muted-foreground">{referrer}</p>}
