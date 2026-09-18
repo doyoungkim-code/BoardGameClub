@@ -15,10 +15,10 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'favicon.ico', 'apple-touch-icon-180x180.png'],
       manifest: {
-        // 앱 이름은 어디서나 줄이지 않고 'Do you 보드게임?' (오너 요청)
+        // 앱 안에서는 'Do you 보드게임?'
         name: 'Do you 보드게임?',
-        // 홈 화면 아이콘 밑에 나오는 이름 (런처에 따라 길면 잘릴 수 있다)
-        short_name: 'Do you 보드게임?',
+        // 홈 화면 아이콘 밑 이름만 짧게 (길면 잘려서 오너 요청으로 '보드게임')
+        short_name: '보드게임',
         description: 'Do you 보드게임? 동호회 회원 전용 앱',
         lang: 'ko',
         start_url: '/',

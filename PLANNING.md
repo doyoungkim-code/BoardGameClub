@@ -16,7 +16,7 @@
 ## 2. 확정된 결정사항
 | 항목 | 결정 |
 |---|---|
-| 앱 이름 | `Do you 보드게임?` — **어디서나 줄이지 않고 이 이름** (홈 화면 앱 이름 포함). 동호회명은 앱에 표시하지 않음 |
+| 앱 이름 | `Do you 보드게임?` — 앱 안에서는 어디서나 이 이름. **홈 화면 아이콘 밑 이름만 `보드게임`** (길면 잘려서). 동호회명은 앱에 표시하지 않음 |
 | 프론트엔드 | React + Vite + TypeScript |
 | UI | Tailwind CSS + shadcn/ui, lucide-react 아이콘 |
 | 백엔드 | Firebase **Spark(무료) 요금제만 사용**: Auth(Google), Firestore, Hosting |
