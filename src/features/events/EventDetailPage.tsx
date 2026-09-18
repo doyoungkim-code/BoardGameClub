@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { onSnapshot } from 'firebase/firestore'
-import { CalendarDays, Check, ChevronLeft, EllipsisVertical, MapPin, Users } from 'lucide-react'
+import { CalendarDays, Check, ChevronLeft, EllipsisVertical, MapPin, UserPlus, Users } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
@@ -14,7 +14,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { AttendeeManagerDialog } from '@/features/events/AttendeeManagerDialog'
 import { EventTypeBadge } from '@/features/events/EventCard'
+import { usePlaces } from '@/hooks/usePlaces'
 import { formatEventRange, toErrorMessage } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import {
@@ -76,6 +78,9 @@ function EventDetail({ event }: { event: ClubEvent }) {
   const attending = event.attendeeIds.includes(profile.uid)
   const past = isPast(event)
   const host = membersById[event.hostId]
+  // 장소 이름이 지도에 등록된 카페와 같으면 지도로 연결한다
+  const places = usePlaces()
+  const place = places?.find((p) => p.name === event.location.trim())
 
   const run = async (fn: () => Promise<unknown>) => {
     setBusy(true)
@@ -150,7 +155,15 @@ function EventDetail({ event }: { event: ClubEvent }) {
                 <MapPin className="mt-0.5 size-4 text-muted-foreground" />
                 <span className="sr-only">장소</span>
               </dt>
-              <dd>{event.location}</dd>
+              <dd>
+                {place ? (
+                  <Link to={`/places?place=${place.id}`} className="text-primary underline-offset-4 hover:underline">
+                    {event.location} (지도 보기)
+                  </Link>
+                ) : (
+                  event.location
+                )}
+              </dd>
             </div>
           )}
           <div className="flex items-start gap-2">
@@ -218,6 +231,8 @@ function EventDetail({ event }: { event: ClubEvent }) {
 /** 참석자 목록. 호스트·오너는 여기서 출석을 체크한다 */
 function Attendees({ event, manageable }: { event: ClubEvent; manageable: boolean }) {
   const membersById = useMembers((s) => s.byId)
+  const isOwner = useIsOwner()
+  const [managing, setManaging] = useState(false)
   // 모임이 시작된 뒤부터 호스트·오너가 출석을 체크한다
   const checking = manageable && hasStarted(event) && !event.canceled
 
@@ -230,10 +245,17 @@ function Attendees({ event, manageable }: { event: ClubEvent; manageable: boolea
 
   return (
     <section className="space-y-2 border-t pt-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <h2 className="font-semibold">참석자 {event.attendeeIds.length}명</h2>
-        {checking && <p className="text-xs text-muted-foreground">눌러서 출석 체크</p>}
+        {checking && <p className="flex-1 text-xs text-muted-foreground">눌러서 출석 체크</p>}
+        {isOwner && (
+          <Button variant="outline" size="sm" onClick={() => setManaging(true)}>
+            <UserPlus className="size-4" />
+            참석자 관리
+          </Button>
+        )}
       </div>
+      {isOwner && <AttendeeManagerDialog event={event} open={managing} onOpenChange={setManaging} />}
       {event.attendeeIds.length === 0 ? (
         <p className="py-6 text-center text-sm text-muted-foreground">아직 참석자가 없어요</p>
       ) : (

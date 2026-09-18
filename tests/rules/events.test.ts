@@ -189,9 +189,42 @@ describe('참석 신청·취소', () => {
   it('대기자는 신청할 수 없다', async () => {
     await assertFails(updateDoc(doc(dbAs('waiting'), 'events/e1'), { attendeeIds: arrayUnion('waiting') }))
   })
+})
 
-  it('오너도 남을 대신 신청시킬 수 없다', async () => {
-    await assertFails(updateDoc(doc(ownerDb(), 'events/e1'), { attendeeIds: arrayUnion('bob') }))
+describe('오너의 참석자 관리', () => {
+  it('오너는 다른 회원을 참석자로 넣고 뺄 수 있다', async () => {
+    await seedEvent('e1', 'alice')
+    await assertSucceeds(updateDoc(doc(ownerDb(), 'events/e1'), { attendeeIds: ['alice', 'bob', 'carol'] }))
+    await assertSucceeds(updateDoc(doc(ownerDb(), 'events/e1'), { attendeeIds: ['bob'] }))
+  })
+
+  it('지난 모임·취소된 모임·정원 초과여도 오너는 정리할 수 있다', async () => {
+    const past = Timestamp.fromMillis(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    await seedEvent('old', 'alice', { startAt: past, canceled: true, capacity: 1 })
+    await assertSucceeds(
+      updateDoc(doc(ownerDb(), 'events/old'), { attendeeIds: ['alice', 'bob'], attendedIds: ['alice', 'bob'] }),
+    )
+  })
+
+  it('출석자는 참석자 안에 있어야 한다', async () => {
+    await seedEvent('e1', 'alice')
+    await assertFails(updateDoc(doc(ownerDb(), 'events/e1'), { attendeeIds: ['alice'], attendedIds: ['bob'] }))
+  })
+
+  it('참석자를 빼면서 출석도 같이 빼야 한다', async () => {
+    await seedEvent('e1', 'alice', { attendeeIds: ['alice', 'bob'], attendedIds: ['alice', 'bob'] })
+    await assertFails(updateDoc(doc(ownerDb(), 'events/e1'), { attendeeIds: ['alice'] }))
+    await assertSucceeds(updateDoc(doc(ownerDb(), 'events/e1'), { attendeeIds: ['alice'], attendedIds: ['alice'] }))
+  })
+
+  it('오너라도 참석자와 함께 다른 필드를 바꿀 수 없다', async () => {
+    await seedEvent('e1', 'alice')
+    await assertFails(updateDoc(doc(ownerDb(), 'events/e1'), { attendeeIds: ['alice', 'bob'], hostId: 'bob' }))
+  })
+
+  it('호스트(오너 아님)는 남을 참석자로 넣을 수 없다', async () => {
+    await seedEvent('e1', 'alice')
+    await assertFails(updateDoc(doc(dbAs('alice'), 'events/e1'), { attendeeIds: ['alice', 'bob'] }))
   })
 })
 

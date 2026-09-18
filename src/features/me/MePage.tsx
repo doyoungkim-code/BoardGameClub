@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Trophy } from 'lucide-react'
 import { useForm } from 'react-hook-form'
+import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { UserAvatar } from '@/components/UserAvatar'
@@ -65,6 +67,13 @@ export function MePage() {
           </div>
         </CardContent>
       </Card>
+
+      <Button asChild variant="outline" className="h-11 w-full">
+        <Link to={`/members/${profile.uid}`}>
+          <Trophy className="size-4" />
+          내 업적·활동 기록 보기
+        </Link>
+      </Button>
 
       <Card>
         <CardHeader>

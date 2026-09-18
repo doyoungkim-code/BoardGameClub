@@ -129,3 +129,24 @@
 @utility pb-safe {
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* 지도 핀 (features/places/PlaceMap.tsx). 네모의 한 모서리를 뾰족하게 두고 45도 돌려 물방울 모양을 만든다 */
+.place-pin {
+  width: 28px;
+  height: 28px;
+  border: 3px solid white;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.35);
+}
+.place-pin-normal {
+  background: var(--primary);
+}
+.place-pin-active {
+  background: var(--destructive);
+  transform: rotate(-45deg) scale(1.2);
+}
+.place-pin-draft {
+  background: var(--foreground);
+  border-style: dashed;
+}

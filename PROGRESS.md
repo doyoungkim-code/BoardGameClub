@@ -1,6 +1,6 @@
 # 진행 기록 & 개발 가이드
 
-> 마지막 업데이트: 2026-09-14 (6~8단계까지 구현 완료)
+> 마지막 업데이트: 2026-09-19 (지도, 관리자 참석자 관리, 업적·활동 기록 추가)
 > 기획 전체는 [PLANNING.md](PLANNING.md), 이 문서는 "어디까지 했고 다음에 뭘 하는지"와 "개발 환경 세팅"을 기록한다.
 
 ## 1. 진행 상황
@@ -15,10 +15,11 @@
 | 6 | 게시판/공지: 공지·자유·후기, 댓글, 좋아요, 고정 | ✅ 구현 완료 · ⚠️ 실사용 확인 전 | |
 | 7 | 회원관리/관리자: 회원 목록·프로필, 활동 통계, 강퇴, 관리자 메모 | ✅ 구현 완료 · ⚠️ 실사용 확인 전 | |
 | 8 | GitHub Actions 자동 배포 | ✅ 완료 (Hosting 자동, 규칙은 수동) | |
+| + | 지도(카페 위치), 관리자 참석자 관리(지난 모임 포함), 업적·활동 기록 | ✅ 구현 완료 · ⚠️ 실사용 확인 전 | |
 
-- Firestore 보안 규칙은 **전 단계 실제 프로젝트(`doyou-boardgame`)에 배포 완료**
+- Firestore 보안 규칙은 **전부 실제 프로젝트(`doyou-boardgame`)에 배포 완료**
 - **배포 주소: https://doyou-boardgame.web.app** — `main`에 push하면 자동 배포 (아래 2-1)
-- 규칙 테스트 119개 통과 (users 34 + chat 31 + events 26 + posts 28)
+- 규칙 테스트 133개 통과 (users 34 + chat 31 + events 31 + posts 28 + places 9)
 - `firestore.indexes.json`에 posts 복합 색인 1개 (board + pinned + createdAt)
 
 ## 2. 다음에 할 일
@@ -31,6 +32,9 @@
    - 게임: 목록 39개와 표지, 검색, "몇 명이서" 필터
    - 게시판: 공지(오너만)·자유·후기 글쓰기, 댓글, 좋아요, 고정
    - 회원: 목록·프로필, DM 보내기, 관리자에서 강퇴·메모·소개자 수정
+   - 지도: 장소 추가(지도 누르기) → 핀·카드, 수정·위치 옮기기·삭제, 카카오맵 길찾기, 내 위치 버튼
+   - 관리자: 지난 모임을 만들고 "참석자 관리"로 회원 넣기 → 그 회원 프로필의 출석·업적에 반영되는지
+   - 업적·활동 기록: 회원 프로필, 내 정보 → "내 업적·활동 기록 보기"
    - 모바일 화면에서 키보드가 올라올 때 채팅 입력창 위치
 2. 그 뒤에는 PLANNING.md 11장 백로그 (플레이 기록, 이미지 업로드, BGG 검색, 다크모드 …)
 
@@ -129,6 +133,7 @@ src/
   services/     Firestore 읽기·쓰기 함수 (users, chat, events, posts, members)
   stores/       zustand 전역 상태 + 한 번만 하는 실시간 구독 (auth, members, chat, events)
   data/games.ts 보드게임 목록 (Firestore 아님. 표지 이미지는 public/games/)
+  data/achievements.ts  업적 목록 (조건·아이콘·이름. 여기만 고치면 된다)
   hooks/        여러 화면에서 쓰는 훅 (useUnreadCount, useChatNotifications)
   features/     기능별 화면 (auth, home, chat, events, games, stats, board, members, me, more, admin)
   features/lazyPages.ts   화면별 코드 분할(React.lazy) 목록. 새 기능 화면은 여기에 추가
@@ -207,3 +212,31 @@ tests/rules/    보안 규칙 테스트
 - **관리자 메모(`adminMemos/{uid}`)는 회원 패널을 펼칠 때만 읽는다.** 오너만 접근 가능
 - **강퇴는 `status: 'removed'`**. 관리자 화면 아래쪽 "거절·이용 중지 계정"에서 되돌릴 수 있다
 - `PlaceholderPage`는 모든 화면이 만들어져서 삭제했다
+
+### 2026-09-19 추가 기능에서 정한 것
+**지도 (`/places`, `places` 컬렉션)**
+- **OpenStreetMap + Leaflet**을 쓴다. API 키·가입이 필요 없어서 바로 쓸 수 있다.
+  대신 한국 장소 검색이 없어서 위치는 지도를 눌러 찍고, 주소는 직접 적는다.
+  길찾기는 카카오맵 링크로 넘긴다(`kakaoRouteUrl`). 카카오맵으로 바꾸는 건 백로그
+- 등록은 회원 누구나, 수정·위치 옮기기·삭제는 등록자와 오너
+- Leaflet은 지도 화면에서만 불러온다(`lazyPages`). 지도 박스에 `isolate`를 걸어
+  Leaflet의 큰 z-index가 헤더·하단 탭·팝업 위로 올라오지 않게 했다
+- 모임과의 연결은 **이름 일치**로 한다: 모임 만들기에서 등록된 카페를 고르면 장소 칸에 이름이 들어가고,
+  모임 화면에서 장소 이름이 지도의 카페와 같으면 "지도 보기" 링크가 뜬다 (events 스키마는 그대로)
+
+**관리자 참석자 관리**
+- 오너는 `attendeeIds`·`attendedIds`를 직접 바꿀 수 있다. 정원·취소·지난 모임과 상관없다(rules)
+- 출석자는 항상 참석자 안에 있어야 한다. 참석자에서 빼면 출석에서도 같이 뺀다
+- 이미 출석 체크를 쓴 지난 모임에 사람을 넣으면 "출석으로도 체크" 선택지가 나온다.
+  출석 체크를 안 쓴 모임은 참석자 전원이 출석으로 집계되므로 묻지 않는다
+- 지난 모임 기록은 오너가 모임 만들기에서 **지난 날짜로 만들고** 참석자를 넣으면 된다
+
+**업적·활동 기록 (회원 프로필)**
+- **저장하지 않고 매번 계산한다.** 서버가 없어서 클라이언트가 쓰는 업적은 조작을 막을 수 없기 때문.
+  이미 rules로 검증된 기록(모임 참석·주최, 게시글, 등록한 장소, 가입일)에서 센다 (`services/activity.ts`)
+- **출석 기준은 앱 전체에서 하나**(`countsAsAttended`): 시작했고 취소되지 않은 모임에 참석자로 있고,
+  출석 체크를 한 모임이면 체크된 경우만. 통계 화면 랭킹도 같은 함수를 쓴다
+- 업적 목록은 `src/data/achievements.ts`. 쓸 수 있는 수치는 attended, regularAttended, flashAttended,
+  hosted, flashHosted, posts, reviews, places, memberDays. 새 수치가 필요하면 `ActivityStats`에 추가
+- 프로필 하나를 열 때 쿼리 4개(참석 모임, 연 모임, 쓴 글, 등록한 장소). 모두 한 필드 조건이라 색인 추가 없음
+- 댓글 수는 업적에 넣지 않았다 (회원별 댓글을 세려면 collection group 색인이 필요)

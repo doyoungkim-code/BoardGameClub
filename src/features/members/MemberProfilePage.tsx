@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
-import { subMonths } from 'date-fns'
-import { CalendarCheck, CalendarDays, ChevronLeft, MessageCircle } from 'lucide-react'
+import { CalendarCheck, ChevronLeft, MessageCircle, PenLine, Trophy, Zap } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { PageSpinner } from '@/components/PageSpinner'
@@ -8,42 +7,44 @@ import { UserAvatar } from '@/components/UserAvatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ACHIEVEMENTS, isUnlocked } from '@/data/achievements'
+import { AchievementList } from '@/features/members/AchievementList'
+import { ActivityHistory } from '@/features/members/ActivityHistory'
 import { formatDateTime, referrerLabel, toErrorMessage } from '@/lib/format'
+import { fetchMemberActivity, type MemberActivity } from '@/services/activity'
 import { openDm } from '@/services/chat'
-import { fetchEventsBetween, toEvent } from '@/services/events'
-import { countActivity, introducedBy, type MemberActivity } from '@/services/members'
+import { introducedBy } from '@/services/members'
 import { useAuth } from '@/stores/auth'
 import { useMembers } from '@/stores/members'
-
-/** 활동 통계 집계 기간 */
-const MONTHS = 6
 
 export function MemberProfilePage() {
   const { uid } = useParams()
   const navigate = useNavigate()
   const me = useAuth((s) => s.profile)!
   const { loaded, members, byId } = useMembers()
-  // 누구의 집계인지 같이 담아 둔다. 보고 있는 회원과 다르면 아직 불러오는 중
-  const [counted, setCounted] = useState<{ uid: string; value: MemberActivity } | null>(null)
-  const activity = counted && counted.uid === uid ? counted.value : null
+  // 누구의 기록인지 같이 담아 둔다. 보고 있는 회원과 다르면 아직 불러오는 중
+  const [loadedFor, setLoadedFor] = useState<{ uid: string; value: MemberActivity } | null>(null)
+  const activity = loadedFor && loadedFor.uid === uid ? loadedFor.value : null
   const [opening, setOpening] = useState(false)
 
+  const joined = uid ? byId[uid]?.approvedAt ?? byId[uid]?.createdAt : null
+  const joinedAt = joined ? joined.toMillis() : null
+
   useEffect(() => {
-    if (!uid) return
+    if (!uid || !loaded) return
     let canceled = false
-    const done = (value: MemberActivity) => {
-      if (!canceled) setCounted({ uid, value })
-    }
-    fetchEventsBetween(subMonths(new Date(), MONTHS), new Date())
-      .then((snap) => done(countActivity(snap.docs.map(toEvent), uid)))
+    fetchMemberActivity(uid, joinedAt)
+      .then((value) => {
+        if (!canceled) setLoadedFor({ uid, value })
+      })
       .catch((error) => {
-        console.error('활동 통계 불러오기 실패', error)
-        done({ joined: 0, attended: 0 })
+        console.error('활동 기록 불러오기 실패', error)
+        toast.error('활동 기록을 불러오지 못했어요')
       })
     return () => {
       canceled = true
     }
-  }, [uid])
+  }, [uid, loaded, joinedAt])
 
   if (!loaded) return <PageSpinner />
 
@@ -111,13 +112,30 @@ export function MemberProfilePage() {
       )}
 
       <section className="space-y-2">
-        <h2 className="font-semibold">활동 (최근 {MONTHS}개월)</h2>
-        <div className="grid grid-cols-2 gap-3">
-          <Stat icon={CalendarDays} label="참석 신청" value={activity ? `${activity.joined}회` : null} />
-          <Stat icon={CalendarCheck} label="출석" value={activity ? `${activity.attended}회` : null} />
+        <div className="grid grid-cols-4 gap-2">
+          <Stat icon={CalendarCheck} label="출석" value={activity && `${activity.stats.attended}`} />
+          <Stat icon={Zap} label="번개 주최" value={activity && `${activity.stats.flashHosted}`} />
+          <Stat icon={PenLine} label="게시글" value={activity && `${activity.stats.posts}`} />
+          <Stat
+            icon={Trophy}
+            label="업적"
+            value={activity && `${ACHIEVEMENTS.filter((a) => isUnlocked(a, activity.stats)).length}`}
+          />
         </div>
         <p className="text-xs text-muted-foreground">가입일 {formatDateTime(member.approvedAt ?? member.createdAt)}</p>
       </section>
+
+      {activity ? (
+        <>
+          <AchievementList stats={activity.stats} />
+          <ActivityHistory items={activity.history} />
+        </>
+      ) : (
+        <div className="space-y-2">
+          <Skeleton className="h-32 w-full rounded-xl" />
+          <Skeleton className="h-32 w-full rounded-xl" />
+        </div>
+      )}
 
       {introduced.length > 0 && (
         <section className="space-y-2">
@@ -139,14 +157,14 @@ export function MemberProfilePage() {
   )
 }
 
-function Stat({ icon: Icon, label, value }: { icon: typeof CalendarDays; label: string; value: string | null }) {
+function Stat({ icon: Icon, label, value }: { icon: typeof Trophy; label: string; value: string | null }) {
   return (
-    <div className="rounded-xl border px-3 py-3">
-      <p className="flex items-center gap-1 text-xs text-muted-foreground">
+    <div className="rounded-xl border px-2 py-2.5 text-center">
+      <p className="flex items-center justify-center gap-1 text-[11px] text-muted-foreground">
         <Icon className="size-3" />
         {label}
       </p>
-      {value === null ? <Skeleton className="mt-1 h-6 w-10" /> : <p className="mt-1 text-lg font-bold">{value}</p>}
+      {value === null ? <Skeleton className="mx-auto mt-1 h-6 w-8" /> : <p className="mt-0.5 text-lg font-bold">{value}</p>}
     </div>
   )
 }

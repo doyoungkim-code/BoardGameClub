@@ -4,6 +4,8 @@ import {
   Dices,
   Ellipsis,
   House,
+  // JS 내장 Map 과 이름이 겹치지 않게
+  Map as MapIcon,
   Megaphone,
   MessageCircle,
   ShieldCheck,
@@ -33,6 +35,7 @@ export const TAB_ITEMS: NavItem[] = [
 
 /** 하단 탭에 없는 메뉴 (모바일: 더보기 화면, PC: 사이드바 아래쪽) */
 export const MORE_ITEMS: NavItem[] = [
+  { to: '/places', label: '지도', icon: MapIcon },
   { to: '/stats', label: '통계', icon: ChartColumn },
   { to: '/board/notice', label: '게시판', icon: Megaphone },
   { to: '/members', label: '회원', icon: Users },

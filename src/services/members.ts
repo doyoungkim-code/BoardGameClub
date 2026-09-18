@@ -1,31 +1,8 @@
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import type { ClubEvent } from '@/types/event'
 import type { UserProfile } from '@/types/user'
 
-// ---------- 활동 통계 ----------
-
-export type MemberActivity = {
-  /** 참석 신청한 모임 수 (취소된 모임 제외) */
-  joined: number
-  /** 출석 체크된 모임 수 */
-  attended: number
-}
-
-/**
- * 모임 목록에서 한 회원의 참석·출석 횟수를 센다.
- * 출석 체크를 하지 않은 모임은 참석 신청을 출석으로 본다.
- */
-export function countActivity(events: ClubEvent[], uid: string): MemberActivity {
-  let joined = 0
-  let attended = 0
-  for (const event of events) {
-    if (event.canceled || !event.attendeeIds.includes(uid)) continue
-    joined += 1
-    if (event.attendedIds.length === 0 || event.attendedIds.includes(uid)) attended += 1
-  }
-  return { joined, attended }
-}
+// 활동 기록·업적 계산은 services/activity.ts
 
 /** 이 회원이 소개해서 들어온 회원들 */
 export const introducedBy = (members: UserProfile[], uid: string) =>

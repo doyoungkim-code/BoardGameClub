@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { GAMES } from '@/data/games'
 import { cn } from '@/lib/utils'
+import { countsAsAttended } from '@/services/activity'
 import { fetchEventsBetween, toEvent } from '@/services/events'
 import { useMembers } from '@/stores/members'
 import type { ClubEvent } from '@/types/event'
@@ -33,11 +34,12 @@ export function StatsPage() {
     const held = events.filter((event) => !event.canceled)
     const attendeeTotal = held.reduce((sum, event) => sum + event.attendeeIds.length, 0)
 
-    // 출석 체크를 한 모임이 있으면 그 기록을, 없으면 참석 신청을 기준으로 센다
+    // 회원 프로필·업적과 같은 기준으로 센다 (services/activity.ts 의 countsAsAttended)
     const count = new Map<string, number>()
     for (const event of held) {
-      const people = event.attendedIds.length > 0 ? event.attendedIds : event.attendeeIds
-      for (const uid of people) count.set(uid, (count.get(uid) ?? 0) + 1)
+      for (const uid of event.attendeeIds) {
+        if (countsAsAttended(event, uid)) count.set(uid, (count.get(uid) ?? 0) + 1)
+      }
     }
     const ranking = [...count.entries()]
       .map(([uid, times]) => ({ uid, times }))

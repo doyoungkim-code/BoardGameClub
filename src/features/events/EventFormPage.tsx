@@ -10,9 +10,11 @@ import { PageSpinner } from '@/components/PageSpinner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { FieldError } from '@/features/auth/SignupPage'
 import { EventTypeBadge } from '@/features/events/EventCard'
+import { usePlaces } from '@/hooks/usePlaces'
 import { toDateTimeLocal, toErrorMessage } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { canManage, createEvent, fetchEvent, updateEvent } from '@/services/events'
@@ -100,11 +102,13 @@ function EventForm({ event }: { event?: ClubEvent }) {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     values: event ? toFormValues(event) : emptyValues(),
   })
+  const places = usePlaces()
 
   if (editing && !canManage(event, profile.uid, isOwner)) return <EventFormForbidden />
 
@@ -196,6 +200,21 @@ function EventForm({ event }: { event?: ClubEvent }) {
         <div className="space-y-2">
           <Label htmlFor="location">장소 (선택)</Label>
           <Input id="location" placeholder="예: 강남 보드게임카페" aria-invalid={!!errors.location} {...register('location')} />
+          {/* 지도에 등록된 카페를 고르면 이름을 채워준다. 이름이 같으면 모임 화면에서 지도로 연결된다 */}
+          {places && places.length > 0 && (
+            <Select onValueChange={(name) => setValue('location', name, { shouldDirty: true, shouldValidate: true })}>
+              <SelectTrigger className="w-full" aria-label="지도에 등록된 카페에서 고르기">
+                <SelectValue placeholder="지도에 등록된 카페에서 고르기" />
+              </SelectTrigger>
+              <SelectContent>
+                {places.map((place) => (
+                  <SelectItem key={place.id} value={place.name}>
+                    {place.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           <FieldError message={errors.location?.message} />
         </div>
 

@@ -247,11 +247,23 @@ service cloud.firestore {
         (isHostOrOwner() && (validEventEdit() || validAttendedUpdate()))
         // 회원 누구나: 본인 참석 신청·취소
         || validAttendToggle()
+        // 오너: 참석자를 직접 넣고 뺀다 (지난 모임 기록 정리용)
+        || (isOwner() && validOwnerAttendeeEdit())
       );
       allow delete: if isMember() && isHostOrOwner();
 
       function isHostOrOwner() {
         return resource.data.hostId == request.auth.uid || isOwner();
+      }
+
+      // 정원·취소 여부·지난 모임과 상관없이 바꿀 수 있다.
+      // 출석자는 참석자 안에 있어야 한다 (참석자에서 뺀 사람은 출석에서도 같이 뺀다)
+      function validOwnerAttendeeEdit() {
+        let d = request.resource.data;
+        return changedOnly(['attendeeIds', 'attendedIds'])
+          && d.attendeeIds is list && d.attendeeIds.size() <= 100
+          && d.attendedIds is list
+          && d.attendedIds.hasOnly(d.attendeeIds);
       }
 
       function validEventFields() {
@@ -317,6 +329,39 @@ service cloud.firestore {
               && after.size() == before.size() - 1
               && after.toSet() == before.toSet().difference([me].toSet()))
           );
+      }
+    }
+
+    // ---------- places: 지도에 찍은 보드게임 카페 ----------
+
+    match /places/{placeId} {
+      allow read: if isMember();
+      allow create: if isMember() && validNewPlace();
+      allow update: if isMember() && isPlaceEditor()
+        && changedOnly(['name', 'address', 'memo', 'lat', 'lng'])
+        && validPlaceFields();
+      allow delete: if isMember() && isPlaceEditor();
+
+      function isPlaceEditor() {
+        return resource.data.createdBy == request.auth.uid || isOwner();
+      }
+
+      function validPlaceFields() {
+        let d = request.resource.data;
+        return d.name is string && d.name.size() >= 1 && d.name.size() <= 40
+          && d.address is string && d.address.size() <= 100
+          && d.memo is string && d.memo.size() <= 300
+          && d.lat is number && d.lat >= -90 && d.lat <= 90
+          && d.lng is number && d.lng >= -180 && d.lng <= 180;
+      }
+
+      function validNewPlace() {
+        let d = request.resource.data;
+        let keys = ['name', 'address', 'memo', 'lat', 'lng', 'createdBy', 'createdAt'];
+        return d.keys().hasOnly(keys) && d.keys().hasAll(keys)
+          && validPlaceFields()
+          && d.createdBy == request.auth.uid
+          && d.createdAt == request.time;
       }
     }
 

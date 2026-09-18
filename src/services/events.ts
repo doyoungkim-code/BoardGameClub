@@ -137,6 +137,14 @@ export function setAttending(eventId: string, uid: string, attending: boolean) {
   })
 }
 
+/**
+ * 오너 전용: 참석자를 통째로 바꾼다 (지난 모임 기록 정리용).
+ * rules 가 출석자는 참석자 안에 있어야 한다고 검사하므로 둘을 같이 넘긴다.
+ */
+export function setAttendeesByOwner(eventId: string, attendeeIds: string[], attendedIds: string[]) {
+  return updateDoc(eventRef(eventId), { attendeeIds, attendedIds })
+}
+
 /** 출석 체크 (호스트·오너) */
 export function setAttended(eventId: string, uid: string, attended: boolean) {
   return updateDoc(eventRef(eventId), {

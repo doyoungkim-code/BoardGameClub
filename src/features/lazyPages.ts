@@ -26,6 +26,9 @@ export const EventDetailPage = lazy(() =>
 
 export const GamesPage = lazy(() => import('@/features/games/GamesPage').then((m) => ({ default: m.GamesPage })))
 
+// 지도 라이브러리(Leaflet)는 이 화면에서만 불러온다
+export const PlacesPage = lazy(() => import('@/features/places/PlacesPage').then((m) => ({ default: m.PlacesPage })))
+
 export const StatsPage = lazy(() => import('@/features/stats/StatsPage').then((m) => ({ default: m.StatsPage })))
 
 export const BoardPage = lazy(() => import('@/features/board/BoardPage').then((m) => ({ default: m.BoardPage })))
