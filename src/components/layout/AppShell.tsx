@@ -4,6 +4,7 @@ import { PageSpinner } from '@/components/PageSpinner'
 import { UserAvatar } from '@/components/UserAvatar'
 import { TAB_ITEMS, useMoreItems, type NavItem } from '@/components/layout/nav'
 import { useRouteHandle } from '@/components/layout/routeHandle'
+import { useAppHistory, useTabNavigate } from '@/hooks/useAppHistory'
 import { useChatNotifications } from '@/hooks/useChatNotifications'
 import { useUnreadCount } from '@/hooks/useUnreadCount'
 import { APP_NAME } from '@/lib/constants'
@@ -21,6 +22,8 @@ export function AppShell() {
   useEffect(() => startMembersSync(), [])
   useEffect(() => startChatSync(profile.uid), [profile.uid])
   useChatNotifications()
+  // 뒤로가기: 탭에서는 홈으로, 홈에서는 두 번 눌러 종료 (설치한 앱)
+  useAppHistory()
 
   return (
     <div className={cn('min-h-dvh md:flex', fullHeight && 'md:h-dvh md:overflow-hidden')}>
@@ -28,9 +31,7 @@ export function AppShell() {
       <div className="flex min-h-dvh flex-1 flex-col md:min-h-0 md:min-w-0">
         {!immersive && (
           <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background/90 px-4 backdrop-blur md:hidden">
-            <Link to="/" className="font-bold text-primary">
-              {APP_NAME}
-            </Link>
+            <HomeLink className="font-bold text-primary" />
             <Link to="/me" aria-label="내 정보">
               <UserAvatar name={profile.nickname} photoURL={profile.photoURL} className="size-8" />
             </Link>
@@ -54,18 +55,33 @@ export function AppShell() {
   )
 }
 
+/** 앱 이름 = 홈 버튼. 홈 탭과 똑같이 기록을 쌓지 않는다 */
+function HomeLink({ className }: { className?: string }) {
+  const goToTab = useTabNavigate()
+  return (
+    <Link
+      to="/"
+      className={className}
+      onClick={(e) => {
+        e.preventDefault()
+        goToTab('/')
+      }}
+    >
+      {APP_NAME}
+    </Link>
+  )
+}
+
 function Sidebar() {
   const profile = useAuth((s) => s.profile)!
   const moreItems = useMoreItems()
 
   return (
     <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r bg-sidebar px-3 py-5 md:flex">
-      <Link to="/" className="mb-6 px-3 text-lg font-bold text-sidebar-primary">
-        {APP_NAME}
-      </Link>
+      <HomeLink className="mb-6 px-3 text-lg font-bold text-sidebar-primary" />
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">
         {TAB_ITEMS.filter((item) => item.to !== '/more').map((item) => (
-          <SidebarLink key={item.to} item={item} />
+          <SidebarLink key={item.to} item={item} tab />
         ))}
         <div className="my-3 border-t border-sidebar-border" />
         {moreItems.map((item) => (
@@ -80,12 +96,22 @@ function Sidebar() {
   )
 }
 
-function SidebarLink({ item }: { item: NavItem }) {
+/** tab: 하단 탭과 같은 메뉴면 기록을 쌓지 않고 옮긴다 (useTabNavigate) */
+function SidebarLink({ item, tab }: { item: NavItem; tab?: boolean }) {
   const Icon = item.icon
+  const goToTab = useTabNavigate()
   return (
     <NavLink
       to={item.to}
       end={item.to === '/'}
+      onClick={
+        tab
+          ? (e) => {
+              e.preventDefault()
+              goToTab(item.to)
+            }
+          : undefined
+      }
       className={({ isActive }) =>
         cn(
           'flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent',
@@ -101,6 +127,7 @@ function SidebarLink({ item }: { item: NavItem }) {
 }
 
 function BottomTabs() {
+  const goToTab = useTabNavigate()
   return (
     <nav className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur md:hidden">
       <ul className="grid h-16 grid-cols-5">
@@ -111,6 +138,11 @@ function BottomTabs() {
               <NavLink
                 to={item.to}
                 end={item.to === '/'}
+                onClick={(e) => {
+                  // 탭끼리는 기록을 쌓지 않는다 → 어느 탭에서든 뒤로가기 = 홈
+                  e.preventDefault()
+                  goToTab(item.to)
+                }}
                 className={({ isActive }) =>
                   cn(
                     'flex h-full flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground',

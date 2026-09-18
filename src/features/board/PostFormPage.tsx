@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ChevronLeft } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
+import { BackButton } from '@/components/BackButton'
 import { PageSpinner } from '@/components/PageSpinner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -90,11 +90,7 @@ function PostForm({ post }: { post?: Post }) {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" asChild>
-          <Link to={post ? `/posts/${post.id}` : `/board/${board}`} aria-label="뒤로">
-            <ChevronLeft className="size-5" />
-          </Link>
-        </Button>
+        <BackButton fallback={post ? `/posts/${post.id}` : `/board/${board}`} />
         <h1 className="text-2xl font-bold">{editing ? '글 수정' : '글쓰기'}</h1>
       </div>
 

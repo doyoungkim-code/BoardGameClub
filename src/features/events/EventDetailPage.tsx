@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { onSnapshot } from 'firebase/firestore'
-import { CalendarDays, Check, ChevronLeft, EllipsisVertical, MapPin, UserPlus, Users } from 'lucide-react'
+import { CalendarDays, Check, EllipsisVertical, MapPin, UserPlus, Users } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
+import { BackButton } from '@/components/BackButton'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { PageSpinner } from '@/components/PageSpinner'
 import { UserAvatar } from '@/components/UserAvatar'
@@ -103,11 +104,7 @@ function EventDetail({ event }: { event: ClubEvent }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" asChild>
-          <Link to="/events" aria-label="모임 목록으로">
-            <ChevronLeft className="size-5" />
-          </Link>
-        </Button>
+        <BackButton fallback="/events" />
         <div className="flex flex-1 flex-wrap items-center gap-1.5">
           <EventTypeBadge type={event.type} />
           {event.canceled && <Badge variant="destructive">취소됨</Badge>}

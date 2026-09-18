@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { onSnapshot } from 'firebase/firestore'
-import { ChevronLeft, EllipsisVertical, Heart, Pin, Send } from 'lucide-react'
+import { EllipsisVertical, Heart, Pin, Send } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
+import { BackButton } from '@/components/BackButton'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { PageSpinner } from '@/components/PageSpinner'
 import { UserAvatar } from '@/components/UserAvatar'
@@ -92,11 +93,7 @@ function PostDetail({ post }: { post: Post }) {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" asChild>
-          <Link to={`/board/${post.board}`} aria-label="게시판으로">
-            <ChevronLeft className="size-5" />
-          </Link>
-        </Button>
+        <BackButton fallback={`/board/${post.board}`} />
         <div className="flex flex-1 flex-wrap items-center gap-1.5">
           <Badge variant={post.board === 'notice' ? 'default' : 'outline'}>{BOARD_LABEL[post.board]}</Badge>
           {post.pinned && (

@@ -1,8 +1,6 @@
 import { useCallback, type ReactNode } from 'react'
-import { ChevronLeft } from 'lucide-react'
-import { Link } from 'react-router'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
+import { BackButton } from '@/components/BackButton'
 import { Composer } from '@/features/chat/Composer'
 import { MessageList } from '@/features/chat/MessageList'
 import { useMarkRead, useMessages } from '@/features/chat/useMessages'
@@ -55,11 +53,7 @@ export function ChatRoom({ type, roomId, title, subtitle, avatar, actions, disab
   return (
     <div className="flex h-dvh flex-col bg-background md:h-auto md:min-h-0 md:flex-1">
       <header className="flex h-14 shrink-0 items-center gap-2 border-b px-2 md:px-4">
-        <Button variant="ghost" size="icon" asChild className="md:hidden">
-          <Link to="/chat" aria-label="채팅 목록으로">
-            <ChevronLeft className="size-5" />
-          </Link>
-        </Button>
+        <BackButton fallback="/chat" className="md:hidden" />
         {avatar}
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold">{title}</p>

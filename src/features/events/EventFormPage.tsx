@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { addDays } from 'date-fns'
-import { ChevronLeft } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
+import { BackButton } from '@/components/BackButton'
 import { PageSpinner } from '@/components/PageSpinner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -140,11 +140,7 @@ function EventForm({ event }: { event?: ClubEvent }) {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" asChild>
-          <Link to={event ? `/events/${event.id}` : '/events'} aria-label="뒤로">
-            <ChevronLeft className="size-5" />
-          </Link>
-        </Button>
+        <BackButton fallback={event ? `/events/${event.id}` : '/events'} />
         <h1 className="text-2xl font-bold">{editing ? '모임 수정' : '새 모임'}</h1>
       </div>
 

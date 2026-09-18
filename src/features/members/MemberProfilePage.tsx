@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { CalendarCheck, ChevronLeft, MessageCircle, PenLine, Trophy, Zap } from 'lucide-react'
+import { CalendarCheck, MessageCircle, PenLine, Trophy, Zap } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
+import { BackButton } from '@/components/BackButton'
 import { PageSpinner } from '@/components/PageSpinner'
 import { UserAvatar } from '@/components/UserAvatar'
 import { Badge } from '@/components/ui/badge'
@@ -80,11 +81,7 @@ export function MemberProfilePage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" asChild>
-          <Link to="/members" aria-label="회원 목록으로">
-            <ChevronLeft className="size-5" />
-          </Link>
-        </Button>
+        <BackButton fallback="/members" />
         <h1 className="text-lg font-semibold">회원 프로필</h1>
       </div>
 
