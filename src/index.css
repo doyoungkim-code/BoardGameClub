@@ -157,3 +157,37 @@
   background: var(--destructive);
   transform: rotate(-45deg) scale(1.25);
 }
+
+/* 지도의 내 위치 (파란 점 + 퍼지는 원) */
+.my-location-dot {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  border: 3px solid white;
+  border-radius: 9999px;
+  background: #2563eb;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.4);
+}
+.my-location-dot::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  background: rgb(37 99 235 / 0.35);
+  animation: my-location-pulse 2s ease-out infinite;
+}
+@keyframes my-location-pulse {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .my-location-dot::after {
+    animation: none;
+  }
+}

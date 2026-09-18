@@ -47,6 +47,15 @@ function pinElement(variant: PinVariant, label: string, onClick: () => void) {
   return el
 }
 
+/** 내 위치 파란 점 (모양은 index.css 의 .my-location-dot). 이전 점은 지운다 */
+function drawMyDot(map: kakao.maps.Map, prev: kakao.maps.CustomOverlay | null, position: kakao.maps.LatLng) {
+  prev?.setMap(null)
+  const dot = document.createElement('div')
+  dot.className = 'my-location-dot'
+  dot.title = '내 위치'
+  return new window.kakao.maps.CustomOverlay({ map, position, content: dot, zIndex: 5 })
+}
+
 /**
  * 카카오맵. React 상태와 카카오맵 객체를 ref 로 이어 붙이는 얇은 래퍼.
  * SDK 는 이 컴포넌트가 처음 그려질 때 불러온다 (lib/kakaoMap.ts).
@@ -55,8 +64,12 @@ export function PlaceMap({ cafes, favorites, selected, onSelect, onIdle, focus, 
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<kakao.maps.Map | null>(null)
   const pinsRef = useRef<kakao.maps.CustomOverlay[]>([])
+  const myDotRef = useRef<kakao.maps.CustomOverlay | null>(null)
+  /** 한 번이라도 지도를 특정 위치로 옮겼으면 참 (그 뒤로는 자동으로 옮기지 않는다) */
   const fittedRef = useRef(false)
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
+  /** 처음 열 때 내 위치 잡기. 실패하면 즐겨찾기 → 기본 위치 순으로 보여준다 */
+  const [autoLocate, setAutoLocate] = useState<'pending' | 'done' | 'failed'>('pending')
   // selected 객체는 렌더마다 새로 만들어지므로 값으로 풀어서 비교한다
   const selId = selected?.id
   const selLat = selected?.lat
@@ -87,6 +100,30 @@ export function PlaceMap({ cafes, favorites, selected, onSelect, onIdle, focus, 
         mapRef.current = map
         setStatus('ready')
         reportIdle()
+
+        // 내 위치에서 시작한다 (권한을 묻는다). 그 사이 다른 곳으로 옮겼으면 점만 찍고 이동하지 않는다
+        if (!('geolocation' in navigator)) {
+          setAutoLocate('failed')
+          return
+        }
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            if (canceled) return
+            const here = new k.maps.LatLng(pos.coords.latitude, pos.coords.longitude)
+            myDotRef.current = drawMyDot(map, myDotRef.current, here)
+            if (!fittedRef.current) {
+              fittedRef.current = true
+              map.setLevel(DEFAULT_LEVEL)
+              map.setCenter(here)
+            }
+            setAutoLocate('done')
+          },
+          () => {
+            if (!canceled) setAutoLocate('failed')
+          },
+          // 5분 안에 잡은 위치가 있으면 그걸 써서 빨리 뜨게 한다
+          { enableHighAccuracy: false, timeout: 10_000, maximumAge: 5 * 60_000 },
+        )
       })
       .catch((error) => {
         console.error('카카오맵 불러오기 실패', error)
@@ -126,17 +163,18 @@ export function PlaceMap({ cafes, favorites, selected, onSelect, onIdle, focus, 
     })
   }, [cafes, favorites, selId, status])
 
-  // 처음 한 번: 즐겨찾기가 있으면 모두 보이게 맞춘다
+  // 내 위치를 못 잡았을 때만: 즐겨찾기가 있으면 모두 보이게 맞춘다
   useEffect(() => {
     const map = mapRef.current
-    if (status !== 'ready' || !map || fittedRef.current || favorites.length === 0 || selId) return
+    if (status !== 'ready' || !map || autoLocate !== 'failed') return
+    if (fittedRef.current || favorites.length === 0 || selId) return
     fittedRef.current = true
     const k = window.kakao
     const bounds = new k.maps.LatLngBounds()
     favorites.forEach((f) => bounds.extend(new k.maps.LatLng(f.lat, f.lng)))
     map.setBounds(bounds, 60, 60, 60, 60)
     if (map.getLevel() < FOCUS_LEVEL) map.setLevel(FOCUS_LEVEL)
-  }, [favorites, selId, status])
+  }, [favorites, selId, status, autoLocate])
 
   // 고른 카페로 이동
   useEffect(() => {
@@ -165,9 +203,11 @@ export function PlaceMap({ cafes, favorites, selected, onSelect, onIdle, focus, 
       (pos) => {
         const map = mapRef.current
         if (!map) return
+        const here = new window.kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude)
+        myDotRef.current = drawMyDot(map, myDotRef.current, here)
         fittedRef.current = true
-        map.setLevel(FOCUS_LEVEL)
-        map.setCenter(new window.kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude))
+        map.setLevel(DEFAULT_LEVEL)
+        map.setCenter(here)
       },
       () => toast.error('위치 권한을 허용해 주세요'),
       { enableHighAccuracy: true, timeout: 10_000 },
