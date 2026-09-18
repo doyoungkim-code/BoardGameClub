@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import { ExternalLink, Loader2 } from 'lucide-react'
 import { Navigate, useLocation } from 'react-router'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { isKakaoInApp, isOtherInApp, openInExternalBrowser } from '@/lib/browser'
 import { APP_NAME } from '@/lib/constants'
 import { toErrorMessage } from '@/lib/format'
 import { signInWithGoogle } from '@/services/auth'
@@ -34,10 +35,11 @@ export function LoginPage() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-10 px-6">
       <div className="space-y-3 text-center">
-        <p className="text-6xl">🎲</p>
+        <img src="/pwa-192x192.png" alt="" className="mx-auto size-20 rounded-3xl shadow-md" />
         <h1 className="text-3xl font-bold text-primary">{APP_NAME}</h1>
         <p className="text-sm text-muted-foreground">회원 전용 공간이에요. 가입은 운영자 승인 후 이용할 수 있어요.</p>
       </div>
+      <InAppBrowserNotice />
       <Button
         size="lg"
         variant="outline"
@@ -50,6 +52,32 @@ export function LoginPage() {
       </Button>
     </div>
   )
+}
+
+/**
+ * 카카오톡·인스타그램 등 앱 안 브라우저에서는 구글이 로그인을 막는다 (403 disallowed_useragent).
+ * 카톡으로 링크를 받는 경우가 많아서 로그인 전에 안내한다.
+ */
+function InAppBrowserNotice() {
+  if (isKakaoInApp()) {
+    return (
+      <div className="w-full max-w-xs space-y-2 rounded-xl border border-primary/30 bg-primary/5 p-4 text-center text-sm">
+        <p>카카오톡 안에서는 구글 로그인이 안 돼요.</p>
+        <Button className="w-full" onClick={openInExternalBrowser}>
+          <ExternalLink className="size-4" />
+          다른 브라우저로 열기
+        </Button>
+      </div>
+    )
+  }
+  if (isOtherInApp()) {
+    return (
+      <p className="w-full max-w-xs rounded-xl border border-primary/30 bg-primary/5 p-4 text-center text-sm">
+        이 앱 안에서는 구글 로그인이 안 돼요. 오른쪽 위 메뉴에서 <b>다른 브라우저로 열기</b>를 눌러주세요.
+      </p>
+    )
+  }
+  return null
 }
 
 function GoogleIcon() {

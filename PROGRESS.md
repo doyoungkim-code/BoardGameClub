@@ -15,7 +15,8 @@
 | 6 | 게시판/공지: 공지·자유·후기, 댓글, 좋아요, 고정 | ✅ 구현 완료 · ⚠️ 실사용 확인 전 | |
 | 7 | 회원관리/관리자: 회원 목록·프로필, 활동 통계, 강퇴, 관리자 메모 | ✅ 구현 완료 · ⚠️ 실사용 확인 전 | |
 | 8 | GitHub Actions 자동 배포 | ✅ 완료 (Hosting 자동, 규칙은 수동) | |
-| + | 지도(주변 보드게임카페 + 오너 즐겨찾기), 관리자 참석자 관리(지난 모임 포함), 업적·활동 기록 | ✅ 구현 완료 · ⚠️ 실사용 확인 전 | |
+| + | 지도(주변 보드게임카페 + 오너 즐겨찾기), 관리자 참석자 관리(지난 모임 포함), 업적·활동 기록 | ✅ 완료 (사용자 확인) | |
+| + | 홈 화면 앱(PWA): 앱 아이콘, 설치 안내, 오프라인 캐시, 카카오톡 브라우저 안내 | ✅ 구현 완료 · ⚠️ 실사용 확인 전 | |
 
 - Firestore 보안 규칙은 **전부 실제 프로젝트(`doyou-boardgame`)에 배포 완료**
 - **배포 주소: https://doyou-boardgame.web.app** — `main`에 push하면 자동 배포 (아래 2-1)
@@ -35,6 +36,8 @@
    - 지도: 주변 보드게임카페 자동 표시(지도 이동·확대 시 다시 뽑기), 지역으로 이동, 오너 즐겨찾기·메모, 길찾기
    - 관리자: 지난 모임을 만들고 "참석자 관리"로 회원 넣기 → 그 회원 프로필의 출석·업적에 반영되는지
    - 업적·활동 기록: 회원 프로필, 내 정보 → "내 업적·활동 기록 보기"
+   - 홈 화면 앱: 안드로이드 "앱 설치" 버튼, 아이폰 홈 화면에 추가 → 설치한 앱에서 구글 로그인 되는지(특히 아이폰),
+     카카오톡에서 링크 열었을 때 "다른 브라우저로 열기"
    - 모바일 화면에서 키보드가 올라올 때 채팅 입력창 위치
 2. 그 뒤에는 PLANNING.md 11장 백로그 (플레이 기록, 이미지 업로드, BGG 검색, 다크모드 …)
 
@@ -258,3 +261,23 @@ tests/rules/    보안 규칙 테스트
   hosted, flashHosted, posts, reviews, memberDays. 새 수치가 필요하면 `ActivityStats`에 추가
 - 프로필 하나를 열 때 쿼리 3개(참석 모임, 연 모임, 쓴 글). 모두 한 필드 조건이라 색인 추가 없음
 - 댓글 수는 업적에 넣지 않았다 (회원별 댓글을 세려면 collection group 색인이 필요)
+
+### 홈 화면 앱 (PWA, 2026-09-19)
+- 스토어 앱 대신 **PWA**로 했다. 비용·심사가 없고 push하면 설치한 앱에도 바로 반영된다.
+  스토어 등록(TWA/Capacitor)은 PLANNING.md 11장 백로그
+- `vite-plugin-pwa`가 `manifest.webmanifest`와 서비스 워커(`sw.js`)를 만든다 (`vite.config.ts`)
+  - `registerType: 'autoUpdate'`: 새 버전을 배포하면 다음에 열 때 자동으로 바뀐다
+  - 앱 화면(JS·CSS·아이콘·게임 표지)을 기기에 저장해 빠르게 연다. 데이터는 여전히 Firestore에서 받는다
+  - `/__/`(Firebase 로그인 경로)는 서비스 워커가 가로채지 않게 뺐다
+  - `firebase.json`에서 `sw.js`·`index.html`·`manifest`는 `no-cache` (새 버전이 바로 퍼지게)
+- **앱 아이콘 원본은 `public/icon.svg`** (주황 배경 + 주사위). 고치면 `npm run icons`로 PNG를 다시 만든다
+  (`pwa-assets.config.ts`). 탭 아이콘은 `public/favicon.svg`. 홈 화면 이름은 manifest의 `short_name`("보드게임")
+- **설치 안내**(`components/InstallAppCard.tsx`): 홈(닫기 가능, 다시 안 뜸)과 내 정보(항상)
+  - 안드로이드 크롬: `beforeinstallprompt`를 앱 시작 때 받아 두고(`stores/install.ts`) "앱 설치" 버튼 한 번
+  - 아이폰: 공유 → 홈 화면에 추가 순서 안내
+  - 카카오톡 안 브라우저: 설치도 구글 로그인도 안 되므로 `kakaotalk://web/openExternal`로 기본 브라우저에서 다시 열기
+- **로그인 화면에도 카카오톡·인스타 등 앱 안 브라우저 안내**를 넣었다 (구글이 403 disallowed_useragent로 막는다)
+- **아이폰 홈 화면 앱은 Safari와 저장공간이 따로라 앱에서 한 번 더 로그인해야 한다.**
+  만약 앱 안에서 구글 로그인이 안 되면: `.env.production`의 `VITE_FIREBASE_AUTH_DOMAIN`을
+  `doyou-boardgame.web.app`으로 바꾸고, Google Cloud 콘솔 OAuth 클라이언트의 승인된 리디렉션 URI에
+  `https://doyou-boardgame.web.app/__/auth/handler`를 **먼저** 추가한다 (순서를 바꾸면 모든 로그인이 깨진다)

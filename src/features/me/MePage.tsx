@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
+import { InstallAppCard } from '@/components/InstallAppCard'
 import { UserAvatar } from '@/components/UserAvatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -94,6 +95,8 @@ export function MePage() {
           </form>
         </CardContent>
       </Card>
+
+      <InstallAppCard />
 
       <NotificationSetting />
 

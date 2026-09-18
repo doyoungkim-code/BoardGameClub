@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { CalendarDays, ChartColumn, Megaphone, MessageCircle } from 'lucide-react'
 import { Link } from 'react-router'
+import { InstallAppCard } from '@/components/InstallAppCard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useUnreadCount } from '@/hooks/useUnreadCount'
 import { APP_NAME } from '@/lib/constants'
@@ -11,11 +12,23 @@ import type { Post } from '@/types/post'
 import { useAuth } from '@/stores/auth'
 import { startEventsSync, useEvents } from '@/stores/events'
 
+/** 홈의 설치 안내를 닫았는지 (내 정보 화면에는 계속 나온다) */
+const INSTALL_DISMISSED_KEY = 'installCardDismissed'
+
+function readInstallDismissed() {
+  try {
+    return localStorage.getItem(INSTALL_DISMISSED_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
 export function HomePage() {
   const nickname = useAuth((s) => s.profile?.nickname)
   const unread = useUnreadCount()
   const { loaded, upcoming } = useEvents()
   const [notice, setNotice] = useState<Post | null | undefined>(undefined)
+  const [installDismissed, setInstallDismissed] = useState(readInstallDismissed)
 
   useEffect(() => startEventsSync(), [])
 
@@ -68,6 +81,19 @@ export function HomePage() {
         <p className="text-sm text-muted-foreground">{APP_NAME}</p>
         <h1 className="text-2xl font-bold">{nickname}님, 오늘은 무슨 게임 할까요?</h1>
       </div>
+
+      {!installDismissed && (
+        <InstallAppCard
+          onDismiss={() => {
+            setInstallDismissed(true)
+            try {
+              localStorage.setItem(INSTALL_DISMISSED_KEY, '1')
+            } catch {
+              // 저장 못 해도 이번에는 닫힌다
+            }
+          }}
+        />
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         {sections.map(({ title, to, icon: Icon, text, highlight }) => (

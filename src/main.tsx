@@ -4,9 +4,11 @@ import { RouterProvider } from 'react-router'
 import { Toaster } from '@/components/ui/sonner'
 import { router } from '@/router'
 import { initAuthListener } from '@/stores/auth'
+import { listenInstallPrompt } from '@/stores/install'
 import './index.css'
 
 initAuthListener()
+listenInstallPrompt()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
