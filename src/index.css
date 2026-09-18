@@ -18,8 +18,9 @@
   --secondary-foreground: oklch(0.32 0.04 50);
   --muted: oklch(0.955 0.012 80);
   --muted-foreground: oklch(0.52 0.02 55);
-  --accent: oklch(0.93 0.05 150);
-  --accent-foreground: oklch(0.3 0.05 150);
+  /* 눌렀을 때·선택·로딩 자리 표시 배경. 예전 연두색이 로딩 때마다 번쩍여서 원목 톤 베이지로 */
+  --accent: oklch(0.94 0.03 75);
+  --accent-foreground: oklch(0.3 0.04 50);
   --destructive: oklch(0.58 0.22 27);
   --border: oklch(0.9 0.015 75);
   --input: oklch(0.9 0.015 75);
@@ -52,8 +53,8 @@
   --secondary-foreground: oklch(0.96 0.01 80);
   --muted: oklch(0.3 0.015 50);
   --muted-foreground: oklch(0.72 0.02 70);
-  --accent: oklch(0.35 0.05 150);
-  --accent-foreground: oklch(0.95 0.02 150);
+  --accent: oklch(0.32 0.03 60);
+  --accent-foreground: oklch(0.96 0.01 80);
   --destructive: oklch(0.7 0.19 25);
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 16%);
@@ -190,4 +191,31 @@
   .my-location-dot::after {
     animation: none;
   }
+}
+
+/*
+ * 로딩 표시는 0.3초 넘게 걸릴 때만 부드럽게 나타난다.
+ * 금방 끝나는 로딩(캐시에서 바로 오는 경우 등)에 자리 표시가 번쩍였다 사라지지 않게 한다.
+ */
+@keyframes appear-delayed {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes skeleton-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+@utility appear-delayed {
+  animation: appear-delayed 0.2s ease-out 0.3s both;
+}
+/* 스켈레톤(회색 자리 표시): 늦게 나타난 뒤 은은하게 깜빡인다 */
+@utility skeleton-loading {
+  animation:
+    appear-delayed 0.2s ease-out 0.3s both,
+    skeleton-pulse 1.6s ease-in-out 0.5s infinite;
 }

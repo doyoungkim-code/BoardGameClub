@@ -290,6 +290,11 @@ tests/rules/    보안 규칙 테스트
     안내가 뜬 뒤 화면을 누르면 다시 걸린다 (시간 제한 없음)
   - react-router가 `history.state.idx`에 적는 기록 번호를 읽는다 (`historyIndex`). 라우터를 바꾸면 확인할 것
   - 알려진 한계: 팝업(다이얼로그)이 열린 상태에서 뒤로가기를 누르면 팝업이 아니라 화면이 뒤로 간다
+- **화면 전환 때 번쩍임 없애기**
+  - 강조색(`--accent`)이 연두색이라 로딩 자리 표시(스켈레톤)가 초록 상자로 번쩍였다 → 원목 톤 베이지로 바꿈
+  - 스켈레톤·로딩 빙글이·시작 화면은 **0.3초 넘게 걸릴 때만** 나타난다 (`index.css`의 `skeleton-loading`,
+    `appear-delayed`). 캐시에서 바로 오는 로딩에는 아무것도 안 보이고 바로 화면이 뜬다
+  - 화면 이동은 React Router가 이미 transition으로 처리해서, 새 화면이 준비될 때까지 이전 화면이 유지된다
 - **아이폰 홈 화면 앱은 Safari와 저장공간이 따로라 앱에서 한 번 더 로그인해야 한다.**
   만약 앱 안에서 구글 로그인이 안 되면: `.env.production`의 `VITE_FIREBASE_AUTH_DOMAIN`을
   `doyou-boardgame.web.app`으로 바꾸고, Google Cloud 콘솔 OAuth 클라이언트의 승인된 리디렉션 URI에
