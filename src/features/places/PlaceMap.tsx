@@ -1,9 +1,8 @@
-import { useEffect, useRef } from 'react'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
+import { useEffect, useRef, useState } from 'react'
 import { LocateFixed } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { loadKakaoMaps } from '@/lib/kakaoMap'
 import { cn } from '@/lib/utils'
 import type { Place } from '@/types/place'
 
@@ -11,9 +10,10 @@ export type LatLng = { lat: number; lng: number }
 
 /** 등록된 장소가 없을 때 처음 보여줄 곳 (서울시청) */
 const DEFAULT_CENTER: LatLng = { lat: 37.5665, lng: 126.978 }
-const DEFAULT_ZOOM = 12
-/** 장소를 골랐을 때 최소 이 정도로 확대 */
-const FOCUS_ZOOM = 16
+/** 카카오맵 level 은 작을수록 확대. 서울 시내가 한눈에 보이는 정도 */
+const DEFAULT_LEVEL = 8
+/** 장소를 골랐을 때 이 정도까지 확대 */
+const FOCUS_LEVEL = 3
 
 type Props = {
   places: Place[]
@@ -22,31 +22,44 @@ type Props = {
   /** 위치 찍기 중이면 지도를 누를 때 좌표를 넘긴다 */
   picking: boolean
   onPick: (point: LatLng) => void
-  /** 방금 찍은(아직 저장 안 한) 위치 */
+  /** 방금 찍거나 검색으로 고른(아직 저장 안 한) 위치 */
   draft: LatLng | null
   className?: string
 }
 
-const pinIcon = (variant: 'normal' | 'active' | 'draft') =>
-  L.divIcon({
-    // 기본 흰 상자 스타일을 없앤다
-    className: '',
-    html: `<div class="place-pin place-pin-${variant}"></div>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 30],
-  })
+type PinVariant = 'normal' | 'active' | 'draft'
+
+/** 지도 핀 (모양은 index.css 의 .place-pin) */
+function pinElement(variant: PinVariant, label?: string, onClick?: () => void) {
+  const el = document.createElement(onClick ? 'button' : 'div')
+  el.className = `place-pin place-pin-${variant}`
+  if (label) {
+    el.title = label
+    el.setAttribute('aria-label', label)
+  }
+  if (onClick) {
+    ;(el as HTMLButtonElement).type = 'button'
+    el.addEventListener('click', (e) => {
+      // 핀을 눌렀을 때 지도 클릭(위치 찍기)으로 번지지 않게
+      e.stopPropagation()
+      onClick()
+    })
+  }
+  return el
+}
 
 /**
- * OpenStreetMap 지도 (Leaflet). API 키가 필요 없다.
- * React 상태와 Leaflet 객체를 ref 로 이어 붙이는 얇은 래퍼.
+ * 카카오맵. React 상태와 카카오맵 객체를 ref 로 이어 붙이는 얇은 래퍼.
+ * SDK 는 이 컴포넌트가 처음 그려질 때 불러온다 (lib/kakaoMap.ts).
  */
 export function PlaceMap({ places, selectedId, onSelect, picking, onPick, draft, className }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const mapRef = useRef<L.Map | null>(null)
-  const markersRef = useRef<L.LayerGroup | null>(null)
-  const draftRef = useRef<L.Marker | null>(null)
+  const mapRef = useRef<kakao.maps.Map | null>(null)
+  const pinsRef = useRef<kakao.maps.CustomOverlay[]>([])
+  const draftRef = useRef<kakao.maps.CustomOverlay | null>(null)
   const fittedRef = useRef(false)
-  // Leaflet 이벤트 안에서 최신 콜백을 부르기 위해 ref 로 들고 있는다
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
+  // 카카오맵 이벤트 안에서 최신 콜백을 부르기 위해 ref 로 들고 있는다
   const callbacks = useRef({ onSelect, onPick, picking })
   useEffect(() => {
     callbacks.current = { onSelect, onPick, picking }
@@ -54,63 +67,84 @@ export function PlaceMap({ places, selectedId, onSelect, picking, onPick, draft,
 
   // 지도 만들기 (한 번)
   useEffect(() => {
-    if (!containerRef.current) return
-    const map = L.map(containerRef.current, { zoomControl: true }).setView(DEFAULT_CENTER, DEFAULT_ZOOM)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    }).addTo(map)
-    map.on('click', (e: L.LeafletMouseEvent) => {
-      if (callbacks.current.picking) callbacks.current.onPick({ lat: e.latlng.lat, lng: e.latlng.lng })
-    })
-    markersRef.current = L.layerGroup().addTo(map)
-    mapRef.current = map
+    let canceled = false
+    loadKakaoMaps()
+      .then((k) => {
+        if (canceled || !containerRef.current) return
+        const map = new k.maps.Map(containerRef.current, {
+          center: new k.maps.LatLng(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng),
+          level: DEFAULT_LEVEL,
+        })
+        map.addControl(new k.maps.ZoomControl(), k.maps.ControlPosition.RIGHT)
+        k.maps.event.addListener(map, 'click', (e) => {
+          if (callbacks.current.picking) callbacks.current.onPick({ lat: e.latLng.getLat(), lng: e.latLng.getLng() })
+        })
+        mapRef.current = map
+        setStatus('ready')
+      })
+      .catch((error) => {
+        console.error('카카오맵 불러오기 실패', error)
+        if (!canceled) setStatus('error')
+      })
     return () => {
-      map.remove()
+      canceled = true
       mapRef.current = null
-      markersRef.current = null
-      draftRef.current = null
     }
   }, [])
 
   // 장소 핀 다시 그리기
   useEffect(() => {
-    const layer = markersRef.current
     const map = mapRef.current
-    if (!layer || !map) return
-    layer.clearLayers()
-    for (const place of places) {
-      L.marker([place.lat, place.lng], {
-        icon: pinIcon(place.id === selectedId ? 'active' : 'normal'),
-        title: place.name,
-        zIndexOffset: place.id === selectedId ? 1000 : 0,
-      })
-        .on('click', () => callbacks.current.onSelect(place.id))
-        .addTo(layer)
-    }
+    if (status !== 'ready' || !map) return
+    const k = window.kakao
+    pinsRef.current.forEach((pin) => pin.setMap(null))
+    pinsRef.current = places.map(
+      (place) =>
+        new k.maps.CustomOverlay({
+          map,
+          position: new k.maps.LatLng(place.lat, place.lng),
+          content: pinElement(place.id === selectedId ? 'active' : 'normal', place.name, () =>
+            callbacks.current.onSelect(place.id),
+          ),
+          yAnchor: 1,
+          zIndex: place.id === selectedId ? 10 : 1,
+          clickable: true,
+        }),
+    )
     // 처음 불러왔을 때만 모든 핀이 보이게 맞춘다
     if (!fittedRef.current && places.length > 0 && !selectedId) {
       fittedRef.current = true
-      map.fitBounds(L.latLngBounds(places.map((p) => [p.lat, p.lng])), { padding: [40, 40], maxZoom: 15 })
+      const bounds = new k.maps.LatLngBounds()
+      places.forEach((p) => bounds.extend(new k.maps.LatLng(p.lat, p.lng)))
+      map.setBounds(bounds, 60, 60, 60, 60)
+      // 장소가 하나뿐이면 너무 확대되므로 적당히 되돌린다
+      if (map.getLevel() < FOCUS_LEVEL) map.setLevel(FOCUS_LEVEL)
     }
-  }, [places, selectedId])
+  }, [places, selectedId, status])
 
   // 고른 장소로 이동
   useEffect(() => {
     const map = mapRef.current
     const place = places.find((p) => p.id === selectedId)
-    if (!map || !place) return
+    if (status !== 'ready' || !map || !place) return
     fittedRef.current = true
-    map.flyTo([place.lat, place.lng], Math.max(map.getZoom(), FOCUS_ZOOM), { duration: 0.5 })
-  }, [selectedId, places])
+    if (map.getLevel() > FOCUS_LEVEL) map.setLevel(FOCUS_LEVEL)
+    map.panTo(new window.kakao.maps.LatLng(place.lat, place.lng))
+  }, [selectedId, places, status])
 
-  // 찍은 위치 임시 핀
+  // 찍거나 검색으로 고른 위치: 임시 핀을 두고 그리로 이동
   useEffect(() => {
     const map = mapRef.current
-    if (!map) return
-    draftRef.current?.remove()
-    draftRef.current = draft ? L.marker([draft.lat, draft.lng], { icon: pinIcon('draft') }).addTo(map) : null
-  }, [draft])
+    if (status !== 'ready' || !map) return
+    draftRef.current?.setMap(null)
+    draftRef.current = null
+    if (!draft) return
+    const k = window.kakao
+    const position = new k.maps.LatLng(draft.lat, draft.lng)
+    draftRef.current = new k.maps.CustomOverlay({ map, position, content: pinElement('draft'), yAnchor: 1, zIndex: 20 })
+    if (map.getLevel() > FOCUS_LEVEL) map.setLevel(FOCUS_LEVEL)
+    map.panTo(position)
+  }, [draft, status])
 
   const locateMe = () => {
     if (!('geolocation' in navigator)) {
@@ -118,26 +152,45 @@ export function PlaceMap({ places, selectedId, onSelect, picking, onPick, draft,
       return
     }
     navigator.geolocation.getCurrentPosition(
-      (pos) => mapRef.current?.flyTo([pos.coords.latitude, pos.coords.longitude], FOCUS_ZOOM, { duration: 0.5 }),
+      (pos) => {
+        const map = mapRef.current
+        if (!map) return
+        map.setLevel(4)
+        map.panTo(new window.kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude))
+      },
       () => toast.error('위치 권한을 허용해 주세요'),
       { enableHighAccuracy: true, timeout: 10_000 },
     )
   }
 
   return (
-    // isolate: Leaflet 내부의 큰 z-index 가 헤더·하단 탭·팝업 위로 올라오지 않게 가둔다
-    <div className={cn('relative isolate overflow-hidden rounded-xl border', className)}>
-      <div ref={containerRef} className={cn('size-full', picking && 'cursor-crosshair [&_.leaflet-grab]:cursor-crosshair')} />
-      <Button
-        type="button"
-        size="icon"
-        variant="secondary"
-        onClick={locateMe}
-        aria-label="내 위치로"
-        className="absolute right-3 bottom-6 z-[1000] shadow-md"
-      >
-        <LocateFixed className="size-4" />
-      </Button>
+    // isolate: 지도 안의 z-index 가 헤더·하단 탭·팝업 위로 올라오지 않게 가둔다
+    <div className={cn('relative isolate overflow-hidden rounded-xl border bg-muted', className)}>
+      <div ref={containerRef} className={cn('size-full', picking && 'cursor-crosshair')} />
+      {status === 'loading' && (
+        <p className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
+          지도를 불러오는 중…
+        </p>
+      )}
+      {status === 'error' && (
+        <p className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-muted-foreground">
+          지도를 불러오지 못했어요.
+          <br />
+          광고 차단 확장 프로그램이 켜져 있으면 꺼 주세요.
+        </p>
+      )}
+      {status === 'ready' && (
+        <Button
+          type="button"
+          size="icon"
+          variant="secondary"
+          onClick={locateMe}
+          aria-label="내 위치로"
+          className="absolute bottom-3 left-3 z-10 shadow-md"
+        >
+          <LocateFixed className="size-4" />
+        </Button>
+      )}
     </div>
   )
 }

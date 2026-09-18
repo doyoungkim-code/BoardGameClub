@@ -35,10 +35,12 @@ type Props = {
   point: LatLng | null
   /** 없으면 새 장소 */
   place?: Place
+  /** 새 장소일 때 미리 채울 값 (카카오 검색 결과) */
+  defaults?: { name: string; address: string }
   onSaved: (placeId: string) => void
 }
 
-export function PlaceFormDialog({ open, onOpenChange, point, place, onSaved }: Props) {
+export function PlaceFormDialog({ open, onOpenChange, point, place, defaults, onSaved }: Props) {
   const uid = useAuth((s) => s.profile!.uid)
   const {
     register,
@@ -46,7 +48,11 @@ export function PlaceFormDialog({ open, onOpenChange, point, place, onSaved }: P
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    values: { name: place?.name ?? '', address: place?.address ?? '', memo: place?.memo ?? '' },
+    values: {
+      name: place?.name ?? defaults?.name ?? '',
+      address: place?.address ?? defaults?.address ?? '',
+      memo: place?.memo ?? '',
+    },
   })
 
   const onSubmit = async (values: FormValues) => {

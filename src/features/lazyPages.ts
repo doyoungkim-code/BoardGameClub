@@ -26,7 +26,7 @@ export const EventDetailPage = lazy(() =>
 
 export const GamesPage = lazy(() => import('@/features/games/GamesPage').then((m) => ({ default: m.GamesPage })))
 
-// 지도 라이브러리(Leaflet)는 이 화면에서만 불러온다
+// 카카오맵 SDK 는 이 화면이 열릴 때 불러온다 (lib/kakaoMap.ts)
 export const PlacesPage = lazy(() => import('@/features/places/PlacesPage').then((m) => ({ default: m.PlacesPage })))
 
 export const StatsPage = lazy(() => import('@/features/stats/StatsPage').then((m) => ({ default: m.StatsPage })))

@@ -215,12 +215,22 @@ tests/rules/    보안 규칙 테스트
 
 ### 2026-09-19 추가 기능에서 정한 것
 **지도 (`/places`, `places` 컬렉션)**
-- **OpenStreetMap + Leaflet**을 쓴다. API 키·가입이 필요 없어서 바로 쓸 수 있다.
-  대신 한국 장소 검색이 없어서 위치는 지도를 눌러 찍고, 주소는 직접 적는다.
-  길찾기는 카카오맵 링크로 넘긴다(`kakaoRouteUrl`). 카카오맵으로 바꾸는 건 백로그
+- **카카오맵**을 쓴다 (처음엔 OpenStreetMap이었다가 같은 날 교체).
+  네이버 지도는 가게 이름 검색이 서버에서만 되고 클라우드 가입에 결제수단이 필요해서 제외
+- **가게 이름 검색**(`searchKakaoPlaces`)으로 고르면 이름·주소·좌표가 채워진다.
+  검색에 없는 곳은 "직접 찍기"로 지도를 눌러 추가. 같은 이름이 이미 있으면 새로 만들지 않고 그 장소를 보여준다
+- 길찾기·크게 보기는 카카오맵 링크로 넘긴다 (`kakaoMapUrl`, `kakaoRouteUrl`)
 - 등록은 회원 누구나, 수정·위치 옮기기·삭제는 등록자와 오너
-- Leaflet은 지도 화면에서만 불러온다(`lazyPages`). 지도 박스에 `isolate`를 걸어
-  Leaflet의 큰 z-index가 헤더·하단 탭·팝업 위로 올라오지 않게 했다
+- SDK는 지도가 처음 그려질 때 한 번만 불러온다 (`lib/kakaoMap.ts`). 핀은 CustomOverlay + `.place-pin` CSS.
+  지도 박스에 `isolate`를 걸어 지도 안의 z-index가 헤더·하단 탭·팝업 위로 올라오지 않게 했다
+
+**카카오 개발자 콘솔 설정** (앱: Do you 보드게임?, kwat09k 카카오 계정)
+- JavaScript 키: `VITE_KAKAO_MAP_KEY` (`.env.production`, `.env.local`, `.env.emulator`).
+  등록한 도메인에서만 동작해서 커밋해도 된다
+- 등록한 사이트 도메인: `https://doyou-boardgame.web.app`, `https://doyou-boardgame.firebaseapp.com`,
+  `http://localhost:5173`. **다른 주소(예: 미리보기 채널)에서 지도를 쓰려면 여기에 추가해야 한다**
+- 카카오맵 사용 설정 ON (꺼지면 지도·검색이 모두 안 된다)
+- 키 확인: `dapi.kakao.com/v2/local/search/keyword.json`에 `Authorization: KakaoAK <키>`와 등록한 `Origin`을 붙여 부르면 200
 - 모임과의 연결은 **이름 일치**로 한다: 모임 만들기에서 등록된 카페를 고르면 장소 칸에 이름이 들어가고,
   모임 화면에서 장소 이름이 지도의 카페와 같으면 "지도 보기" 링크가 뜬다 (events 스키마는 그대로)
 
