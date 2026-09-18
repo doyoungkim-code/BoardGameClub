@@ -6,11 +6,41 @@ type Props = {
   progress: Progress
   /** 새로 달성한 업적 (출석 횟수). 본인 프로필에서만 */
   newGoals?: Set<number>
+  /** 다른 회원 프로필: 달성한 업적만 한 줄로 */
+  compact?: boolean
 }
 
-/** 출석 업적 배지. 달성한 것은 색이 들어가고, 못 한 것은 흐리게 + 진행도 */
-export function AchievementList({ progress, newGoals }: Props) {
+/**
+ * 출석 업적.
+ * - 본인: 전체 목록. 달성한 것은 색, 못 한 것은 흐리게 + 진행도
+ * - 다른 회원(compact): 달성한 것만 한 줄 (넘치면 옆으로 밀어서 본다)
+ */
+export function AchievementList({ progress, newGoals, compact }: Props) {
   const unlocked = new Set(progress.unlockedGoals)
+
+  if (compact) {
+    const done = ATTENDANCE_ACHIEVEMENTS.filter((a) => unlocked.has(a.goal))
+    if (done.length === 0) return null
+    return (
+      <section className="space-y-2">
+        <h2 className="flex items-baseline gap-2 font-semibold">
+          업적 <span className="text-sm font-normal text-muted-foreground">{done.length}개</span>
+        </h2>
+        <ul className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none]">
+          {done.map((achievement) => (
+            <li
+              key={achievement.goal}
+              title={`출석 ${achievement.goal}회`}
+              className="flex shrink-0 items-center gap-1 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-sm"
+            >
+              <span aria-hidden>{achievement.icon}</span>
+              {achievement.name}
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
 
   return (
     <section className="space-y-2">

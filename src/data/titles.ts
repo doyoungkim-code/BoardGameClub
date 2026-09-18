@@ -1,38 +1,53 @@
+import { TITLE_LIST } from '@/data/achievementList'
 import type { ActivityStats } from '@/services/activity'
 
 /**
  * 조건을 채우면 자동으로 얻는 칭호. 닉네임 앞에 붙는다 ("번개의 신 홍길동").
- * 이름·조건은 여기만 고치면 된다. id 는 회원이 대표 칭호로 고른 값으로 저장되므로 한 번 정하면 바꾸지 말 것
- * (영문 소문자·숫자·- 만. rules 가 'auto:<id>' 모양을 검사한다).
+ * 이름·조건은 src/data/achievementList.ts 의 TITLE_LIST 에서 고친다.
+ * 이름(text)을 비워 둔 칭호는 앱에 나오지 않는다.
  *
  * 관리자가 직접 주는 칭호는 여기 없이 회원 문서(users.grantedTitles)에 'granted:<이름>' 으로 저장된다.
- *
- * - metric: 어떤 기록으로 셀지 (services/activity.ts 의 ActivityStats)
- *   attended 출석 / regularAttended 정기모임 출석 / flashAttended 번개 출석
- *   hosted 연 모임 / flashHosted 연 번개 / posts 게시글 / reviews 후기 글
- *   memberDays 가입 후 날 수 / longestWeekStreak 가장 길게 이어진 주 단위 연속 출석
- * - goal: 이 수치 이상이면 획득
  */
 export type AutoTitle = {
   id: string
   text: string
+  /** 얻는 조건 설명 (조건으로 자동 생성) */
   description: string
   metric: keyof ActivityStats
   goal: number
 }
 
-// 형용사 칭호(보드게임에 입문한·보드게임을 사랑하는·예리한·꾸준한)는 조건이 정해지면 추가한다
-export const AUTO_TITLES: AutoTitle[] = [
-  { id: 'flash-host-1', text: '번개 새내기', description: '번개 처음 열기', metric: 'flashHosted', goal: 1 },
-  { id: 'flash-host-5', text: '번개맨', description: '번개 5번 열기', metric: 'flashHosted', goal: 5 },
-  { id: 'flash-host-20', text: '번개의 신', description: '번개 20번 열기', metric: 'flashHosted', goal: 20 },
-  { id: 'regular-10', text: '정모 지킴이', description: '정기모임 10번 출석', metric: 'regularAttended', goal: 10 },
-  { id: 'flash-10', text: '번개 사냥꾼', description: '번개 10번 출석', metric: 'flashAttended', goal: 10 },
-  { id: 'posts-10', text: '수다쟁이', description: '게시글 10개 쓰기', metric: 'posts', goal: 10 },
-  { id: 'reviews-5', text: '후기 장인', description: '후기 게시판에 5번 쓰기', metric: 'reviews', goal: 5 },
-  { id: 'year-1', text: '1년 차 보드게이머', description: '가입한 지 1년', metric: 'memberDays', goal: 365 },
-  { id: 'streak-4', text: '개근왕', description: '4주 연속 매주 출석', metric: 'longestWeekStreak', goal: 4 },
-]
+/** 조건 설명 문장 ("번개 5번 열기") */
+function describeCondition(metric: keyof ActivityStats, goal: number) {
+  switch (metric) {
+    case 'attended':
+      return `모임 ${goal}번 출석`
+    case 'regularAttended':
+      return `정기모임 ${goal}번 출석`
+    case 'flashAttended':
+      return `번개 ${goal}번 출석`
+    case 'hosted':
+      return `모임 ${goal}번 열기`
+    case 'flashHosted':
+      return `번개 ${goal}번 열기`
+    case 'posts':
+      return `게시글 ${goal}개 쓰기`
+    case 'reviews':
+      return `후기 ${goal}개 쓰기`
+    case 'memberDays':
+      return goal % 365 === 0 ? `가입한 지 ${goal / 365}년` : `가입한 지 ${goal}일`
+    case 'longestWeekStreak':
+      return `${goal}주 연속 매주 출석`
+  }
+}
+
+export const AUTO_TITLES: AutoTitle[] = TITLE_LIST.filter((entry) => entry.text.trim()).map((entry) => ({
+  id: entry.id,
+  text: entry.text.trim(),
+  description: describeCondition(entry.metric, entry.goal),
+  metric: entry.metric,
+  goal: entry.goal,
+}))
 
 const AUTO_PREFIX = 'auto:'
 const GRANTED_PREFIX = 'granted:'

@@ -137,7 +137,8 @@ src/
   services/     Firestore 읽기·쓰기 함수 (users, chat, events, posts, members)
   stores/       zustand 전역 상태 + 한 번만 하는 실시간 구독 (auth, members, chat, events)
   data/games.ts 보드게임 목록 (Firestore 아님. 표지 이미지는 public/games/)
-  data/achievements.ts  출석 업적·경험치·티어 숫자 (여기만 고치면 된다)
+  data/achievementList.ts  업적·칭호 목록 (이름·조건. 오너가 채우는 파일)
+  data/achievements.ts  경험치·티어 계산
   data/titles.ts        자동 칭호 목록
   hooks/        여러 화면에서 쓰는 훅 (useUnreadCount, useChatNotifications)
   features/     기능별 화면 (auth, home, chat, events, games, stats, board, members, me, more, admin)
@@ -263,10 +264,13 @@ tests/rules/    보안 규칙 테스트
 
 ### 출석 업적 · 경험치 · 티어 · 칭호 (2026-09-19 개편)
 처음 만든 업적 14개(출석·주최·게시글·가입일 섞음)를 비우고 다시 짰다.
-- **숫자는 파일 두 개만 고치면 된다**
-  - `src/data/achievements.ts`: 출석 업적 14개(1·2·3·5·7·10·15·20·25·30·40·50·70·100회, 보너스 XP),
-    `XP_PER_ATTENDANCE`(10), 티어 7개(`TIERS`: 기준 XP·색)
-  - `src/data/titles.ts`: 자동 칭호(`AUTO_TITLES`: 조건 수치·목표). id는 회원이 고른 값으로 저장되니 바꾸지 말 것
+- **업적·칭호 목록은 `src/data/achievementList.ts` 한 파일** (오너가 이름을 직접 채우는 파일, 9/19 분리)
+  - `ACHIEVEMENT_LIST`: 출석 횟수·보너스 XP·아이콘·이름. 이름·아이콘이 비면 "출석 N회"·🎲로 나온다
+  - `TITLE_LIST`: 칭호 id·조건(metric·goal)·이름. **이름이 비어 있으면 앱에 나오지 않는다**. 조건 설명은 자동 생성
+  - id는 회원이 고른 대표 칭호로 저장되니 바꾸지 말 것
+- 계산식·티어는 `src/data/achievements.ts`(`XP_PER_ATTENDANCE` 10, `TIERS` 기준 XP·색),
+  칭호 표시 규칙은 `src/data/titles.ts`
+- 다른 회원 프로필에서는 **달성한 업적만 한 줄**로 보인다. 본인 프로필은 전체 목록(진행도 포함)
 - **경험치** = 출석 1회 10XP + 달성한 출석 업적 보너스. 티어 기준은 대략 출석 2회 실버 · 5회 골드 · 10회 플래티넘 ·
   20회 다이아 · 30회 마스터 · 50회 챌린저 (오너 요청 "빨리 오르게")
 - **칭호**

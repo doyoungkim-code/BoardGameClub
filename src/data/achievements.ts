@@ -1,5 +1,8 @@
+import { ACHIEVEMENT_LIST } from '@/data/achievementList'
+
 /**
- * 출석 업적 · 경험치(XP) · 티어. 숫자·이름·아이콘은 여기만 고치면 화면에 바로 반영된다
+ * 출석 업적 · 경험치(XP) · 티어 계산.
+ * 업적 이름·아이콘·조건은 src/data/achievementList.ts 에서 고친다. 여기는 티어와 계산식
  * (저장하는 데이터가 없고 매번 출석 기록으로 계산한다).
  *
  * XP = 출석 1회마다 XP_PER_ATTENDANCE + 달성한 출석 업적의 보너스 XP 합
@@ -18,23 +21,15 @@ export type AttendanceAchievement = {
   bonusXp: number
 }
 
-/** 목록 순서대로 화면에 나온다 (goal 오름차순을 유지할 것) */
-export const ATTENDANCE_ACHIEVEMENTS: AttendanceAchievement[] = [
-  { goal: 1, icon: '🎲', name: '첫 발걸음', bonusXp: 10 },
-  { goal: 2, icon: '👋', name: '또 왔어요', bonusXp: 10 },
-  { goal: 3, icon: '🤝', name: '세 번째 만남', bonusXp: 15 },
-  { goal: 5, icon: '🙌', name: '단골손님', bonusXp: 20 },
-  { goal: 7, icon: '🍀', name: '럭키 세븐', bonusXp: 25 },
-  { goal: 10, icon: '🔥', name: '개근러', bonusXp: 30 },
-  { goal: 15, icon: '🎯', name: '보드게임 중독', bonusXp: 40 },
-  { goal: 20, icon: '🏠', name: '터줏대감', bonusXp: 50 },
-  { goal: 25, icon: '⭐', name: '반오십', bonusXp: 60 },
-  { goal: 30, icon: '🏛️', name: '동호회의 기둥', bonusXp: 70 },
-  { goal: 40, icon: '🎖️', name: '베테랑', bonusXp: 90 },
-  { goal: 50, icon: '👑', name: '살아있는 전설', bonusXp: 110 },
-  { goal: 70, icon: '🏆', name: '명예의 전당', bonusXp: 150 },
-  { goal: 100, icon: '💯', name: '백전노장', bonusXp: 200 },
-]
+/** 이름·아이콘을 아직 안 정한 업적은 기본값으로 채운다 */
+export const ATTENDANCE_ACHIEVEMENTS: AttendanceAchievement[] = [...ACHIEVEMENT_LIST]
+  .sort((a, b) => a.goal - b.goal)
+  .map((entry) => ({
+    goal: entry.goal,
+    bonusXp: entry.bonusXp,
+    icon: entry.icon.trim() || '🎲',
+    name: entry.name.trim() || `출석 ${entry.goal}회`,
+  }))
 
 export type TierId = 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond' | 'master' | 'challenger'
 

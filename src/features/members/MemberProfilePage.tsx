@@ -154,7 +154,7 @@ export function MemberProfilePage() {
           </section>
 
           <TitleSection member={member} stats={activity.stats} progress={progress} isMe={isMe} newKeys={newTitleKeys} />
-          <AchievementList progress={progress} newGoals={newGoals} />
+          <AchievementList progress={progress} newGoals={newGoals} compact={!isMe} />
           <ActivityHistory items={activity.history} />
         </>
       ) : (
