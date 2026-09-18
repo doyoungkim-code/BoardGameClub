@@ -291,14 +291,14 @@ service cloud.firestore {
           && d.canceled is bool;
       }
 
+      // 모임은 한 종류 (예전의 정기모임·번개 구분은 2026-09-19에 없앴다. 예전 문서에 남은 type 필드는 쓰지 않는다)
+      // 승인된 회원 누구나 만든다
       function validNewEvent() {
         let d = request.resource.data;
-        let keys = ['type', 'title', 'description', 'location', 'startAt', 'endAt', 'capacity',
+        let keys = ['title', 'description', 'location', 'startAt', 'endAt', 'capacity',
                     'hostId', 'gameIds', 'attendeeIds', 'attendedIds', 'canceled', 'createdAt'];
         return d.keys().hasOnly(keys) && d.keys().hasAll(keys)
           && validEventFields()
-          // 정기모임은 오너만, 번개는 승인된 회원 누구나
-          && (d.type == 'flash' || (d.type == 'regular' && isOwner()))
           && d.hostId == request.auth.uid
           // 만든 사람은 자동으로 참석
           && d.attendeeIds == [request.auth.uid]

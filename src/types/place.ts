@@ -5,7 +5,7 @@ export type Place = {
   id: string
   name: string
   address: string
-  /** 예: "9월 정모 장소, 6인 테이블 있음" */
+  /** 예: "9월 모임 장소, 6인 테이블 있음" */
   memo: string
   lat: number
   lng: number

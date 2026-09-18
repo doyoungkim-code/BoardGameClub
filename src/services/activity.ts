@@ -4,7 +4,7 @@ import { ATTENDANCE_ACHIEVEMENTS, nextTier, tierFor, xpFor, type Tier } from '@/
 import { AUTO_TITLES } from '@/data/titles'
 import { eventsCol, hasStarted, toEvent } from '@/services/events'
 import { postsCol, toPost } from '@/services/posts'
-import type { ClubEvent, EventType } from '@/types/event'
+import type { ClubEvent } from '@/types/event'
 import type { BoardId } from '@/types/post'
 
 /**
@@ -12,16 +12,10 @@ import type { BoardId } from '@/types/post'
  * 출석 업적·티어는 attended 로, 자동 칭호(src/data/titles.ts)는 이 이름들 중 하나로 조건을 정한다.
  */
 export type ActivityStats = {
-  /** 모임 출석 (정기 + 번개) */
+  /** 모임 출석 */
   attended: number
-  /** 정기모임 출석 */
-  regularAttended: number
-  /** 번개 출석 */
-  flashAttended: number
-  /** 연 모임 (정기 + 번개) */
+  /** 연 모임 */
   hosted: number
-  /** 연 번개 */
-  flashHosted: number
   /** 쓴 게시글 (모든 게시판) */
   posts: number
   /** 후기 게시판 글 */
@@ -78,7 +72,6 @@ export type ActivityItem =
       id: string
       at: number
       title: string
-      eventType: EventType
       attended: boolean
       hosted: boolean
     }
@@ -120,10 +113,7 @@ export async function fetchMemberActivity(uid: string, joinedAt: number | null):
 
   const stats: ActivityStats = {
     attended: attendedEvents.length,
-    regularAttended: attendedEvents.filter((e) => e.type === 'regular').length,
-    flashAttended: attendedEvents.filter((e) => e.type === 'flash').length,
     hosted: hostedEvents.length,
-    flashHosted: hostedEvents.filter((e) => e.type === 'flash').length,
     posts: posts.length,
     reviews: posts.filter((p) => p.board === 'review').length,
     memberDays: joinedAt ? Math.floor((Date.now() - joinedAt) / DAY) : 0,
@@ -140,7 +130,6 @@ export async function fetchMemberActivity(uid: string, joinedAt: number | null):
           id: e.id,
           at: e.startAt.toMillis(),
           title: e.title,
-          eventType: e.type,
           attended: countsAsAttended(e, uid),
           hosted: e.hostId === uid,
         }),

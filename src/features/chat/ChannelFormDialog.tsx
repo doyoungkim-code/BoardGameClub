@@ -71,7 +71,7 @@ export function ChannelFormDialog({ open, onOpenChange, channel, nextOrder = 0 }
         <form id="channel-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div className="space-y-2">
             <Label htmlFor="channel-name">이름</Label>
-            <Input id="channel-name" placeholder="예: 번개" aria-invalid={!!errors.name} {...register('name')} />
+            <Input id="channel-name" placeholder="예: 모임" aria-invalid={!!errors.name} {...register('name')} />
             <FieldError message={errors.name?.message} />
           </div>
           <div className="space-y-2">

@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { formatEventDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/stores/auth'
-import { EVENT_TYPE_LABEL, type ClubEvent } from '@/types/event'
+import type { ClubEvent } from '@/types/event'
 
 /** 목록·캘린더·홈에서 함께 쓰는 모임 한 줄 */
 export function EventCard({ event }: { event: ClubEvent }) {
@@ -17,7 +17,6 @@ export function EventCard({ event }: { event: ClubEvent }) {
       <Card className={cn('py-3 transition-colors hover:border-primary/40', event.canceled && 'opacity-60')}>
         <CardContent className="space-y-2 px-4">
           <div className="flex flex-wrap items-center gap-1.5">
-            <EventTypeBadge type={event.type} />
             {event.canceled && <Badge variant="destructive">취소됨</Badge>}
             {attending && !event.canceled && <Badge variant="secondary">참석</Badge>}
             <p className={cn('min-w-0 flex-1 truncate font-semibold', event.canceled && 'line-through')}>
@@ -42,10 +41,6 @@ export function EventCard({ event }: { event: ClubEvent }) {
       </Card>
     </Link>
   )
-}
-
-export function EventTypeBadge({ type }: { type: ClubEvent['type'] }) {
-  return <Badge variant={type === 'regular' ? 'default' : 'outline'}>{EVENT_TYPE_LABEL[type]}</Badge>
 }
 
 export function EmptyEvents({ text }: { text: string }) {

@@ -91,7 +91,7 @@ function ListView() {
         {!loaded ? (
           <EventSkeletons />
         ) : upcoming.length === 0 ? (
-          <EmptyEvents text="예정된 모임이 없어요. 번개를 열어보세요!" />
+          <EmptyEvents text="예정된 모임이 없어요. 모임을 열어보세요!" />
         ) : (
           upcoming.map((event) => <EventCard key={event.id} event={event} />)
         )}

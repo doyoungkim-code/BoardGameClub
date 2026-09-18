@@ -308,7 +308,7 @@ function SpotCard({ spot, favorite, isOwner, uid, onClose }: CardProps) {
               onChange={(e) => setMemo(e.target.value)}
               rows={2}
               maxLength={300}
-              placeholder="메모 (예: 9월 정모 장소, 6인 테이블 있음)"
+              placeholder="메모 (예: 9월 모임 장소, 6인 테이블 있음)"
               aria-label="즐겨찾기 메모"
             />
             <div className="flex gap-2">

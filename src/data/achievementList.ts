@@ -18,11 +18,8 @@ import type { ActivityStats } from '@/services/activity'
  *    text    : 칭호 이름 (비워 두면 그 칭호는 앱에 나오지 않는다)
  *
  *    metric 에 쓸 수 있는 것
- *      attended            모임 출석 (정모 + 번개)
- *      regularAttended     정기모임 출석
- *      flashAttended       번개 출석
- *      hosted              모임을 연 횟수 (정모 + 번개)
- *      flashHosted         번개를 연 횟수
+ *      attended            모임 출석 횟수
+ *      hosted              모임을 연 횟수
  *      posts               게시글 수 (모든 게시판)
  *      reviews             후기 게시판 글 수
  *      memberDays          가입한 지 며칠
@@ -64,13 +61,13 @@ export const ACHIEVEMENT_LIST: AchievementEntry[] = [
 ]
 
 export const TITLE_LIST: TitleEntry[] = [
-  // 번개를 연 횟수
-  { id: 'flash-host-1', metric: 'flashHosted', goal: 1, text: '' },
-  { id: 'flash-host-5', metric: 'flashHosted', goal: 5, text: '' },
-  { id: 'flash-host-20', metric: 'flashHosted', goal: 20, text: '' },
-  // 정기모임·번개 출석
-  { id: 'regular-10', metric: 'regularAttended', goal: 10, text: '' },
-  { id: 'flash-10', metric: 'flashAttended', goal: 10, text: '' },
+  // 모임을 연 횟수
+  { id: 'host-1', metric: 'hosted', goal: 1, text: '' },
+  { id: 'host-5', metric: 'hosted', goal: 5, text: '' },
+  { id: 'host-20', metric: 'hosted', goal: 20, text: '' },
+  // 모임 출석 횟수
+  { id: 'attend-10', metric: 'attended', goal: 10, text: '' },
+  { id: 'attend-30', metric: 'attended', goal: 30, text: '' },
   // 게시판
   { id: 'posts-10', metric: 'posts', goal: 10, text: '' },
   { id: 'reviews-5', metric: 'reviews', goal: 5, text: '' },

@@ -13,13 +13,11 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { FieldError } from '@/features/auth/SignupPage'
-import { EventTypeBadge } from '@/features/events/EventCard'
 import { usePlaces } from '@/hooks/usePlaces'
 import { toDateTimeLocal, toErrorMessage } from '@/lib/format'
-import { cn } from '@/lib/utils'
 import { canManage, createEvent, fetchEvent, updateEvent } from '@/services/events'
 import { useAuth, useIsOwner } from '@/stores/auth'
-import { EVENT_TYPE_LABEL, type ClubEvent, type EventType } from '@/types/event'
+import type { ClubEvent } from '@/types/event'
 
 const schema = z
   .object({
@@ -96,8 +94,6 @@ function EventForm({ event }: { event?: ClubEvent }) {
   const isOwner = useIsOwner()
   const navigate = useNavigate()
   const editing = !!event
-  // 유형은 만들 때만 고를 수 있어서(rules) 폼 밖에서 따로 들고 있는다
-  const [type, setType] = useState<EventType>(event?.type ?? 'flash')
 
   const {
     register,
@@ -127,7 +123,7 @@ function EventForm({ event }: { event?: ClubEvent }) {
         toast.success('모임을 수정했어요')
         navigate(`/events/${event.id}`, { replace: true })
       } else {
-        const id = await createEvent(profile.uid, { ...input, type })
+        const id = await createEvent(profile.uid, input)
         toast.success('모임을 만들었어요')
         navigate(`/events/${id}`, { replace: true })
       }
@@ -146,37 +142,8 @@ function EventForm({ event }: { event?: ClubEvent }) {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
         <div className="space-y-2">
-          <Label>유형</Label>
-          {editing ? (
-            <div>
-              <EventTypeBadge type={type} />
-              <p className="mt-1 text-xs text-muted-foreground">유형은 바꿀 수 없어요</p>
-            </div>
-          ) : isOwner ? (
-            <div className="grid grid-cols-2 gap-2">
-              {(['regular', 'flash'] as const).map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setType(value)}
-                  aria-pressed={type === value}
-                  className={cn(
-                    'rounded-lg border py-2 text-sm transition-colors',
-                    type === value ? 'border-primary bg-primary/5 font-semibold text-primary' : 'text-muted-foreground',
-                  )}
-                >
-                  {EVENT_TYPE_LABEL[value]}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">번개 — 정기모임은 오너만 만들 수 있어요</p>
-          )}
-        </div>
-
-        <div className="space-y-2">
           <Label htmlFor="title">이름</Label>
-          <Input id="title" placeholder="예: 토요일 정기모임" aria-invalid={!!errors.title} {...register('title')} />
+          <Input id="title" placeholder="예: 토요일 보드게임 모임" aria-invalid={!!errors.title} {...register('title')} />
           <FieldError message={errors.title?.message} />
         </div>
 

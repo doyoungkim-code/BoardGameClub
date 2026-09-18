@@ -2,7 +2,7 @@ import { TITLE_LIST } from '@/data/achievementList'
 import type { ActivityStats } from '@/services/activity'
 
 /**
- * 조건을 채우면 자동으로 얻는 칭호. 닉네임 앞에 붙는다 ("번개의 신 홍길동").
+ * 조건을 채우면 자동으로 얻는 칭호. 닉네임 앞에 붙는다 ("모임의 신 홍길동").
  * 이름·조건은 src/data/achievementList.ts 의 TITLE_LIST 에서 고친다.
  * 이름(text)을 비워 둔 칭호는 앱에 나오지 않는다.
  *
@@ -17,19 +17,13 @@ export type AutoTitle = {
   goal: number
 }
 
-/** 조건 설명 문장 ("번개 5번 열기") */
+/** 조건 설명 문장 ("모임 5번 열기") */
 function describeCondition(metric: keyof ActivityStats, goal: number) {
   switch (metric) {
     case 'attended':
       return `모임 ${goal}번 출석`
-    case 'regularAttended':
-      return `정기모임 ${goal}번 출석`
-    case 'flashAttended':
-      return `번개 ${goal}번 출석`
     case 'hosted':
       return `모임 ${goal}번 열기`
-    case 'flashHosted':
-      return `번개 ${goal}번 열기`
     case 'posts':
       return `게시글 ${goal}개 쓰기`
     case 'reviews':

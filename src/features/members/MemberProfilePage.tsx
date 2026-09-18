@@ -147,7 +147,7 @@ export function MemberProfilePage() {
           <section className="space-y-2">
             <div className="grid grid-cols-3 gap-2">
               <Stat icon={CalendarCheck} label="출석" value={`${activity.stats.attended}`} />
-              <Stat icon={Zap} label="번개 주최" value={`${activity.stats.flashHosted}`} />
+              <Stat icon={Zap} label="모임 주최" value={`${activity.stats.hosted}`} />
               <Stat icon={PenLine} label="게시글" value={`${activity.stats.posts}`} />
             </div>
             <p className="text-xs text-muted-foreground">가입일 {formatDateTime(member.approvedAt ?? member.createdAt)}</p>

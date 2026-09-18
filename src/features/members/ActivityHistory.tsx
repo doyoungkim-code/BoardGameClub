@@ -6,7 +6,6 @@ import { Link } from 'react-router'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import type { ActivityItem } from '@/services/activity'
-import { EVENT_TYPE_LABEL } from '@/types/event'
 import { BOARD_LABEL } from '@/types/post'
 
 const PAGE = 10
@@ -56,8 +55,7 @@ export function ActivityHistory({ items }: { items: ActivityItem[] }) {
 
 function describe(item: ActivityItem) {
   if (item.kind === 'post') return `${BOARD_LABEL[item.board]} 게시판에 글`
-  const type = EVENT_TYPE_LABEL[item.eventType]
-  return item.attended ? `${type} 출석` : `${type} 주최`
+  return item.attended ? '모임 출석' : '모임 주최'
 }
 
 function ItemIcon({ item }: { item: ActivityItem }) {

@@ -18,7 +18,7 @@ import {
   type DocumentSnapshot,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import type { ClubEvent, EventType } from '@/types/event'
+import type { ClubEvent } from '@/types/event'
 
 /** 지난 모임 목록에서 한 번에 불러오는 개수 */
 export const PAST_PAGE_SIZE = 20
@@ -85,7 +85,6 @@ export function fetchEventsBetween(from: Date, to: Date) {
 // ---------- 쓰기 ----------
 
 export type EventInput = {
-  type: EventType
   title: string
   description: string
   location: string
@@ -110,8 +109,8 @@ export function createEvent(uid: string, input: EventInput) {
   }).then(() => ref.id)
 }
 
-/** 유형과 호스트는 바꿀 수 없다 (rules) */
-export function updateEvent(eventId: string, input: Omit<EventInput, 'type'>) {
+/** 호스트는 바꿀 수 없다 (rules) */
+export function updateEvent(eventId: string, input: EventInput) {
   return updateDoc(eventRef(eventId), {
     title: input.title,
     description: input.description,

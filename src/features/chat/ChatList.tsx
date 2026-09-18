@@ -61,7 +61,7 @@ export function ChatList() {
             <p>아직 채널이 없어요</p>
             {isOwner && (
               <Button size="sm" onClick={handleCreateDefaults} disabled={creatingDefaults}>
-                기본 채널 만들기 (전체·번개·잡담)
+                기본 채널 만들기 (전체·모임·잡담)
               </Button>
             )}
           </div>

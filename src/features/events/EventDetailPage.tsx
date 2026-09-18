@@ -17,7 +17,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { AttendeeManagerDialog } from '@/features/events/AttendeeManagerDialog'
-import { EventTypeBadge } from '@/features/events/EventCard'
 import { usePlaces } from '@/hooks/usePlaces'
 import { formatEventRange, toErrorMessage } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -106,7 +105,6 @@ function EventDetail({ event }: { event: ClubEvent }) {
       <div className="flex items-center gap-1">
         <BackButton fallback="/events" />
         <div className="flex flex-1 flex-wrap items-center gap-1.5">
-          <EventTypeBadge type={event.type} />
           {event.canceled && <Badge variant="destructive">취소됨</Badge>}
           {!event.canceled && past && <Badge variant="secondary">지난 모임</Badge>}
         </div>

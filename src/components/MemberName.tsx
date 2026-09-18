@@ -14,7 +14,7 @@ type Props = {
 }
 
 /**
- * 닉네임 표시: [티어 방패] 대표 칭호 닉네임 → "🛡 번개의 신 홍길동".
+ * 닉네임 표시: [티어 방패] 대표 칭호 닉네임 → "🛡 모임의 신 홍길동".
  * 채팅·게시판·모임 참석자·회원 목록·통계에서 같이 쓴다.
  */
 export function MemberName({ uid, fallback, showTitle = true, className }: Props) {

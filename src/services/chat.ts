@@ -78,7 +78,7 @@ export function createChannel(uid: string, input: ChannelInput, order: number) {
 
 const DEFAULT_CHANNELS: ChannelInput[] = [
   { name: '전체', description: '동호회 전체 대화방' },
-  { name: '번개', description: '오늘 한 판? 번개 모임 잡기' },
+  { name: '모임', description: '오늘 한 판? 모임 잡기' },
   { name: '잡담', description: '보드게임 얘기도, 사는 얘기도' },
 ]
 

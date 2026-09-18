@@ -32,8 +32,7 @@ const tomorrow = () => Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000)
 
 /** 클라이언트가 보내는 새 모임 문서 */
 const newEvent = (hostId: string, overrides: Record<string, unknown> = {}) => ({
-  type: 'flash',
-  title: '수요일 번개',
+  title: '수요일 모임',
   description: '',
   location: '강남 보드게임카페',
   startAt: tomorrow(),
@@ -71,13 +70,13 @@ describe('모임 읽기', () => {
 })
 
 describe('모임 만들기', () => {
-  it('회원은 번개를 만들 수 있다', async () => {
+  it('회원과 오너 모두 모임을 만들 수 있다', async () => {
     await assertSucceeds(setDoc(doc(dbAs('alice'), 'events/e1'), newEvent('alice')))
+    await assertSucceeds(setDoc(doc(ownerDb(), 'events/e2'), newEvent('owner')))
   })
 
-  it('정기모임은 오너만 만들 수 있다', async () => {
-    await assertSucceeds(setDoc(doc(ownerDb(), 'events/e1'), newEvent('owner', { type: 'regular' })))
-    await assertFails(setDoc(doc(dbAs('alice'), 'events/e2'), newEvent('alice', { type: 'regular' })))
+  it('예전의 모임 유형(type) 필드는 더 이상 넣을 수 없다', async () => {
+    await assertFails(setDoc(doc(dbAs('alice'), 'events/e1'), newEvent('alice', { type: 'regular' })))
   })
 
   it('대기자는 만들 수 없다', async () => {
@@ -103,7 +102,6 @@ describe('모임 만들기', () => {
       assertFails(setDoc(doc(dbAs('alice'), `events/${Math.random()}`), newEvent('alice', overrides)))
     await bad({ title: '' })
     await bad({ title: 'a'.repeat(51) })
-    await bad({ type: 'party' })
     await bad({ capacity: 0 })
     await bad({ capacity: 3.5 })
     await bad({ endAt: Timestamp.fromMillis(0) }) // 시작보다 이른 종료
@@ -128,9 +126,15 @@ describe('모임 수정·삭제', () => {
     await assertFails(updateDoc(doc(dbAs('bob'), 'events/e1'), { title: '장난' }))
   })
 
-  it('유형과 호스트는 바꿀 수 없다', async () => {
-    await assertFails(updateDoc(doc(dbAs('alice'), 'events/e1'), { type: 'regular' }))
+  it('호스트는 바꿀 수 없고, 없는 필드를 더할 수도 없다', async () => {
     await assertFails(updateDoc(doc(dbAs('alice'), 'events/e1'), { hostId: 'bob' }))
+    await assertFails(updateDoc(doc(dbAs('alice'), 'events/e1'), { type: 'regular' }))
+  })
+
+  it('예전에 만든 모임(type 필드가 남아 있음)도 그대로 고칠 수 있다', async () => {
+    await seedEvent('old', 'alice', { type: 'flash' })
+    await assertSucceeds(updateDoc(doc(dbAs('alice'), 'events/old'), { title: '장소 변경' }))
+    await assertSucceeds(updateDoc(doc(dbAs('bob'), 'events/old'), { attendeeIds: arrayUnion('bob') }))
   })
 
   it('호스트와 오너는 모임을 취소 표시할 수 있다', async () => {
