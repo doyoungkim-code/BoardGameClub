@@ -6,7 +6,7 @@ import type { ActivityStats } from '@/services/activity'
  * - metric: 어떤 수치로 셀지. 고를 수 있는 값은 services/activity.ts 의 ActivityStats 참고
  *   attended 출석 / regularAttended 정기모임 출석 / flashAttended 번개 출석
  *   hosted 연 모임 / flashHosted 연 번개 / posts 게시글 / reviews 후기 글
- *   places 지도에 등록한 장소 / memberDays 가입 후 날 수
+ *   memberDays 가입 후 날 수
  * - goal: 이 수치 이상이면 달성
  * - 목록 순서대로 화면에 나온다
  */
@@ -37,9 +37,6 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'post-1', icon: '✏️', name: '첫 글', description: '게시판에 처음 글쓰기', metric: 'posts', goal: 1 },
   { id: 'post-10', icon: '💬', name: '수다쟁이', description: '게시글 10개 쓰기', metric: 'posts', goal: 10 },
   { id: 'review-3', icon: '📝', name: '후기 작가', description: '후기 게시판에 3번 쓰기', metric: 'reviews', goal: 3 },
-
-  // 지도
-  { id: 'place-1', icon: '🗺️', name: '탐험가', description: '지도에 카페를 처음 등록', metric: 'places', goal: 1 },
 
   // 함께한 시간
   { id: 'days-100', icon: '💯', name: '100일', description: '가입한 지 100일', metric: 'memberDays', goal: 100 },

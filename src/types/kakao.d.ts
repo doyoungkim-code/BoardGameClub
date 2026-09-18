@@ -31,6 +31,7 @@ declare global {
       panTo(latlng: LatLng): void
       setLevel(level: number, options?: { animate?: boolean }): void
       getLevel(): number
+      getBounds(): LatLngBounds
       setBounds(bounds: LatLngBounds, paddingTop?: number, paddingRight?: number, paddingBottom?: number, paddingLeft?: number): void
       addControl(control: ZoomControl, position: number): void
       relayout(): void
@@ -60,6 +61,8 @@ declare global {
 
     namespace event {
       function addListener(target: Map, type: 'click', handler: (event: MouseEvent) => void): void
+      /** 지도 이동·확대가 끝났을 때 */
+      function addListener(target: Map, type: 'idle', handler: () => void): void
     }
 
     namespace services {
@@ -78,12 +81,19 @@ declare global {
         y: string
       }
 
+      /** 검색 결과 페이지 정보. 한 검색어당 최대 45건(15건 × 3쪽)까지만 받을 수 있다 */
+      type Pagination = {
+        totalCount: number
+        hasNextPage: boolean
+        nextPage(): void
+      }
+
       class Places {
         constructor()
         keywordSearch(
           keyword: string,
-          callback: (result: PlaceResult[], status: string) => void,
-          options?: { size?: number; page?: number; location?: LatLng },
+          callback: (result: PlaceResult[], status: string, pagination: Pagination) => void,
+          options?: { size?: number; page?: number; location?: LatLng; bounds?: LatLngBounds },
         ): void
       }
     }

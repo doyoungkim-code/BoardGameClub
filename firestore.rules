@@ -332,19 +332,16 @@ service cloud.firestore {
       }
     }
 
-    // ---------- places: 지도에 찍은 보드게임 카페 ----------
+    // ---------- places: 오너가 즐겨찾기한 보드게임 카페 ----------
+    // 문서 ID 는 카카오 장소 ID. 회원은 보기만 하고 즐겨찾기·메모·해제는 오너만 한다
 
     match /places/{placeId} {
       allow read: if isMember();
-      allow create: if isMember() && validNewPlace();
-      allow update: if isMember() && isPlaceEditor()
+      allow create: if isOwner() && validNewPlace();
+      allow update: if isOwner()
         && changedOnly(['name', 'address', 'memo', 'lat', 'lng'])
         && validPlaceFields();
-      allow delete: if isMember() && isPlaceEditor();
-
-      function isPlaceEditor() {
-        return resource.data.createdBy == request.auth.uid || isOwner();
-      }
+      allow delete: if isOwner();
 
       function validPlaceFields() {
         let d = request.resource.data;

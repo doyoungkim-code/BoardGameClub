@@ -142,14 +142,18 @@
   transform: rotate(-45deg);
   box-shadow: 0 2px 6px rgb(0 0 0 / 0.35);
 }
+/* 주변 보드게임카페: 작고 흐리게 */
 .place-pin-normal {
-  background: var(--primary);
+  background: var(--muted-foreground);
+  transform: rotate(-45deg) scale(0.8);
 }
+/* 오너 즐겨찾기: 앱 기본색으로 눈에 띄게 */
+.place-pin-favorite {
+  background: var(--primary);
+  transform: rotate(-45deg) scale(1.1);
+}
+/* 지금 고른 곳 */
 .place-pin-active {
   background: var(--destructive);
-  transform: rotate(-45deg) scale(1.2);
-}
-.place-pin-draft {
-  background: var(--foreground);
-  border-style: dashed;
+  transform: rotate(-45deg) scale(1.25);
 }

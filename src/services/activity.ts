@@ -1,6 +1,5 @@
 import { getDocs, query, where } from 'firebase/firestore'
 import { eventsCol, hasStarted, toEvent } from '@/services/events'
-import { placesCol } from '@/services/places'
 import { postsCol, toPost } from '@/services/posts'
 import type { ClubEvent, EventType } from '@/types/event'
 import type { BoardId } from '@/types/post'
@@ -24,8 +23,6 @@ export type ActivityStats = {
   posts: number
   /** 후기 게시판 글 */
   reviews: number
-  /** 지도에 등록한 장소 */
-  places: number
   /** 가입(승인) 후 지난 날 수 */
   memberDays: number
 }
@@ -58,15 +55,14 @@ const DAY = 24 * 60 * 60 * 1000
 
 /**
  * 한 회원의 활동 기록 전체를 읽는다.
- * 쿼리 4개 모두 한 필드 조건이라 복합 색인이 필요 없다 (정렬은 화면에서).
+ * 쿼리 3개 모두 한 필드 조건이라 복합 색인이 필요 없다 (정렬은 화면에서).
  * joinedAt: 가입(승인) 시각(ms). 가입 후 날 수 계산에 쓴다
  */
 export async function fetchMemberActivity(uid: string, joinedAt: number | null): Promise<MemberActivity> {
-  const [attendSnap, hostSnap, postSnap, placeSnap] = await Promise.all([
+  const [attendSnap, hostSnap, postSnap] = await Promise.all([
     getDocs(query(eventsCol, where('attendeeIds', 'array-contains', uid))),
     getDocs(query(eventsCol, where('hostId', '==', uid))),
     getDocs(query(postsCol, where('authorId', '==', uid))),
-    getDocs(query(placesCol, where('createdBy', '==', uid))),
   ])
 
   // 참석한 모임과 연 모임을 합친다 (호스트는 보통 참석자에도 들어 있다)
@@ -85,7 +81,6 @@ export async function fetchMemberActivity(uid: string, joinedAt: number | null):
     flashHosted: hostedEvents.filter((e) => e.type === 'flash').length,
     posts: posts.length,
     reviews: posts.filter((p) => p.board === 'review').length,
-    places: placeSnap.size,
     memberDays: joinedAt ? Math.floor((Date.now() - joinedAt) / DAY) : 0,
   }
 

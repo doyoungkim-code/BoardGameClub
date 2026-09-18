@@ -200,11 +200,11 @@ function EventForm({ event }: { event?: ClubEvent }) {
         <div className="space-y-2">
           <Label htmlFor="location">장소 (선택)</Label>
           <Input id="location" placeholder="예: 강남 보드게임카페" aria-invalid={!!errors.location} {...register('location')} />
-          {/* 지도에 등록된 카페를 고르면 이름을 채워준다. 이름이 같으면 모임 화면에서 지도로 연결된다 */}
+          {/* 오너가 즐겨찾기한 카페를 고르면 이름을 채워준다. 이름이 같으면 모임 화면에서 지도로 연결된다 */}
           {places && places.length > 0 && (
             <Select onValueChange={(name) => setValue('location', name, { shouldDirty: true, shouldValidate: true })}>
-              <SelectTrigger className="w-full" aria-label="지도에 등록된 카페에서 고르기">
-                <SelectValue placeholder="지도에 등록된 카페에서 고르기" />
+              <SelectTrigger className="w-full" aria-label="즐겨찾기한 카페에서 고르기">
+                <SelectValue placeholder="즐겨찾기한 카페에서 고르기" />
               </SelectTrigger>
               <SelectContent>
                 {places.map((place) => (
