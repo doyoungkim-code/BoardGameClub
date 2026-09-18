@@ -299,7 +299,7 @@ tests/rules/    보안 규칙 테스트
   - `/__/`(Firebase 로그인 경로)는 서비스 워커가 가로채지 않게 뺐다
   - `firebase.json`에서 `sw.js`·`index.html`·`manifest`는 `no-cache` (새 버전이 바로 퍼지게)
 - **앱 아이콘 원본은 `public/icon.svg`** (주황 배경 + 주사위). 고치면 `npm run icons`로 PNG를 다시 만든다
-  (`pwa-assets.config.ts`). 탭 아이콘은 `public/favicon.svg`. 홈 화면 이름은 manifest의 `short_name`("보드게임")
+  (`pwa-assets.config.ts`). 탭 아이콘은 `public/favicon.svg`. 홈 화면 이름은 manifest의 `short_name`("Do you 보드게임?", 앱 이름은 어디서나 줄이지 않는다)
 - **설치 안내**(`components/InstallAppCard.tsx`): 홈(닫기 가능, 다시 안 뜸)과 내 정보(항상)
   - 안드로이드 크롬: `beforeinstallprompt`를 앱 시작 때 받아 두고(`stores/install.ts`) "앱 설치" 버튼 한 번
   - 아이폰: 공유 → 홈 화면에 추가 순서 안내
