@@ -93,10 +93,9 @@ export type EventInput = {
   capacity: number | null
 }
 
-/** 모임을 만든 사람은 자동으로 참석자가 된다 (rules 도 이 값을 요구) */
-export function createEvent(uid: string, input: EventInput) {
-  const ref = doc(eventsCol)
-  return setDoc(ref, {
+/** 새 모임 문서. 만든 사람은 자동으로 참석자가 된다 (rules 도 이 값을 요구) */
+export function newEventData(uid: string, input: EventInput) {
+  return {
     ...input,
     startAt: Timestamp.fromDate(input.startAt),
     endAt: input.endAt ? Timestamp.fromDate(input.endAt) : null,
@@ -106,7 +105,12 @@ export function createEvent(uid: string, input: EventInput) {
     attendedIds: [],
     canceled: false,
     createdAt: serverTimestamp(),
-  }).then(() => ref.id)
+  }
+}
+
+export function createEvent(uid: string, input: EventInput) {
+  const ref = doc(eventsCol)
+  return setDoc(ref, newEventData(uid, input)).then(() => ref.id)
 }
 
 /** 호스트는 바꿀 수 없다 (rules) */

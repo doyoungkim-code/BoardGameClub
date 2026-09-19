@@ -111,6 +111,13 @@ events/{eventId}
   canceled, createdAt
   // 모임은 승인된 회원 누구나 만든다. 수정·취소·삭제는 만든 사람과 오너
 
+polls/{pollId}                      // 모임 일정 투표 (2026-09-20)
+  title, description, location
+  options[]        // 후보 날짜 [{ id, date:'yyyy-MM-dd', time:'HH:mm'|'' }] 2~10개
+  votes            // { uid: [후보 id...] } 자기 칸만 수정 (rules)
+  createdBy, createdAt, status:'open'|'closed', eventId
+  // 회원 누구나 올리고 투표. 만든 사람·오너가 한 날짜로 모임을 만들면 같은 batch 로 마감(eventId 연결)
+
 places/{카카오 장소 ID}              // 오너가 즐겨찾기한 보드게임 카페 (2026-09-19)
   name, address, memo, lat, lng, createdBy, createdAt
   // 즐겨찾기·메모·해제는 오너만, 회원은 보기만. 모임 장소 이름이 같으면 모임 화면에서 지도로 연결
@@ -144,7 +151,8 @@ posts/{postId}/comments/{id}        authorId, authorNickname, content, createdAt
 | `/signup` | 가입 신청: 닉네임, 소개해준 사람 입력 (최초 1회) |
 | `/pending` | 승인 대기 / 거절·강퇴 안내 |
 | `/` | 홈: 다가오는 모임, 고정 공지, 최근 플레이, 안 읽은 채팅 |
-| `/events`, `/events/new`, `/events/:id` | 캘린더·리스트 전환, 참석 신청, 출석 체크, 모임 화면에서 바로 플레이 기록 작성 |
+| `/events`, `/events/new`, `/events/:id` | 캘린더·리스트 전환, 참석 신청, 출석 체크. 목록 맨 위에 진행 중인 일정 투표 |
+| `/polls/new`, `/polls/:id` | 일정 투표: 후보 날짜 올리기, 되는 날짜 모두 고르기, 가장 많이 되는 날 표시, "이 날짜로 모임 만들기" |
 | `/chat`, `/chat/:channelId`, `/dm/:dmId` | 채널·DM 목록(안 읽음 배지), 채팅방(최근 50개 표시, 위로 스크롤하면 더 불러오기). PC는 목록+대화방 2단, 모바일은 대화방에서 하단 탭 숨김. 오너는 채널 추가(+ 기본 채널 전체·모임·잡담 한 번에 만들기)·수정·삭제 |
 | `/games` | 보드게임 목록 (보기 전용): 표지, 인원, 한 줄 설명. 검색 + "몇 명이서" 필터 |
 | `/stats` | 모임 참석·출석 랭킹, 열린 모임 수, 평균 참석, 보유 게임 수 |

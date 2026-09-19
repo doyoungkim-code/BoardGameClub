@@ -345,6 +345,72 @@ service cloud.firestore {
       }
     }
 
+    // ---------- polls: 모임 일정 투표 ----------
+    // 날짜를 정하지 않고 후보 날짜를 올려 두면, 회원들이 되는 날짜에 모두 표시한다.
+    // 만든 사람(또는 오너)이 한 날짜로 모임을 만들면 투표가 끝난다 (status 'closed', eventId)
+
+    match /polls/{pollId} {
+      allow read: if isMember();
+      allow create: if isMember() && validNewPoll();
+      allow update: if isMember() && (
+        // 회원 누구나: 열려 있는 투표에서 자기 표만 바꾼다
+        validVote()
+        // 만든 사람·오너: 내용 수정 / 마감·다시 열기
+        || (isPollOwner() && (validPollEdit() || validPollStatus()))
+      );
+      allow delete: if isMember() && isPollOwner();
+
+      function isPollOwner() {
+        return resource.data.createdBy == request.auth.uid || isOwner();
+      }
+
+      function validPollFields() {
+        let d = request.resource.data;
+        return d.title is string && d.title.size() >= 1 && d.title.size() <= 50
+          && d.description is string && d.description.size() <= 1000
+          && d.location is string && d.location.size() <= 100
+          // 후보 날짜 [{ id, date: 'yyyy-MM-dd', time: 'HH:mm' 또는 '' }]
+          && d.options is list && d.options.size() >= 2 && d.options.size() <= 10;
+      }
+
+      function validNewPoll() {
+        let d = request.resource.data;
+        let keys = ['title', 'description', 'location', 'options', 'votes',
+                    'createdBy', 'createdAt', 'status', 'eventId'];
+        return d.keys().hasOnly(keys) && d.keys().hasAll(keys)
+          && validPollFields()
+          && d.votes == {}
+          && d.createdBy == request.auth.uid
+          && d.createdAt == request.time
+          && d.status == 'open'
+          && d.eventId == null;
+      }
+
+      // 표는 votes[uid] = 고른 후보 id 목록. 자기 칸만 바꾸거나 지울 수 있다
+      function validVote() {
+        let me = request.auth.uid;
+        let d = request.resource.data;
+        return resource.data.status == 'open'
+          && changedOnly(['votes'])
+          && d.votes is map
+          && d.votes.diff(resource.data.votes).affectedKeys().hasOnly([me])
+          && (!(me in d.votes) || (d.votes[me] is list && d.votes[me].size() <= resource.data.options.size()));
+      }
+
+      function validPollEdit() {
+        return resource.data.status == 'open'
+          && changedOnly(['title', 'description', 'location', 'options'])
+          && validPollFields();
+      }
+
+      function validPollStatus() {
+        let d = request.resource.data;
+        return changedOnly(['status', 'eventId'])
+          && ((d.status == 'closed' && (d.eventId == null || d.eventId is string))
+              || (d.status == 'open' && d.eventId == null));
+      }
+    }
+
     // ---------- places: 오너가 즐겨찾기한 보드게임 카페 ----------
     // 문서 ID 는 카카오 장소 ID. 회원은 보기만 하고 즐겨찾기·메모·해제는 오너만 한다
 

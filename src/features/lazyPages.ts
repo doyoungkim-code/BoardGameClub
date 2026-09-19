@@ -24,6 +24,12 @@ export const EventDetailPage = lazy(() =>
   import('@/features/events/EventDetailPage').then((m) => ({ default: m.EventDetailPage })),
 )
 
+export const PollFormPage = lazy(() => import('@/features/polls/PollFormPage').then((m) => ({ default: m.PollFormPage })))
+
+export const PollDetailPage = lazy(() =>
+  import('@/features/polls/PollDetailPage').then((m) => ({ default: m.PollDetailPage })),
+)
+
 export const GamesPage = lazy(() => import('@/features/games/GamesPage').then((m) => ({ default: m.GamesPage })))
 
 // 카카오맵 SDK 는 이 화면이 열릴 때 불러온다 (lib/kakaoMap.ts)

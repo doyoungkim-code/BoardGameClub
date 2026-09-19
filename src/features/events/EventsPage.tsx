@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { endOfMonth, format, isSameDay, startOfMonth } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { CalendarDays, List, Plus } from 'lucide-react'
+import { CalendarDays, List, Plus, Vote } from 'lucide-react'
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyEvents, EventCard } from '@/features/events/EventCard'
 import { EventCalendar } from '@/features/events/EventCalendar'
+import { OpenPolls } from '@/features/polls/OpenPolls'
 import { dayKey } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import {
@@ -31,12 +32,21 @@ export function EventsPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-2xl font-bold">모임</h1>
-        <Button asChild size="sm">
-          <Link to="/events/new">
-            <Plus className="size-4" />
-            모임 만들기
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          {/* 날짜를 정하기 전: 후보를 올려 언제 모일지 투표 */}
+          <Button asChild size="sm" variant="outline">
+            <Link to="/polls/new">
+              <Vote className="size-4" />
+              일정 투표
+            </Link>
+          </Button>
+          <Button asChild size="sm">
+            <Link to="/events/new">
+              <Plus className="size-4" />
+              모임 만들기
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-1 rounded-lg bg-muted p-1">
@@ -86,6 +96,8 @@ function ListView() {
 
   return (
     <div className="space-y-6">
+      <OpenPolls />
+
       <section className="space-y-2">
         <h2 className="font-semibold">다가오는 모임</h2>
         {!loaded ? (

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { addDays } from 'date-fns'
 import { useForm } from 'react-hook-form'
-import { Link, useNavigate, useParams } from 'react-router'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { BackButton } from '@/components/BackButton'
@@ -16,6 +16,7 @@ import { FieldError } from '@/features/auth/SignupPage'
 import { usePlaces } from '@/hooks/usePlaces'
 import { toDateTimeLocal, toErrorMessage } from '@/lib/format'
 import { canManage, createEvent, fetchEvent, updateEvent } from '@/services/events'
+import { createEventFromPoll, fetchPoll, optionDate } from '@/services/polls'
 import { useAuth, useIsOwner } from '@/stores/auth'
 import type { ClubEvent } from '@/types/event'
 
@@ -58,10 +59,17 @@ const toFormValues = (event: ClubEvent): FormValues => ({
   description: event.description,
 })
 
+/** 일정 투표에서 고른 날짜로 모임을 만들 때 (/events/new?poll=<id>&option=<후보 id>) */
+type FromPoll = { pollId: string; values: FormValues }
+
 /** /events/new 와 /events/:eventId/edit 을 함께 처리한다 */
 export function EventFormPage() {
   const { eventId } = useParams()
+  const [searchParams] = useSearchParams()
+  const pollId = eventId ? null : searchParams.get('poll')
+  const optionId = searchParams.get('option')
   const [event, setEvent] = useState<ClubEvent | null | undefined>(eventId ? undefined : null)
+  const [fromPoll, setFromPoll] = useState<FromPoll | null | undefined>(pollId ? undefined : null)
 
   useEffect(() => {
     if (!eventId) return
@@ -73,9 +81,36 @@ export function EventFormPage() {
       })
   }, [eventId])
 
-  if (event === undefined) return <PageSpinner />
+  // 투표 내용(제목·장소·설명)과 고른 날짜로 폼을 채운다
+  useEffect(() => {
+    if (!pollId) return
+    fetchPoll(pollId)
+      .then((poll) => {
+        const option = poll?.options.find((o) => o.id === optionId)
+        if (!poll || !option) {
+          setFromPoll(null)
+          return
+        }
+        setFromPoll({
+          pollId,
+          values: {
+            ...emptyValues(),
+            title: poll.title,
+            location: poll.location,
+            description: poll.description,
+            startAt: toDateTimeLocal(optionDate(option)),
+          },
+        })
+      })
+      .catch((error) => {
+        console.error('일정 투표 불러오기 실패', error)
+        setFromPoll(null)
+      })
+  }, [pollId, optionId])
+
+  if (event === undefined || fromPoll === undefined) return <PageSpinner />
   if (eventId && !event) return <EventFormMissing />
-  return <EventForm event={event ?? undefined} />
+  return <EventForm event={event ?? undefined} fromPoll={fromPoll ?? undefined} />
 }
 
 function EventFormMissing() {
@@ -89,7 +124,7 @@ function EventFormMissing() {
   )
 }
 
-function EventForm({ event }: { event?: ClubEvent }) {
+function EventForm({ event, fromPoll }: { event?: ClubEvent; fromPoll?: FromPoll }) {
   const profile = useAuth((s) => s.profile)!
   const isOwner = useIsOwner()
   const navigate = useNavigate()
@@ -102,7 +137,7 @@ function EventForm({ event }: { event?: ClubEvent }) {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    values: event ? toFormValues(event) : emptyValues(),
+    values: event ? toFormValues(event) : (fromPoll?.values ?? emptyValues()),
   })
   const places = usePlaces()
 
@@ -122,6 +157,11 @@ function EventForm({ event }: { event?: ClubEvent }) {
         await updateEvent(event.id, input)
         toast.success('모임을 수정했어요')
         navigate(`/events/${event.id}`, { replace: true })
+      } else if (fromPoll) {
+        // 모임을 만들면서 같은 batch 로 투표를 마감한다
+        const id = await createEventFromPoll(profile.uid, input, fromPoll.pollId)
+        toast.success('투표로 정한 날짜에 모임을 만들었어요')
+        navigate(`/events/${id}`, { replace: true })
       } else {
         const id = await createEvent(profile.uid, input)
         toast.success('모임을 만들었어요')
@@ -136,9 +176,14 @@ function EventForm({ event }: { event?: ClubEvent }) {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-1">
-        <BackButton fallback={event ? `/events/${event.id}` : '/events'} />
-        <h1 className="text-2xl font-bold">{editing ? '모임 수정' : '새 모임'}</h1>
+        <BackButton fallback={event ? `/events/${event.id}` : fromPoll ? `/polls/${fromPoll.pollId}` : '/events'} />
+        <h1 className="text-2xl font-bold">{editing ? '모임 수정' : fromPoll ? '투표로 모임 만들기' : '새 모임'}</h1>
       </div>
+      {fromPoll && (
+        <p className="text-sm text-muted-foreground">
+          투표 내용과 고른 날짜를 채워 뒀어요. 시간·정원을 확인하고 만들면 투표는 자동으로 마감돼요.
+        </p>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
         <div className="space-y-2">
