@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useParams } from 'react-router'
+import { Link, useParams } from 'react-router'
 import { UserAvatar } from '@/components/UserAvatar'
 import { PageSpinner } from '@/components/PageSpinner'
 import { RoomNotFound } from '@/features/chat/ChatLayout'
@@ -41,7 +41,16 @@ export function DmRoomPage() {
       roomId={dmId}
       title={name}
       subtitle={other ? (referrerLabel(other, byId) ?? undefined) : undefined}
-      avatar={<UserAvatar name={name} photoURL={other?.photoURL} className="size-8" />}
+      avatar={
+        other ? (
+          // 상대 사진을 누르면 프로필로
+          <Link to={`/members/${otherUid}`} aria-label={`${name} 프로필`}>
+            <UserAvatar name={name} photoURL={other.photoURL} className="size-8" />
+          </Link>
+        ) : (
+          <UserAvatar name={name} photoURL={null} className="size-8" />
+        )
+      }
       disabledReason={!other ? '지금은 대화할 수 없는 회원이에요' : !roomExists ? '대화방을 준비하고 있어요…' : undefined}
     />
   )

@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { isSameDay } from 'date-fns'
 import { Copy, Loader2, Trash2 } from 'lucide-react'
+import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { MemberName } from '@/components/MemberName'
 import { UserAvatar } from '@/components/UserAvatar'
@@ -164,18 +165,23 @@ function MessageItem({ message, mine, sender, showSender, showTime, canDelete, o
     <div className={cn('flex gap-2', mine ? 'justify-end' : 'justify-start', showSender ? 'mt-3' : 'mt-1')}>
       {!mine && (
         <div className="w-8 shrink-0">
-          {showSender && <UserAvatar name={name} photoURL={sender?.photoURL} className="size-8" />}
+          {/* 사진·이름을 누르면 그 사람 프로필로 (강퇴 등으로 회원 목록에 없으면 이동하지 않는다) */}
+          {showSender &&
+            (sender ? (
+              <Link to={`/members/${message.senderId}`} aria-label={`${name} 프로필`}>
+                <UserAvatar name={name} photoURL={sender.photoURL} className="size-8" />
+              </Link>
+            ) : (
+              <UserAvatar name={name} photoURL={null} className="size-8" />
+            ))}
         </div>
       )}
       <div className={cn('flex max-w-[78%] min-w-0 flex-col', mine ? 'items-end' : 'items-start')}>
         {!mine && showSender && (
-          <MemberName
-            uid={message.senderId}
-            fallback={message.senderNickname}
-            className="mb-1 max-w-full px-1 text-xs text-muted-foreground"
-          />
+          <SenderName sender={sender} uid={message.senderId} fallback={message.senderNickname} />
         )}
-        <div className={cn('flex items-end gap-1.5', mine && 'flex-row-reverse')}>
+        {/* min-w-0: 긴 글이 말풍선을 옆으로 밀어 늘리지 않게 */}
+        <div className={cn('flex max-w-full min-w-0 items-end gap-1.5', mine && 'flex-row-reverse')}>
           {message.deleted ? (
             <div className="rounded-2xl border border-dashed px-3.5 py-2 text-sm text-muted-foreground italic">
               삭제된 메시지예요
@@ -185,8 +191,10 @@ function MessageItem({ message, mine, sender, showSender, showTime, canDelete, o
               <div
                 role="button"
                 tabIndex={0}
+                // wrap-anywhere: 앱 전체가 한글 단어를 자르지 않게(keep-all) 되어 있어서, 띄어쓰기 없는 긴 글·주소는
+                // 말풍선 안에서만 필요할 때 아무 데서나 줄을 바꾼다
                 className={cn(
-                  'cursor-pointer rounded-2xl px-3.5 py-2 text-[15px] leading-relaxed break-words whitespace-pre-wrap outline-none focus-visible:ring-2 focus-visible:ring-ring/50 md:text-sm',
+                  'max-w-full min-w-0 cursor-pointer rounded-2xl px-3.5 py-2 text-[15px] leading-relaxed wrap-anywhere whitespace-pre-wrap outline-none focus-visible:ring-2 focus-visible:ring-ring/50 md:text-sm',
                   mine
                     ? 'rounded-br-md bg-primary text-primary-foreground'
                     : 'rounded-bl-md border bg-card text-card-foreground',
@@ -205,6 +213,19 @@ function MessageItem({ message, mine, sender, showSender, showTime, canDelete, o
         </div>
       </div>
     </div>
+  )
+}
+
+/** 보낸 사람 이름. 누르면 프로필로 (회원 목록에 없는 사람은 글자만) */
+function SenderName({ sender, uid, fallback }: { sender?: UserProfile; uid: string; fallback: string }) {
+  const name = <MemberName uid={uid} fallback={fallback} className="max-w-full" />
+  const className = 'mb-1 max-w-full px-1 text-xs text-muted-foreground'
+  return sender ? (
+    <Link to={`/members/${uid}`} className={cn(className, 'hover:underline')}>
+      {name}
+    </Link>
+  ) : (
+    <span className={className}>{name}</span>
   )
 }
 
