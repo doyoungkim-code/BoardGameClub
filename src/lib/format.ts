@@ -2,7 +2,7 @@ import { format, formatDistanceToNowStrict, isSameDay, isSameYear } from 'date-f
 import { ko } from 'date-fns/locale'
 import { FirebaseError } from 'firebase/app'
 import type { Timestamp } from 'firebase/firestore'
-import type { UserProfile } from '@/types/user'
+import { FOUNDER_REFERRER, type UserProfile } from '@/types/user'
 
 export function formatDateTime(ts: Timestamp | null | undefined) {
   return ts ? format(ts.toDate(), 'yyyy. M. d. HH:mm', { locale: ko }) : ''
@@ -59,6 +59,7 @@ export function toDateTimeLocal(date: Date) {
 
 /** "OO의 지인". 연결된 회원이 있으면 그 회원의 현재 닉네임, 없으면 가입 때 입력한 이름 */
 export function referrerLabel(profile: UserProfile, byId: Record<string, UserProfile>) {
+  if (profile.referrerId === FOUNDER_REFERRER) return '초기 멤버'
   const name = (profile.referrerId && byId[profile.referrerId]?.nickname) || profile.referrerName
   return name ? `${name}의 지인` : null
 }

@@ -10,7 +10,7 @@ import { MemberAdminList } from '@/features/admin/MemberAdminList'
 import { formatRelative, toErrorMessage } from '@/lib/format'
 import { approveUser, getUserPrivate, setUserStatus, toProfile, usersCol } from '@/services/users'
 import { useMembers } from '@/stores/members'
-import type { UserProfile } from '@/types/user'
+import { FOUNDER_REFERRER, type UserProfile } from '@/types/user'
 
 const NO_REFERRER = 'none'
 
@@ -129,6 +129,7 @@ function ApplicantCard({ applicant }: { applicant: UserProfile }) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={NO_REFERRER}>연결 안 함 (입력한 이름으로 표시)</SelectItem>
+              <SelectItem value={FOUNDER_REFERRER}>초기 멤버 (소개자 없음)</SelectItem>
               {members.map((m) => (
                 <SelectItem key={m.uid} value={m.uid}>
                   {m.nickname}

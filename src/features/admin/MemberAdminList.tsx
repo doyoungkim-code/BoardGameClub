@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils'
 import { daysSinceActive, fetchAdminMemo, saveAdminMemo } from '@/services/members'
 import { setGrantedTitles, setUserStatus, updateReferrer } from '@/services/users'
 import { useMembers } from '@/stores/members'
-import type { UserProfile } from '@/types/user'
+import { FOUNDER_REFERRER, type UserProfile } from '@/types/user'
 
 const NO_REFERRER = 'none'
 
@@ -206,6 +206,7 @@ function MemberAdminPanel({ member }: { member: UserProfile }) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={NO_REFERRER}>연결 안 함 ({member.referrerName || '입력값 없음'})</SelectItem>
+            <SelectItem value={FOUNDER_REFERRER}>초기 멤버 (소개자 없음)</SelectItem>
             {members
               .filter((m) => m.uid !== member.uid)
               .map((m) => (

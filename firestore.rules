@@ -110,7 +110,9 @@ service cloud.firestore {
           && d.status in ['pending', 'approved', 'rejected', 'removed']
           // 오너 자신의 상태는 바꿀 수 없다
           && (uid != request.auth.uid || d.status == resource.data.status)
+          // 소개자: 연결 안 함(null), '초기 멤버'(founder), 또는 실제로 있는 다른 회원
           && (d.referrerId == null
+              || d.referrerId == 'founder'
               || (d.referrerId is string && d.referrerId != uid && exists(userPath(d.referrerId))))
           && unchangedOrNow('approvedAt')
           // 오너가 주는 칭호 ('granted:<이름>' 목록)

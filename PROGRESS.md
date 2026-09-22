@@ -20,7 +20,7 @@
 
 - Firestore 보안 규칙은 **전부 실제 프로젝트(`doyou-boardgame`)에 배포 완료**
 - **배포 주소: https://doyou-boardgame.web.app** — `main`에 push하면 자동 배포 (아래 2-1)
-- 규칙 테스트 153개 통과 (users 41 + chat 31 + events 32 + posts 28 + places 6 + polls 15)
+- 규칙 테스트 155개 통과 (users 43 + chat 31 + events 32 + posts 28 + places 6 + polls 15)
 - `firestore.indexes.json`에 posts 복합 색인 1개 (board + pinned + createdAt)
 
 ## 2. 다음에 할 일
@@ -160,7 +160,9 @@ tests/rules/    보안 규칙 테스트
 
 ## 6. 구현하면서 정한 것 (기획서 보충)
 - **이메일 분리:** 이메일은 `users`가 아니라 `userPrivate/{uid}`에 저장 (본인·오너만 읽음)
-- **소개자 연결:** 가입 신청 때는 이름(`referrerName`)만 입력하고, 오너가 승인할 때 실제 회원(`referrerId`)과 연결
+- **소개자 연결:** 가입 신청 때는 이름(`referrerName`)만 입력하고, 오너가 승인할 때 실제 회원(`referrerId`)과 연결.
+  동호회를 처음부터 함께한 사람은 관리자가 **초기 멤버**를 고른다 → `referrerId = 'founder'`(회원 uid는 28자라 겹치지 않음),
+  닉네임 옆에 "초기 멤버"로 표시 (`FOUNDER_REFERRER` in `src/types/user.ts`)
 - **채팅 메시지 삭제:** 문서를 지우지 않고 `deleted: true, text: ''`로 표시만 함
 - **DM 방 ID:** 두 uid를 정렬해 `_`로 연결. DM 목록에는 메시지를 주고받은 방만 표시
 - **안 읽음 기준:** 다른 사람의 마지막 메시지 시각 > 내 `readStates` 시각. 읽은 기록이 없으면 가입 승인 시각을 기준으로 함

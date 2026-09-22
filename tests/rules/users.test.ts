@@ -182,6 +182,14 @@ describe('users 오너 관리', () => {
     )
   })
 
+  it("소개자 자리에 '초기 멤버'를 넣을 수 있다", async () => {
+    await assertSucceeds(updateDoc(doc(ownerDb(), 'users/applicant'), { referrerId: 'founder' }))
+  })
+
+  it("일반 회원은 스스로 '초기 멤버'가 될 수 없다", async () => {
+    await assertFails(updateDoc(doc(dbAs('referrer'), 'users/referrer'), { referrerId: 'founder' }))
+  })
+
   it('없는 회원을 소개자로 연결할 수 없다', async () => {
     await assertFails(updateDoc(doc(ownerDb(), 'users/applicant'), { referrerId: 'ghost' }))
   })

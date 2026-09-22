@@ -82,7 +82,7 @@ users/{uid}                        // 공개 프로필: 승인된 회원 전체�
   nickname, googleName, photoURL
   role: 'owner'|'member', status: 'pending'|'approved'|'rejected'|'removed'
   referrerName     // 가입 시 본인이 입력한 소개자 이름 (예: "김철수")
-  referrerId       // 오너가 승인 시 연결한 소개 회원 uid, 없으면 null (오너만 쓰기)
+  referrerId       // 오너가 승인 시 연결한 소개 회원 uid, 없으면 null, 초기 멤버면 'founder' (오너만 쓰기)
   createdAt, approvedAt, lastActiveAt
   titleId?         // 대표 칭호 'auto:<id>' | 'granted:<이름>' | null (본인만 쓰기, 2026-09-19)
   grantedTitles?   // 관리자가 준 칭호 ['granted:<이름>'] 최대 20개 (오너만 쓰기)
