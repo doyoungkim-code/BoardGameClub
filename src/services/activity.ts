@@ -6,6 +6,7 @@ import { eventsCol, hasStarted, toEvent } from '@/services/events'
 import { postsCol, toPost } from '@/services/posts'
 import type { ClubEvent } from '@/types/event'
 import type { BoardId } from '@/types/post'
+import type { UserProfile } from '@/types/user'
 
 /**
  * 업적·칭호 계산에 쓰는 누적 수치 (가입 후 전체 기간).
@@ -39,16 +40,48 @@ export type Progress = {
   earnedAutoIds: Set<string>
 }
 
-export function progressFor(stats: ActivityStats): Progress {
-  const xp = xpFor(stats.attended)
+/**
+ * 출석 횟수만으로 계산되는 부분. 홈 배너는 이것만 쓴다
+ * (출석 횟수는 stores/progress.ts 에 이미 있어서 Firestore 를 더 읽지 않는다)
+ */
+export function attendanceProgress(attended: number): Omit<Progress, 'earnedAutoIds'> {
+  const xp = xpFor(attended)
   return {
-    attended: stats.attended,
+    attended,
     xp,
     tier: tierFor(xp),
     next: nextTier(xp),
-    unlockedGoals: ATTENDANCE_ACHIEVEMENTS.filter((a) => stats.attended >= a.goal).map((a) => a.goal),
+    unlockedGoals: ATTENDANCE_ACHIEVEMENTS.filter((a) => attended >= a.goal).map((a) => a.goal),
+  }
+}
+
+export function progressFor(stats: ActivityStats): Progress {
+  return {
+    ...attendanceProgress(stats.attended),
     earnedAutoIds: new Set(AUTO_TITLES.filter((t) => stats[t.metric] >= t.goal).map((t) => t.id)),
   }
+}
+
+export type XpRank = { member: UserProfile; xp: number; tier: Tier }
+
+/**
+ * 경험치 순위. 출석이 없는 회원은 빼고, 같은 경험치면 닉네임 가나다순.
+ * attendedById 는 stores/progress.ts 가 들고 있는 값이라 Firestore 를 더 읽지 않는다
+ */
+export function xpRanking(members: UserProfile[], attendedById: Record<string, number>): XpRank[] {
+  return members
+    .map((member) => {
+      const xp = xpFor(attendedById[member.uid] ?? 0)
+      return { member, xp, tier: tierFor(xp) }
+    })
+    .filter((row) => row.xp > 0)
+    .sort((a, b) => b.xp - a.xp || a.member.nickname.localeCompare(b.member.nickname, 'ko'))
+}
+
+/** 순위(1등부터). 순위에 없으면(출석 0회) null */
+export function rankOf(ranking: XpRank[], uid: string) {
+  const index = ranking.findIndex((row) => row.member.uid === uid)
+  return index === -1 ? null : index + 1
 }
 
 /** 출석한 날짜들에서, 월요일 시작 주 단위로 가장 길게 이어진 주 수 */

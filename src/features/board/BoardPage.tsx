@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { QueryDocumentSnapshot } from 'firebase/firestore'
-import { Heart, MessageSquare, Pin, Plus } from 'lucide-react'
+import { Heart, Megaphone, MessageSquare, Pin, Plus } from 'lucide-react'
 import { Link, Navigate, useParams } from 'react-router'
+import { EmptyState } from '@/components/EmptyState'
 import { MemberName } from '@/components/MemberName'
+import { PageHeader } from '@/components/PageHeader'
+import { SegmentedTabs } from '@/components/SegmentedTabs'
+import { CardSkeleton } from '@/components/Skeletons'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
 import { formatChatListTime } from '@/lib/format'
-import { cn } from '@/lib/utils'
+import { tappableCard } from '@/lib/styles'
 import { canWriteTo, fetchPosts, POST_PAGE_SIZE, toPost } from '@/services/posts'
 import { useIsOwner } from '@/stores/auth'
 import { BOARDS, isBoardId, type BoardId, type Post } from '@/types/post'
@@ -65,43 +68,41 @@ function Board({ board }: { board: BoardId }) {
   const writable = canWriteTo(board, isOwner)
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <h1 className="text-2xl font-bold">게시판</h1>
-        {writable && (
-          <Button asChild size="sm">
-            <Link to={`/posts/new?board=${board}`}>
-              <Plus className="size-4" />
-              글쓰기
-            </Link>
-          </Button>
-        )}
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="게시판"
+        actions={
+          writable && (
+            <Button asChild size="sm">
+              <Link to={`/posts/new?board=${board}`}>
+                <Plus className="size-4" />
+                글쓰기
+              </Link>
+            </Button>
+          )
+        }
+      />
 
-      <nav className="flex gap-1 rounded-lg bg-muted p-1">
-        {BOARDS.map((item) => (
-          <Link
-            key={item.id}
-            to={`/board/${item.id}`}
-            className={cn(
-              'flex-1 rounded-md py-1.5 text-center text-sm transition-colors',
-              item.id === board ? 'bg-background font-semibold shadow-xs' : 'text-muted-foreground',
-            )}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
+      <SegmentedTabs
+        items={BOARDS.map((item) => ({ key: item.id, label: item.label, to: `/board/${item.id}` }))}
+        active={board}
+      />
 
       {posts === null ? (
-        <div className="space-y-2">
-          <Skeleton className="h-20 w-full rounded-xl" />
-          <Skeleton className="h-20 w-full rounded-xl" />
-        </div>
+        <CardSkeleton className="h-20" />
       ) : posts.length === 0 ? (
-        <p className="rounded-xl border border-dashed py-10 text-center text-sm text-muted-foreground">
-          {board === 'notice' ? '아직 공지가 없어요' : '첫 글을 남겨보세요'}
-        </p>
+        <EmptyState
+          icon={Megaphone}
+          title={board === 'notice' ? '아직 공지가 없어요' : '아직 글이 없어요'}
+          description={writable ? '첫 글을 남겨보세요' : undefined}
+          action={
+            writable && (
+              <Button asChild size="sm">
+                <Link to={`/posts/new?board=${board}`}>글쓰기</Link>
+              </Button>
+            )
+          }
+        />
       ) : (
         <div className="space-y-2">
           {posts.map((post) => (
@@ -120,8 +121,8 @@ function Board({ board }: { board: BoardId }) {
 
 function PostRow({ post }: { post: Post }) {
   return (
-    <Link to={`/posts/${post.id}`} className="block">
-      <Card className="py-3 transition-colors hover:border-primary/40">
+    <Link to={`/posts/${post.id}`} className="group block">
+      <Card className={`py-3 ${tappableCard}`}>
         <CardContent className="space-y-1.5 px-4">
           <div className="flex items-center gap-1.5">
             {post.pinned && <Pin className="size-3.5 shrink-0 text-primary" />}

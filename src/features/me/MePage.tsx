@@ -6,6 +6,7 @@ import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { InstallAppCard } from '@/components/InstallAppCard'
+import { PageHeader } from '@/components/PageHeader'
 import { UserAvatar } from '@/components/UserAvatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -59,7 +60,7 @@ export function MePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">내 정보</h1>
+      <PageHeader title="내 정보" />
 
       <Card>
         <CardContent className="flex items-center gap-4">

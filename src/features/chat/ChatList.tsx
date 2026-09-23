@@ -2,9 +2,10 @@ import { useState, type ReactNode } from 'react'
 import { Hash, Plus } from 'lucide-react'
 import { NavLink } from 'react-router'
 import { toast } from 'sonner'
+import { EmptyState } from '@/components/EmptyState'
+import { RowSkeleton } from '@/components/Skeletons'
 import { UserAvatar } from '@/components/UserAvatar'
 import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
 import { ChannelFormDialog } from '@/features/chat/ChannelFormDialog'
 import { NewDmDialog } from '@/features/chat/NewDmDialog'
 import { formatChatListTime, toErrorMessage } from '@/lib/format'
@@ -55,16 +56,21 @@ export function ChatList() {
           }
         />
         {!loaded ? (
-          <ListSkeleton />
+          <RowSkeleton />
         ) : channels.length === 0 ? (
-          <div className="mx-2 space-y-3 rounded-xl border border-dashed p-4 text-center text-sm text-muted-foreground">
-            <p>아직 채널이 없어요</p>
-            {isOwner && (
-              <Button size="sm" onClick={handleCreateDefaults} disabled={creatingDefaults}>
-                기본 채널 만들기 (전체·모임·잡담)
-              </Button>
-            )}
-          </div>
+          <EmptyState
+            icon={Hash}
+            title="아직 채널이 없어요"
+            size="sm"
+            className="mx-2"
+            action={
+              isOwner && (
+                <Button size="sm" onClick={handleCreateDefaults} disabled={creatingDefaults}>
+                  기본 채널 만들기 (전체·모임·잡담)
+                </Button>
+              )
+            }
+          />
         ) : (
           channels.map((c) => {
             const sender = c.lastSenderId ? byId[c.lastSenderId]?.nickname : undefined
@@ -168,21 +174,5 @@ function RoomLink({ to, icon, title, preview, time, unread }: RoomLinkProps) {
         </div>
       </div>
     </NavLink>
-  )
-}
-
-function ListSkeleton() {
-  return (
-    <div className="space-y-2 px-2 py-1">
-      {[0, 1, 2].map((i) => (
-        <div key={i} className="flex items-center gap-3 py-1.5">
-          <Skeleton className="size-10 rounded-full" />
-          <div className="flex-1 space-y-1.5">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-3 w-40" />
-          </div>
-        </div>
-      ))}
-    </div>
   )
 }

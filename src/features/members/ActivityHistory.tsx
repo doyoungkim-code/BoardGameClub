@@ -3,8 +3,11 @@ import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { CalendarCheck, CalendarDays, Megaphone, PenLine } from 'lucide-react'
 import { Link } from 'react-router'
+import { EmptyState } from '@/components/EmptyState'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { tappableRow } from '@/lib/styles'
+import { cn } from '@/lib/utils'
 import type { ActivityItem } from '@/services/activity'
 import { BOARD_LABEL } from '@/types/post'
 
@@ -18,9 +21,7 @@ export function ActivityHistory({ items }: { items: ActivityItem[] }) {
     <section className="space-y-2">
       <h2 className="font-semibold">활동 기록</h2>
       {items.length === 0 ? (
-        <p className="rounded-xl border border-dashed py-8 text-center text-sm text-muted-foreground">
-          아직 활동 기록이 없어요
-        </p>
+        <EmptyState icon={CalendarCheck} title="아직 활동 기록이 없어요" size="sm" />
       ) : (
         <>
           <ul className="divide-y overflow-hidden rounded-xl border bg-card">
@@ -28,7 +29,7 @@ export function ActivityHistory({ items }: { items: ActivityItem[] }) {
               <li key={`${item.kind}-${item.id}`}>
                 <Link
                   to={item.kind === 'event' ? `/events/${item.id}` : `/posts/${item.id}`}
-                  className="flex items-center gap-3 px-4 py-3 active:bg-muted"
+                  className={cn('flex items-center gap-3 px-4 py-3', tappableRow)}
                 >
                   <ItemIcon item={item} />
                   <span className="min-w-0 flex-1">

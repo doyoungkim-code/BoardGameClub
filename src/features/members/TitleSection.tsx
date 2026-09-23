@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Check, Lock } from 'lucide-react'
 import { toast } from 'sonner'
+import { EmptyState } from '@/components/EmptyState'
 import { NewMark } from '@/features/members/AchievementList'
 import { AUTO_TITLES, autoTitleKey, grantedTitleName } from '@/data/titles'
 import { toErrorMessage } from '@/lib/format'
@@ -58,9 +59,7 @@ export function TitleSection({ member, stats, progress, isMe, newKeys }: Props) 
       </h2>
 
       {owned.length === 0 ? (
-        <p className="rounded-xl border border-dashed py-6 text-center text-sm text-muted-foreground">
-          아직 얻은 칭호가 없어요
-        </p>
+        <EmptyState title="아직 얻은 칭호가 없어요" size="sm" />
       ) : (
         <ul className="flex flex-wrap gap-2">
           {owned.map((title) => {

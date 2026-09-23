@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react'
-import { Search, Users, X } from 'lucide-react'
+import { Dices, Search, Users, X } from 'lucide-react'
+import { EmptyState } from '@/components/EmptyState'
+import { PageHeader } from '@/components/PageHeader'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { GAMES, supportsPlayers, type CatalogGame } from '@/data/games'
 import { cn } from '@/lib/utils'
@@ -23,13 +26,15 @@ export function GamesPage() {
   }, [keyword, players])
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-baseline justify-between gap-2">
-        <h1 className="text-2xl font-bold">보드게임</h1>
-        <p className="text-sm text-muted-foreground">
-          {shown.length === GAMES.length ? `${GAMES.length}개` : `${shown.length} / ${GAMES.length}개`}
-        </p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="보드게임"
+        actions={
+          <span className="text-sm text-muted-foreground">
+            {shown.length === GAMES.length ? `${GAMES.length}개` : `${shown.length} / ${GAMES.length}개`}
+          </span>
+        }
+      />
 
       <div className="relative">
         <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -74,9 +79,22 @@ export function GamesPage() {
       </div>
 
       {shown.length === 0 ? (
-        <p className="rounded-xl border border-dashed py-10 text-center text-sm text-muted-foreground">
-          조건에 맞는 게임이 없어요
-        </p>
+        <EmptyState
+          icon={Dices}
+          title="조건에 맞는 게임이 없어요"
+          action={
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setKeyword('')
+                setPlayers(null)
+              }}
+            >
+              조건 지우기
+            </Button>
+          }
+        />
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2">
           {shown.map((game) => (
@@ -90,9 +108,9 @@ export function GamesPage() {
 
 function GameItem({ game }: { game: CatalogGame }) {
   return (
-    <li className="flex gap-3 rounded-xl border bg-card p-3">
+    <li className="flex gap-3.5 rounded-xl border bg-card p-3.5">
       <Cover game={game} />
-      <div className="min-w-0 flex-1 space-y-1">
+      <div className="min-w-0 flex-1 space-y-1.5">
         <p className="leading-snug font-semibold">{game.name}</p>
         <Badge variant="secondary" className="font-normal">
           {game.players}
@@ -106,7 +124,8 @@ function GameItem({ game }: { game: CatalogGame }) {
 /** 표지. 이미지가 없거나 못 불러오면 이름 첫 글자로 대신한다 */
 function Cover({ game }: { game: CatalogGame }) {
   const [broken, setBroken] = useState(false)
-  const box = 'flex h-24 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted'
+  const box =
+    'flex h-28 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted ring-1 ring-border'
 
   if (!game.image || broken) {
     return (

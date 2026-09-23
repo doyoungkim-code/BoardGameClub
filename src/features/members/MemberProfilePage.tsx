@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { CalendarCheck, MessageCircle, PenLine, Zap } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
-import { BackButton } from '@/components/BackButton'
 import { MemberName } from '@/components/MemberName'
+import { PageHeader } from '@/components/PageHeader'
 import { PageSpinner } from '@/components/PageSpinner'
+import { CardSkeleton } from '@/components/Skeletons'
 import { UserAvatar } from '@/components/UserAvatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
 import { AUTO_TITLES, autoTitleKey, titleText } from '@/data/titles'
 import { AchievementList } from '@/features/members/AchievementList'
 import { ActivityHistory } from '@/features/members/ActivityHistory'
@@ -16,6 +16,8 @@ import { progressKeys, readSeen, writeSeen } from '@/features/members/seenProgre
 import { TierCard } from '@/features/members/TierCard'
 import { TitleSection } from '@/features/members/TitleSection'
 import { formatDateTime, referrerLabel, toErrorMessage } from '@/lib/format'
+import { tappableRow } from '@/lib/styles'
+import { cn } from '@/lib/utils'
 import { fetchMemberActivity, progressFor, type MemberActivity } from '@/services/activity'
 import { openDm } from '@/services/chat'
 import { introducedBy } from '@/services/members'
@@ -111,10 +113,7 @@ export function MemberProfilePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-1">
-        <BackButton fallback="/members" />
-        <h1 className="text-lg font-semibold">회원 프로필</h1>
-      </div>
+      <PageHeader title="회원 프로필" backTo="/members" className="[&_h1]:text-lg [&_h1]:font-semibold" />
 
       <div className="flex items-center gap-4">
         <UserAvatar name={member.nickname} photoURL={member.photoURL} className="size-16" />
@@ -159,9 +158,8 @@ export function MemberProfilePage() {
         </>
       ) : (
         <div className="space-y-2">
-          <Skeleton className="h-24 w-full rounded-xl" />
-          <Skeleton className="h-32 w-full rounded-xl" />
-          <Skeleton className="h-32 w-full rounded-xl" />
+          <CardSkeleton count={1} />
+          <CardSkeleton count={2} className="h-32" />
         </div>
       )}
 
@@ -171,7 +169,7 @@ export function MemberProfilePage() {
           <ul className="divide-y overflow-hidden rounded-xl border bg-card">
             {introduced.map((person) => (
               <li key={person.uid}>
-                <Link to={`/members/${person.uid}`} className="flex items-center gap-3 px-4 py-3 active:bg-muted">
+                <Link to={`/members/${person.uid}`} className={cn('flex items-center gap-3 px-4 py-3', tappableRow)}>
                   <UserAvatar name={person.nickname} photoURL={person.photoURL} className="size-8" />
                   <MemberName uid={person.uid} className="flex-1 text-sm" />
                 </Link>

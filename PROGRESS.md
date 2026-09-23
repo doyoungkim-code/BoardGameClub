@@ -152,6 +152,21 @@ tests/rules/    보안 규칙 테스트
 - 라우트 `handle`: `{ layout: 'chat' }` = 여백 없이 화면 꽉 채움, `{ immersive: true }` = 모바일에서 헤더·하단 탭 숨김
 - 무료 한도(읽기 5만/일) 때문에 실시간 구독은 꼭 필요한 곳만. 회원 목록·채팅 목록은 `stores`에서 한 번만 구독해 공유
 
+### 디자인 규칙 (2026-09-23 정리)
+화면을 새로 만들 때 이 규칙을 따른다. 같은 마크업을 또 복사하지 말고 공용 컴포넌트를 쓴다.
+- **제목**: `components/PageHeader.tsx` (`title` / `eyebrow` / `subtitle` / `actions` / `backTo`).
+  화면마다 `<h1 className="text-2xl font-bold">`를 따로 적지 않는다
+- **빈 목록**: `components/EmptyState.tsx` (아이콘 + 한 줄 + 설명 + **다음에 할 일 버튼**). `size="sm"` 은 카드 안처럼 좁은 자리
+- **회색 띠 탭**: `components/SegmentedTabs.tsx` (`to` 를 주면 링크, 없으면 버튼)
+- **자리 표시**: `components/Skeletons.tsx` 의 `CardSkeleton`(카드 높이는 `className`) / `RowSkeleton`(사진+두 줄)
+- **누름 표시**: `lib/styles.ts` 의 `tappableCard` / `tappableRow`.
+  `active:` 는 누른 요소와 **그 위쪽**에만 걸리므로, 카드가 `<Link>` 안에 있으면 링크에 `group` 을 붙이고
+  카드에는 `group-active:` 를 쓴다 (`index.css` 에서 기본 탭 하이라이트를 껐기 때문에 이게 유일한 반응)
+- **간격**: 화면 루트 `space-y-6`, 섹션(제목+내용) `space-y-2~3`, 카드 목록 `space-y-2`, 폼 `space-y-5`.
+  6보다 붙여야 하는 묶음은 안쪽에 `space-y-3` 상자를 하나 더 둔다 (지도 화면의 검색+지도)
+- **다크모드**: `index.css` 에 `.dark` 색이 다 있지만 아직 켜는 곳이 없다 (`@custom-variant dark`). 나중에 할 때는
+  `<html>` 에 `.dark` 를 붙이고 `index.html` 에 첫 화면 전 스크립트 + `me` 화면 토글 + sonner `theme` 연결이 필요하다
+
 ### 알려진 함정
 - **shadcn 컴포넌트 추가 시** `import { cn } from "cn"`으로 잘못 생성되고 `cn` 패키지가 설치됨
   → `@/lib/utils`로 고치고 `npm uninstall cn`
@@ -294,6 +309,16 @@ tests/rules/    보안 규칙 테스트
   내 정보 화면 버튼의 빨간 점은 출석 업적·티어만 본다 (칭호는 다른 기록이 필요해서)
 - **통계**: 맨 위 "티어 랭킹"(전체 기간 XP), 그 아래 기존 최근 6개월 참석 랭킹
 - 댓글 수는 칭호 조건에 넣지 않았다 (회원별 댓글을 세려면 collection group 색인이 필요)
+
+### 홈 프로필 배너 (2026-09-23)
+- 홈 맨 위에 내 **티어·경험치·출석·업적·동호회 순위**를 가로형 배너로 (`features/home/ProfileBanner.tsx`).
+  배경색과 방패 색이 티어 색을 따라가서 티어가 오르면 배너 모습이 바뀐다. 누르면 내 프로필로
+- **추가 읽기 0회**: 출석 횟수는 `stores/progress.ts` 가 이미 들고 있는 값(6시간 캐시)을 쓴다.
+  출석만으로 계산되는 부분을 `services/activity.ts` 의 `attendanceProgress(attended)` 로 떼어내
+  프로필 화면(`progressFor`)과 같은 코드 경로를 쓴다
+- 순위도 같은 값으로 계산한다 (`xpRanking` / `rankOf`). 통계 화면의 티어 랭킹과 같은 함수라 숫자가 어긋나지 않는다
+- 주최·게시글 수는 배너에 넣지 않았다: 그 값은 회원마다 문서를 더 읽어야 해서 홈을 열 때마다 읽기가 늘어난다
+- 다음 모임은 날짜 블록 + D-day + 참석자 얼굴 카드로 (`features/home/NextEventCard.tsx`), 공지·채팅·통계·지도는 작은 4칸 바로가기
 
 ### 모임 일정 투표 (2026-09-20, `polls` 컬렉션)
 - 날짜를 정하기 전에 **후보 날짜(2~10개, 시간은 선택)**를 올리고, 회원은 되는 날짜를 **모두** 고른다

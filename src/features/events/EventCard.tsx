@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatEventDate } from '@/lib/format'
+import { tappableCard } from '@/lib/styles'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/stores/auth'
 import type { ClubEvent } from '@/types/event'
@@ -13,8 +14,8 @@ export function EventCard({ event }: { event: ClubEvent }) {
   const attending = !!uid && event.attendeeIds.includes(uid)
 
   return (
-    <Link to={`/events/${event.id}`} className="block">
-      <Card className={cn('py-3 transition-colors hover:border-primary/40', event.canceled && 'opacity-60')}>
+    <Link to={`/events/${event.id}`} className="group block">
+      <Card className={cn('py-3', tappableCard, event.canceled && 'opacity-60')}>
         <CardContent className="space-y-2 px-4">
           <div className="flex flex-wrap items-center gap-1.5">
             {event.canceled && <Badge variant="destructive">취소됨</Badge>}
@@ -40,11 +41,5 @@ export function EventCard({ event }: { event: ClubEvent }) {
         </CardContent>
       </Card>
     </Link>
-  )
-}
-
-export function EmptyEvents({ text }: { text: string }) {
-  return (
-    <p className="rounded-xl border border-dashed py-10 text-center text-sm text-muted-foreground">{text}</p>
   )
 }

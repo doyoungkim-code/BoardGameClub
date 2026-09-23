@@ -1,11 +1,12 @@
 import { Suspense, useEffect } from 'react'
-import { Link, NavLink, Outlet } from 'react-router'
+import { Link, NavLink, Outlet, useLocation } from 'react-router'
 import { PageSpinner } from '@/components/PageSpinner'
 import { UserAvatar } from '@/components/UserAvatar'
 import { TAB_ITEMS, useMoreItems, type NavItem } from '@/components/layout/nav'
 import { useRouteHandle } from '@/components/layout/routeHandle'
 import { useAppHistory, useTabNavigate } from '@/hooks/useAppHistory'
 import { useChatNotifications } from '@/hooks/useChatNotifications'
+import { useScrolled } from '@/hooks/useScrolled'
 import { useUnreadCount } from '@/hooks/useUnreadCount'
 import { APP_NAME } from '@/lib/constants'
 import { cn } from '@/lib/utils'
@@ -18,7 +19,11 @@ import { startProgressSync } from '@/stores/progress'
 export function AppShell() {
   const profile = useAuth((s) => s.profile)!
   const { layout, immersive } = useRouteHandle()
+  const { pathname } = useLocation()
   const fullHeight = layout === 'chat'
+  // 채팅은 안쪽 영역이 스크롤돼서 이 방식으로는 알 수 없다 → 항상 테두리를 둔다
+  const { scrolled, sentinelRef } = useScrolled()
+  const headerSolid = scrolled || fullHeight
 
   useEffect(() => startMembersSync(), [])
   // 닉네임 옆 티어 표시용 (모든 회원 출석 횟수, 6시간마다 새로)
@@ -33,7 +38,13 @@ export function AppShell() {
       <Sidebar />
       <div className="flex min-h-dvh flex-1 flex-col md:min-h-0 md:min-w-0">
         {!immersive && (
-          <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background/90 px-4 backdrop-blur md:hidden">
+          <header
+            className={cn(
+              // 테두리 자리는 늘 잡아 두고 색만 바꾼다 (1px 씩 밀리지 않게)
+              'sticky top-0 z-30 flex h-14 items-center justify-between border-b border-transparent bg-background/90 px-4 backdrop-blur transition-shadow md:hidden',
+              headerSolid && 'border-border shadow-sm',
+            )}
+          >
             <HomeLink className="font-bold text-primary" />
             <Link to="/me" aria-label="내 정보">
               <UserAvatar name={profile.nickname} photoURL={profile.photoURL} className="size-8" />
@@ -48,9 +59,21 @@ export function AppShell() {
                 'mx-auto w-full max-w-3xl flex-1 px-4 pt-4 pb-24 md:px-8 md:pt-8 md:pb-8'
           }
         >
-          <Suspense fallback={<PageSpinner />}>
-            <Outlet />
-          </Suspense>
+          {/* 헤더 테두리 판단용 표시 (useScrolled) */}
+          {!fullHeight && <div ref={sentinelRef} className="h-px" />}
+          {/* 화면을 옮길 때 살짝 나타나게. 기기에서 애니메이션을 껐으면 그냥 바뀐다 */}
+          <div
+            key={pathname}
+            className={cn(
+              'motion-safe:animate-in motion-safe:fade-in motion-safe:duration-200',
+              // 채팅은 남은 높이를 다 써야 한다
+              fullHeight && 'flex min-h-0 flex-1 flex-col',
+            )}
+          >
+            <Suspense fallback={<PageSpinner />}>
+              <Outlet />
+            </Suspense>
+          </div>
         </main>
       </div>
       {!immersive && <BottomTabs />}
@@ -146,18 +169,25 @@ function BottomTabs() {
                   e.preventDefault()
                   goToTab(item.to)
                 }}
-                className={({ isActive }) =>
-                  cn(
-                    'flex h-full flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground',
-                    isActive && 'font-semibold text-primary',
-                  )
-                }
+                className="flex h-full flex-col items-center justify-center gap-0.5 text-[11px]"
               >
-                <span className="relative">
-                  <Icon className="size-5" />
-                  {item.badge === 'chat' && <UnreadBadge className="absolute -top-1.5 -right-2.5" />}
-                </span>
-                {item.label}
+                {({ isActive }) => (
+                  <>
+                    {/* 켜진 탭은 아이콘 뒤에 알약 배경 */}
+                    <span
+                      className={cn(
+                        'relative flex items-center justify-center rounded-full px-4 py-1 transition-colors',
+                        isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground',
+                      )}
+                    >
+                      <Icon className="size-5" />
+                      {item.badge === 'chat' && <UnreadBadge className="absolute -top-1 right-1.5" />}
+                    </span>
+                    <span className={isActive ? 'font-semibold text-primary' : 'text-muted-foreground'}>
+                      {item.label}
+                    </span>
+                  </>
+                )}
               </NavLink>
             </li>
           )

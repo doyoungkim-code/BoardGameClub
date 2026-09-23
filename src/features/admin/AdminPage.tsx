@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { onSnapshot, query, where } from 'firebase/firestore'
+import { UserCheck } from 'lucide-react'
 import { toast } from 'sonner'
+import { EmptyState } from '@/components/EmptyState'
+import { PageHeader } from '@/components/PageHeader'
 import { UserAvatar } from '@/components/UserAvatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -37,7 +40,7 @@ export function AdminPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold">관리자</h1>
+      <PageHeader title="관리자" />
 
       <section className="space-y-3">
         <h2 className="flex items-center gap-2 font-semibold">
@@ -45,9 +48,7 @@ export function AdminPage() {
           {!!pending?.length && <Badge>{pending.length}</Badge>}
         </h2>
         {pending === null ? null : pending.length === 0 ? (
-          <p className="rounded-xl border border-dashed py-10 text-center text-sm text-muted-foreground">
-            대기 중인 신청이 없어요
-          </p>
+          <EmptyState icon={UserCheck} title="대기 중인 신청이 없어요" />
         ) : (
           pending.map((applicant) => <ApplicantCard key={applicant.uid} applicant={applicant} />)
         )}

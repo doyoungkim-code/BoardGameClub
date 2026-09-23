@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { endOfMonth, format, isSameDay, startOfMonth } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { CalendarDays, List, Plus, Vote } from 'lucide-react'
+import { CalendarDays, CalendarPlus, List, Plus, Vote } from 'lucide-react'
 import { Link } from 'react-router'
+import { EmptyState } from '@/components/EmptyState'
+import { PageHeader } from '@/components/PageHeader'
+import { SegmentedTabs } from '@/components/SegmentedTabs'
+import { CardSkeleton } from '@/components/Skeletons'
 import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
-import { EmptyEvents, EventCard } from '@/features/events/EventCard'
+import { EventCard } from '@/features/events/EventCard'
 import { EventCalendar } from '@/features/events/EventCalendar'
 import { OpenPolls } from '@/features/polls/OpenPolls'
 import { dayKey } from '@/lib/format'
-import { cn } from '@/lib/utils'
 import {
   fetchEventsBetween,
   fetchPastEvents,
@@ -29,65 +31,39 @@ export function EventsPage() {
   useEffect(() => startEventsSync(), [])
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between gap-2">
-        <h1 className="text-2xl font-bold">모임</h1>
-        <div className="flex gap-2">
-          {/* 날짜를 정하기 전: 후보를 올려 언제 모일지 투표 */}
-          <Button asChild size="sm" variant="outline">
-            <Link to="/polls/new">
-              <Vote className="size-4" />
-              일정 투표
-            </Link>
-          </Button>
-          <Button asChild size="sm">
-            <Link to="/events/new">
-              <Plus className="size-4" />
-              모임 만들기
-            </Link>
-          </Button>
-        </div>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="모임"
+        actions={
+          <>
+            {/* 날짜를 정하기 전: 후보를 올려 언제 모일지 투표 */}
+            <Button asChild size="sm" variant="outline">
+              <Link to="/polls/new">
+                <Vote className="size-4" />
+                일정 투표
+              </Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link to="/events/new">
+                <Plus className="size-4" />
+                모임 만들기
+              </Link>
+            </Button>
+          </>
+        }
+      />
 
-      <div className="flex gap-1 rounded-lg bg-muted p-1">
-        <ViewTab current={view} value="list" icon={List} label="목록" onSelect={setView} />
-        <ViewTab current={view} value="calendar" icon={CalendarDays} label="캘린더" onSelect={setView} />
-      </div>
+      <SegmentedTabs items={VIEW_TABS} active={view} onSelect={(key) => setView(key as View)} />
 
       {view === 'list' ? <ListView /> : <CalendarView />}
     </div>
   )
 }
 
-function ViewTab({
-  current,
-  value,
-  icon: Icon,
-  label,
-  onSelect,
-}: {
-  current: View
-  value: View
-  icon: typeof List
-  label: string
-  onSelect: (view: View) => void
-}) {
-  const active = current === value
-  return (
-    <button
-      type="button"
-      onClick={() => onSelect(value)}
-      aria-pressed={active}
-      className={cn(
-        'flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-sm transition-colors',
-        active ? 'bg-background font-semibold shadow-xs' : 'text-muted-foreground',
-      )}
-    >
-      <Icon className="size-4" />
-      {label}
-    </button>
-  )
-}
+const VIEW_TABS = [
+  { key: 'list', label: '목록', icon: List },
+  { key: 'calendar', label: '캘린더', icon: CalendarDays },
+]
 
 // ---------- 목록 ----------
 
@@ -101,9 +77,17 @@ function ListView() {
       <section className="space-y-2">
         <h2 className="font-semibold">다가오는 모임</h2>
         {!loaded ? (
-          <EventSkeletons />
+          <CardSkeleton />
         ) : upcoming.length === 0 ? (
-          <EmptyEvents text="예정된 모임이 없어요. 모임을 열어보세요!" />
+          <EmptyState
+            icon={CalendarPlus}
+            title="예정된 모임이 없어요"
+            action={
+              <Button asChild size="sm">
+                <Link to="/events/new">모임 만들기</Link>
+              </Button>
+            }
+          />
         ) : (
           upcoming.map((event) => <EventCard key={event.id} event={event} />)
         )}
@@ -157,9 +141,9 @@ function PastEvents() {
     <section className="space-y-2">
       <h2 className="font-semibold">지난 모임</h2>
       {events === null ? (
-        <EventSkeletons />
+        <CardSkeleton />
       ) : events.length === 0 ? (
-        <EmptyEvents text="지난 모임이 없어요" />
+        <EmptyState icon={CalendarDays} title="지난 모임이 없어요" size="sm" />
       ) : (
         <>
           {events.map((event) => (
@@ -229,22 +213,13 @@ function CalendarView() {
       <section className="space-y-2 border-t pt-4">
         <h2 className="font-semibold">{format(selected, 'M월 d일 (E)', { locale: ko })}</h2>
         {events === null ? (
-          <EventSkeletons />
+          <CardSkeleton />
         ) : selectedEvents.length === 0 ? (
-          <EmptyEvents text="이 날은 모임이 없어요" />
+          <EmptyState icon={CalendarDays} title="이 날은 모임이 없어요" size="sm" />
         ) : (
           selectedEvents.map((event) => <EventCard key={event.id} event={event} />)
         )}
       </section>
-    </div>
-  )
-}
-
-function EventSkeletons() {
-  return (
-    <div className="space-y-2">
-      <Skeleton className="h-24 w-full rounded-xl" />
-      <Skeleton className="h-24 w-full rounded-xl" />
     </div>
   )
 }

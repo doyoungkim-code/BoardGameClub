@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react'
-import { CalendarDays, ChartColumn, Megaphone, MessageCircle } from 'lucide-react'
+import { ChartColumn, Map as MapIcon, Megaphone, MessageCircle } from 'lucide-react'
 import { Link } from 'react-router'
 import { InstallAppCard } from '@/components/InstallAppCard'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { PageHeader } from '@/components/PageHeader'
+import { Card, CardContent } from '@/components/ui/card'
+import { NextEventCard } from '@/features/home/NextEventCard'
+import { ProfileBanner } from '@/features/home/ProfileBanner'
 import { useUnreadCount } from '@/hooks/useUnreadCount'
 import { APP_NAME } from '@/lib/constants'
-import { formatEventDate } from '@/lib/format'
 import { fetchTopNotices, toPost } from '@/services/posts'
 import { cn } from '@/lib/utils'
 import type { Post } from '@/types/post'
 import { useAuth } from '@/stores/auth'
-import { startEventsSync, useEvents } from '@/stores/events'
+import { startEventsSync } from '@/stores/events'
 
 /** 홈의 설치 안내를 닫았는지 (내 정보 화면에는 계속 나온다) */
 const INSTALL_DISMISSED_KEY = 'installCardDismissed'
@@ -26,7 +28,6 @@ function readInstallDismissed() {
 export function HomePage() {
   const nickname = useAuth((s) => s.profile?.nickname)
   const unread = useUnreadCount()
-  const { loaded, upcoming } = useEvents()
   const [notice, setNotice] = useState<Post | null | undefined>(undefined)
   const [installDismissed, setInstallDismissed] = useState(readInstallDismissed)
 
@@ -42,17 +43,7 @@ export function HomePage() {
       })
   }, [])
 
-  // 취소된 모임은 홈에서 감춘다
-  const nextEvent = upcoming.find((event) => !event.canceled)
-
-  const sections = [
-    {
-      title: '다가오는 모임',
-      to: nextEvent ? `/events/${nextEvent.id}` : '/events',
-      icon: CalendarDays,
-      text: !loaded ? '불러오는 중…' : nextEvent ? `${nextEvent.title} · ${formatEventDate(nextEvent.startAt)}` : '예정된 모임이 없어요',
-      highlight: !!nextEvent,
-    },
+  const shortcuts = [
     {
       title: '공지사항',
       to: notice ? `/posts/${notice.id}` : '/board/notice',
@@ -64,22 +55,40 @@ export function HomePage() {
       title: '채팅',
       to: '/chat',
       icon: MessageCircle,
-      text: unread > 0 ? `안 읽은 대화방이 ${unread}개 있어요` : '새 메시지가 없어요',
+      text: unread > 0 ? `안 읽은 대화방 ${unread}개` : '새 메시지가 없어요',
       highlight: unread > 0,
     },
-    {
-      title: '통계',
-      to: '/stats',
-      icon: ChartColumn,
-      text: '모임 참석 랭킹 보기',
-    },
+    { title: '통계', to: '/stats', icon: ChartColumn, text: '참석 랭킹 보기' },
+    { title: '지도', to: '/places', icon: MapIcon, text: '보드게임카페 찾기' },
   ]
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-sm text-muted-foreground">{APP_NAME}</p>
-        <h1 className="text-2xl font-bold">{nickname}님, 오늘은 무슨 게임 할까요?</h1>
+      <PageHeader eyebrow={APP_NAME} title={`${nickname}님, 오늘은 무슨 게임 할까요?`} />
+
+      <ProfileBanner />
+
+      <section className="space-y-2">
+        <h2 className="font-semibold">다가오는 모임</h2>
+        <NextEventCard />
+      </section>
+
+      <div className="grid grid-cols-2 gap-3">
+        {shortcuts.map(({ title, to, icon: Icon, text, highlight }) => (
+          <Link key={title} to={to} className="block">
+            <Card className="h-full py-0 transition-colors hover:border-primary/40 active:bg-muted">
+              <CardContent className="space-y-1 px-4 py-3.5">
+                <p className="flex items-center gap-1.5 text-sm font-semibold">
+                  <Icon className="size-4 text-primary" />
+                  {title}
+                </p>
+                <p className={cn('truncate text-xs', highlight ? 'font-medium text-primary' : 'text-muted-foreground')}>
+                  {text}
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
       </div>
 
       {!installDismissed && (
@@ -94,22 +103,6 @@ export function HomePage() {
           }}
         />
       )}
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        {sections.map(({ title, to, icon: Icon, text, highlight }) => (
-          <Link key={title} to={to} className="block">
-            <Card className="h-full transition-colors hover:border-primary/40">
-              <CardHeader className="flex flex-row items-center gap-2">
-                <Icon className="size-4 text-primary" />
-                <CardTitle className="text-base">{title}</CardTitle>
-              </CardHeader>
-              <CardContent className={cn('text-sm', highlight ? 'font-medium text-primary' : 'text-muted-foreground')}>
-                {text}
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
     </div>
   )
 }

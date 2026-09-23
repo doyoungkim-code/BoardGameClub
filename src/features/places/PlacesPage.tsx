@@ -2,6 +2,8 @@ import { useRef, useState, type FormEvent } from 'react'
 import { ExternalLink, MapPin, Navigation, Phone, Search, Star, X } from 'lucide-react'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
+import { EmptyState } from '@/components/EmptyState'
+import { PageHeader } from '@/components/PageHeader'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,6 +12,7 @@ import { PlaceMap, type LatLng } from '@/features/places/PlaceMap'
 import { usePlaces } from '@/hooks/usePlaces'
 import { toErrorMessage } from '@/lib/format'
 import { findArea, searchBoardCafesIn, type KakaoCafe } from '@/lib/kakaoMap'
+import { tappableRow } from '@/lib/styles'
 import { cn } from '@/lib/utils'
 import { addFavorite, kakaoMapUrl, kakaoRouteUrl, removeFavorite, updateFavoriteMemo } from '@/services/places'
 import { useAuth, useIsOwner } from '@/stores/auth'
@@ -108,46 +111,48 @@ export function PlacesPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">보드게임카페 지도</h1>
+    <div className="space-y-6">
+      <PageHeader title="보드게임카페 지도" />
 
-      <form onSubmit={goToArea} className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={areaKeyword}
-            onChange={(e) => setAreaKeyword(e.target.value)}
-            placeholder="지역으로 이동 (예: 홍대, 건대입구)"
-            aria-label="지역으로 이동"
-            className="pl-9"
-            enterKeyHint="search"
-          />
-        </div>
-        <Button type="submit" disabled={!areaKeyword.trim()}>
-          이동
-        </Button>
-      </form>
+      <div className="space-y-3">
+        <form onSubmit={goToArea} className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={areaKeyword}
+              onChange={(e) => setAreaKeyword(e.target.value)}
+              placeholder="지역으로 이동 (예: 홍대, 건대입구)"
+              aria-label="지역으로 이동"
+              className="pl-9"
+              enterKeyHint="search"
+            />
+          </div>
+          <Button type="submit" disabled={!areaKeyword.trim()}>
+            이동
+          </Button>
+        </form>
 
-      <PlaceMap
-        cafes={cafes}
-        favorites={favorites ?? []}
-        selected={selected}
-        onSelect={selectById}
-        onIdle={handleIdle}
-        focus={focus}
-        className="h-[50dvh] md:h-[60dvh]"
-      />
-
-      {selected && (
-        <SpotCard
-          key={selected.id}
-          spot={selected}
-          favorite={selectedFavorite}
-          isOwner={isOwner}
-          uid={uid}
-          onClose={() => select(null)}
+        <PlaceMap
+          cafes={cafes}
+          favorites={favorites ?? []}
+          selected={selected}
+          onSelect={selectById}
+          onIdle={handleIdle}
+          focus={focus}
+          className="h-[50dvh] md:h-[60dvh]"
         />
-      )}
+
+        {selected && (
+          <SpotCard
+            key={selected.id}
+            spot={selected}
+            favorite={selectedFavorite}
+            isOwner={isOwner}
+            uid={uid}
+            onClose={() => select(null)}
+          />
+        )}
+      </div>
 
       {favorites && favorites.length > 0 && (
         <section className="space-y-2">
@@ -184,8 +189,8 @@ export function PlacesPage() {
   )
 }
 
-function Notice({ children }: { children: React.ReactNode }) {
-  return <p className="rounded-xl border border-dashed py-8 text-center text-sm text-muted-foreground">{children}</p>
+function Notice({ children }: { children: string }) {
+  return <EmptyState title={children} size="sm" />
 }
 
 function SpotList({
@@ -206,10 +211,7 @@ function SpotList({
           <button
             type="button"
             onClick={() => onPick(spot)}
-            className={cn(
-              'flex w-full items-start gap-3 px-4 py-3 text-left active:bg-muted',
-              spot.id === selectedId && 'bg-accent',
-            )}
+            className={cn('flex w-full items-start gap-3 px-4 py-3 text-left', tappableRow, spot.id === selectedId && 'bg-accent')}
           >
             {favorite ? (
               <Star className="mt-0.5 size-4 shrink-0 fill-primary text-primary" />

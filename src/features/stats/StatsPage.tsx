@@ -2,14 +2,17 @@ import { useEffect, useMemo, useState } from 'react'
 import { subMonths } from 'date-fns'
 import { CalendarDays, Dices, Trophy, Users } from 'lucide-react'
 import { Link } from 'react-router'
+import { EmptyState } from '@/components/EmptyState'
 import { MemberName } from '@/components/MemberName'
+import { PageHeader } from '@/components/PageHeader'
+import { CardSkeleton } from '@/components/Skeletons'
 import { UserAvatar } from '@/components/UserAvatar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { tierFor, xpFor } from '@/data/achievements'
 import { GAMES } from '@/data/games'
+import { tappableRow } from '@/lib/styles'
 import { cn } from '@/lib/utils'
-import { countsAsAttended } from '@/services/activity'
+import { countsAsAttended, xpRanking } from '@/services/activity'
 import { fetchEventsBetween, toEvent } from '@/services/events'
 import { useMembers } from '@/stores/members'
 import { useProgress } from '@/stores/progress'
@@ -58,10 +61,7 @@ export function StatsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">통계</h1>
-        <p className="mt-1 text-sm text-muted-foreground">최근 {MONTHS}개월 기준</p>
-      </div>
+      <PageHeader title="통계" subtitle={`최근 ${MONTHS}개월 기준`} />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat icon={CalendarDays} label="열린 모임" value={summary ? `${summary.heldCount}회` : null} />
@@ -78,12 +78,9 @@ export function StatsPage() {
         </CardHeader>
         <CardContent>
           {!summary ? (
-            <div className="space-y-2">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
+            <CardSkeleton className="h-10 rounded-md" />
           ) : summary.ranking.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">아직 집계할 모임이 없어요</p>
+            <EmptyState icon={CalendarDays} title="아직 집계할 모임이 없어요" size="sm" className="border-0" />
           ) : (
             <ol className="divide-y">
               {summary.ranking.map(({ uid, times }, index) => {
@@ -119,14 +116,7 @@ export function StatsPage() {
 function TierRanking() {
   const { loaded, attendedById } = useProgress()
   const members = useMembers((s) => s.members)
-
-  const ranking = members
-    .map((member) => {
-      const xp = xpFor(attendedById[member.uid] ?? 0)
-      return { member, xp, tier: tierFor(xp) }
-    })
-    .filter((row) => row.xp > 0)
-    .sort((a, b) => b.xp - a.xp || a.member.nickname.localeCompare(b.member.nickname, 'ko'))
+  const ranking = useMemo(() => xpRanking(members, attendedById), [members, attendedById])
 
   return (
     <Card>
@@ -135,17 +125,14 @@ function TierRanking() {
       </CardHeader>
       <CardContent>
         {!loaded ? (
-          <div className="space-y-2">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-          </div>
+          <CardSkeleton className="h-10 rounded-md" />
         ) : ranking.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">아직 출석한 회원이 없어요</p>
+          <EmptyState icon={Trophy} title="아직 출석한 회원이 없어요" size="sm" className="border-0" />
         ) : (
           <ol className="divide-y">
             {ranking.map(({ member, xp, tier }, index) => (
               <li key={member.uid}>
-                <Link to={`/members/${member.uid}`} className="flex items-center gap-3 py-2">
+                <Link to={`/members/${member.uid}`} className={cn('flex items-center gap-3 px-2 py-2', tappableRow)}>
                   <span
                     className={cn(
                       'w-5 shrink-0 text-center text-sm font-bold',
