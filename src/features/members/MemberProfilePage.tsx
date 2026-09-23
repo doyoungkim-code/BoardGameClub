@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { CalendarCheck, MessageCircle, PenLine, Zap } from 'lucide-react'
+import { MessageCircle } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { MemberName } from '@/components/MemberName'
@@ -9,20 +9,23 @@ import { CardSkeleton } from '@/components/Skeletons'
 import { UserAvatar } from '@/components/UserAvatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { AUTO_TITLES, autoTitleKey, titleText } from '@/data/titles'
+import { SectionTitle } from '@/components/SectionTitle'
 import { AchievementList } from '@/features/members/AchievementList'
 import { ActivityHistory } from '@/features/members/ActivityHistory'
 import { progressKeys, readSeen, writeSeen } from '@/features/members/seenProgress'
-import { TierCard } from '@/features/members/TierCard'
+import { TierBanner } from '@/features/members/TierBanner'
 import { TitleSection } from '@/features/members/TitleSection'
 import { formatDateTime, referrerLabel, toErrorMessage } from '@/lib/format'
 import { tappableRow } from '@/lib/styles'
 import { cn } from '@/lib/utils'
-import { fetchMemberActivity, progressFor, type MemberActivity } from '@/services/activity'
+import { fetchMemberActivity, progressFor, rankOf, xpRanking, type MemberActivity } from '@/services/activity'
 import { openDm } from '@/services/chat'
 import { introducedBy } from '@/services/members'
 import { useAuth } from '@/stores/auth'
 import { useMembers } from '@/stores/members'
+import { useProgress } from '@/stores/progress'
 
 export function MemberProfilePage() {
   const { uid } = useParams()
@@ -56,6 +59,10 @@ export function MemberProfilePage() {
   }, [uid, loaded, joinedAt])
 
   const progress = useMemo(() => (activity ? progressFor(activity.stats) : null), [activity])
+
+  // 동호회 순위는 모든 회원의 출석 횟수(6시간 캐시)로 계산한다. 통계 화면의 티어 랭킹과 같은 함수
+  const attendedById = useProgress((s) => s.attendedById)
+  const rank = useMemo(() => (uid ? rankOf(xpRanking(members, attendedById), uid) : null), [members, attendedById, uid])
 
   // 가진 칭호 값 전부 ('granted:…' + 조건을 채운 'auto:…')
   const grantedTitles = member?.grantedTitles
@@ -95,6 +102,12 @@ export function MemberProfilePage() {
   const title = titleText(member.titleId, member.grantedTitles, progress?.earnedAutoIds)
 
   const isNew = (key: string) => !!seenBefore && !seenBefore.has(key)
+  const bannerStats = [
+    { label: '출석', value: `${activity?.stats.attended ?? 0}회` },
+    { label: '주최', value: `${activity?.stats.hosted ?? 0}회` },
+    { label: '게시글', value: `${activity?.stats.posts ?? 0}개` },
+    { label: '순위', value: rank ? `${rank}위` : '-' },
+  ]
   const newGoals = progress ? new Set(progress.unlockedGoals.filter((goal) => isNew(`ach:${goal}`))) : undefined
   const newTitleKeys = new Set(ownedTitleKeys.filter((key) => isNew(`title:${key}`)))
 
@@ -115,57 +128,49 @@ export function MemberProfilePage() {
     <div className="space-y-6">
       <PageHeader title="회원 프로필" backTo="/members" className="[&_h1]:text-lg [&_h1]:font-semibold" />
 
-      <div className="flex items-center gap-4">
-        <UserAvatar name={member.nickname} photoURL={member.photoURL} className="size-16" />
-        <div className="min-w-0 flex-1">
-          {title && <p className="truncate text-sm font-medium text-primary">{title}</p>}
-          <p className="flex items-center gap-1.5 text-xl font-bold">
-            <span className="truncate">{member.nickname}</span>
-            {member.role === 'owner' && <Badge variant="secondary">오너</Badge>}
-          </p>
-          <p className="truncate text-sm text-muted-foreground">{member.googleName}</p>
-          {referrer && <p className="text-sm text-muted-foreground">{referrer}</p>}
-        </div>
-      </div>
-
-      {isMe ? (
-        <Button asChild variant="outline" className="h-11 w-full">
-          <Link to="/me">내 정보 수정</Link>
-        </Button>
+      {progress ? (
+        <TierBanner
+          member={member}
+          progress={progress}
+          title={title}
+          subtitle={[member.googleName, referrer].filter(Boolean).join(' · ')}
+          badge={member.role === 'owner' && <Badge variant="secondary">오너</Badge>}
+          isNew={isNew(`tier:${progress.tier.id}`)}
+          stats={bannerStats}
+        />
       ) : (
-        <Button className="h-11 w-full" disabled={opening} onClick={() => void startDm()}>
-          <MessageCircle className="size-4" />
-          메시지 보내기
-        </Button>
+        <Skeleton className="h-[10.5rem] w-full rounded-2xl" />
       )}
+
+      <div className="space-y-2">
+        {isMe ? (
+          <Button asChild variant="outline" className="h-11 w-full">
+            <Link to="/me">내 정보 수정</Link>
+          </Button>
+        ) : (
+          <Button className="h-11 w-full" disabled={opening} onClick={() => void startDm()}>
+            <MessageCircle className="size-4" />
+            메시지 보내기
+          </Button>
+        )}
+        <p className="text-center text-xs text-muted-foreground">
+          가입일 {formatDateTime(member.approvedAt ?? member.createdAt)}
+        </p>
+      </div>
 
       {activity && progress ? (
         <>
-          <TierCard progress={progress} isNew={isNew(`tier:${progress.tier.id}`)} />
-
-          <section className="space-y-2">
-            <div className="grid grid-cols-3 gap-2">
-              <Stat icon={CalendarCheck} label="출석" value={`${activity.stats.attended}`} />
-              <Stat icon={Zap} label="모임 주최" value={`${activity.stats.hosted}`} />
-              <Stat icon={PenLine} label="게시글" value={`${activity.stats.posts}`} />
-            </div>
-            <p className="text-xs text-muted-foreground">가입일 {formatDateTime(member.approvedAt ?? member.createdAt)}</p>
-          </section>
-
           <TitleSection member={member} stats={activity.stats} progress={progress} isMe={isMe} newKeys={newTitleKeys} />
           <AchievementList progress={progress} newGoals={newGoals} compact={!isMe} />
           <ActivityHistory items={activity.history} />
         </>
       ) : (
-        <div className="space-y-2">
-          <CardSkeleton count={1} />
-          <CardSkeleton count={2} className="h-32" />
-        </div>
+        <CardSkeleton count={2} className="h-32" />
       )}
 
       {introduced.length > 0 && (
         <section className="space-y-2">
-          <h2 className="font-semibold">소개한 회원 {introduced.length}명</h2>
+          <SectionTitle count={`${introduced.length}명`}>소개한 회원</SectionTitle>
           <ul className="divide-y overflow-hidden rounded-xl border bg-card">
             {introduced.map((person) => (
               <li key={person.uid}>
@@ -178,18 +183,6 @@ export function MemberProfilePage() {
           </ul>
         </section>
       )}
-    </div>
-  )
-}
-
-function Stat({ icon: Icon, label, value }: { icon: typeof Zap; label: string; value: string }) {
-  return (
-    <div className="rounded-xl border px-2 py-2.5 text-center">
-      <p className="flex items-center justify-center gap-1 text-[11px] text-muted-foreground">
-        <Icon className="size-3" />
-        {label}
-      </p>
-      <p className="mt-0.5 text-lg font-bold">{value}</p>
     </div>
   )
 }

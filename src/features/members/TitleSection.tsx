@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { Check, Lock } from 'lucide-react'
 import { toast } from 'sonner'
 import { EmptyState } from '@/components/EmptyState'
+import { SectionTitle } from '@/components/SectionTitle'
 import { NewMark } from '@/features/members/AchievementList'
 import { AUTO_TITLES, autoTitleKey, grantedTitleName } from '@/data/titles'
 import { toErrorMessage } from '@/lib/format'
+import { tierTint } from '@/lib/tier'
 import { cn } from '@/lib/utils'
 import type { ActivityStats, Progress } from '@/services/activity'
 import { setMyTitle } from '@/services/users'
@@ -26,6 +28,7 @@ type Props = {
  */
 export function TitleSection({ member, stats, progress, isMe, newKeys }: Props) {
   const [saving, setSaving] = useState(false)
+  const tier = progress.tier
   const granted = member.grantedTitles ?? []
   const earnedAuto = AUTO_TITLES.filter((t) => progress.earnedAutoIds.has(t.id))
   const lockedAuto = AUTO_TITLES.filter((t) => !progress.earnedAutoIds.has(t.id))
@@ -53,10 +56,7 @@ export function TitleSection({ member, stats, progress, isMe, newKeys }: Props) 
 
   return (
     <section className="space-y-2">
-      <h2 className="flex items-baseline gap-2 font-semibold">
-        칭호
-        {isMe && <span className="text-xs font-normal text-muted-foreground">눌러서 닉네임 앞에 붙일 칭호를 골라요</span>}
-      </h2>
+      <SectionTitle count={isMe ? '눌러서 닉네임 앞에 붙일 칭호를 골라요' : `${owned.length}개`}>칭호</SectionTitle>
 
       {owned.length === 0 ? (
         <EmptyState title="아직 얻은 칭호가 없어요" size="sm" />
@@ -75,9 +75,13 @@ export function TitleSection({ member, stats, progress, isMe, newKeys }: Props) 
                   aria-pressed={isMe ? selected : undefined}
                   className={cn(
                     'flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm transition-colors disabled:cursor-default',
-                    selected ? 'border-primary bg-primary text-primary-foreground' : 'bg-card',
+                    selected ? 'font-semibold' : 'bg-card',
                     isMe && !selected && 'hover:border-primary/50',
                   )}
+                  // 대표로 고른 칭호는 티어 색으로 (프로필 배너와 같은 결)
+                  style={
+                    selected ? { borderColor: tier.color, background: tierTint(tier.color, 18), color: tier.color } : undefined
+                  }
                 >
                   {selected && <Check className="size-3.5" />}
                   {title.text}

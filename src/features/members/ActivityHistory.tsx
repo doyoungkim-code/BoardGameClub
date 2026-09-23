@@ -4,6 +4,7 @@ import { ko } from 'date-fns/locale'
 import { CalendarCheck, CalendarDays, Megaphone, PenLine } from 'lucide-react'
 import { Link } from 'react-router'
 import { EmptyState } from '@/components/EmptyState'
+import { SectionTitle } from '@/components/SectionTitle'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { tappableRow } from '@/lib/styles'
@@ -19,7 +20,7 @@ export function ActivityHistory({ items }: { items: ActivityItem[] }) {
 
   return (
     <section className="space-y-2">
-      <h2 className="font-semibold">활동 기록</h2>
+      <SectionTitle count={items.length > 0 ? `${items.length}개` : undefined}>활동 기록</SectionTitle>
       {items.length === 0 ? (
         <EmptyState icon={CalendarCheck} title="아직 활동 기록이 없어요" size="sm" />
       ) : (

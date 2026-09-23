@@ -27,8 +27,8 @@ export type ActivityStats = {
   longestWeekStreak: number
 }
 
-/** 출석 기록으로 계산한 성장 상태 */
-export type Progress = {
+/** 출석 횟수만으로 정해지는 성장 상태 (티어 배너가 쓰는 값) */
+export type AttendanceProgress = {
   attended: number
   xp: number
   tier: Tier
@@ -36,6 +36,10 @@ export type Progress = {
   next: Tier | null
   /** 달성한 출석 업적 (goal 값) */
   unlockedGoals: number[]
+}
+
+/** 출석 기록으로 계산한 성장 상태 */
+export type Progress = AttendanceProgress & {
   /** 조건을 채운 자동 칭호 id */
   earnedAutoIds: Set<string>
 }
@@ -44,7 +48,7 @@ export type Progress = {
  * 출석 횟수만으로 계산되는 부분. 홈 배너는 이것만 쓴다
  * (출석 횟수는 stores/progress.ts 에 이미 있어서 Firestore 를 더 읽지 않는다)
  */
-export function attendanceProgress(attended: number): Omit<Progress, 'earnedAutoIds'> {
+export function attendanceProgress(attended: number): AttendanceProgress {
   const xp = xpFor(attended)
   return {
     attended,
