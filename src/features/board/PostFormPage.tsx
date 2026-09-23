@@ -16,7 +16,7 @@ import { toErrorMessage } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { canEditPost, canWriteTo, createPost, fetchPost, updatePost } from '@/services/posts'
 import { useAuth, useIsOwner } from '@/stores/auth'
-import { BOARDS, BOARD_LABEL, isBoardId, type BoardId, type Post } from '@/types/post'
+import { CATEGORY_LABEL, isPostCategory, POST_CATEGORIES, type Post, type PostCategory } from '@/types/post'
 
 const schema = z.object({
   title: z.string().trim().min(1, '제목을 입력해 주세요').max(100, '100자 이하로 입력해 주세요'),
@@ -52,10 +52,10 @@ function PostForm({ post }: { post?: Post }) {
   const [searchParams] = useSearchParams()
   const editing = !!post
 
-  // 새 글은 쿼리스트링(?board=free)으로 게시판을 받고, 수정할 때는 바꿀 수 없다
-  const requested = searchParams.get('board')
-  const [board, setBoard] = useState<BoardId>(
-    post?.board ?? (isBoardId(requested ?? undefined) ? (requested as BoardId) : 'free'),
+  // 새 글은 쿼리스트링(?c=free)으로 카테고리를 받고, 수정할 때는 바꿀 수 없다
+  const requested = searchParams.get('c')
+  const [board, setBoard] = useState<PostCategory>(
+    post?.board ?? (isPostCategory(requested) ? requested : 'free'),
   )
 
   const {
@@ -90,31 +90,36 @@ function PostForm({ post }: { post?: Post }) {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-1">
-        <BackButton fallback={post ? `/posts/${post.id}` : `/board/${board}`} />
+        <BackButton fallback={post ? `/posts/${post.id}` : '/board'} />
         <h1 className="text-2xl font-bold">{editing ? '글 수정' : '글쓰기'}</h1>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
         <div className="space-y-2">
-          <Label>게시판</Label>
+          <Label>카테고리</Label>
           {editing ? (
             <div>
-              <Badge variant="outline">{BOARD_LABEL[board]}</Badge>
-              <p className="mt-1 text-xs text-muted-foreground">게시판은 바꿀 수 없어요</p>
+              <Badge variant="outline">{CATEGORY_LABEL[board]}</Badge>
+              <p className="mt-1 text-xs text-muted-foreground">카테고리는 바꿀 수 없어요</p>
             </div>
           ) : (
-            <div className="flex flex-wrap gap-1.5">
-              {BOARDS.filter((item) => canWriteTo(item.id, isOwner)).map((item) => (
-                <button key={item.id} type="button" onClick={() => setBoard(item.id)} aria-pressed={board === item.id}>
-                  <Badge
-                    variant={board === item.id ? 'default' : 'outline'}
-                    className={cn('cursor-pointer font-normal')}
-                  >
-                    {item.label}
-                  </Badge>
-                </button>
-              ))}
-            </div>
+            <>
+              <div className="flex flex-wrap gap-1.5">
+                {POST_CATEGORIES.filter((item) => canWriteTo(item.id, isOwner)).map((item) => (
+                  <button key={item.id} type="button" onClick={() => setBoard(item.id)} aria-pressed={board === item.id}>
+                    <Badge
+                      variant={board === item.id ? 'default' : 'outline'}
+                      className={cn('cursor-pointer font-normal')}
+                    >
+                      {item.label}
+                    </Badge>
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {POST_CATEGORIES.find((item) => item.id === board)?.description}
+              </p>
+            </>
           )}
         </div>
 
@@ -143,7 +148,7 @@ function PostFormNotice({ text }: { text: string }) {
     <div className="space-y-4 text-center">
       <p className="py-16 text-sm text-muted-foreground">{text}</p>
       <Button asChild variant="outline">
-        <Link to="/board/notice">게시판으로</Link>
+        <Link to="/board">게시판으로</Link>
       </Button>
     </div>
   )

@@ -77,9 +77,11 @@ describe('글 읽기', () => {
 })
 
 describe('글 작성', () => {
-  it('회원은 자유·후기 글을 쓸 수 있다', async () => {
+  it('회원은 공지 말고 모든 카테고리에 쓸 수 있다', async () => {
     await assertSucceeds(setDoc(doc(dbAs('alice'), 'posts/p1'), newPost('alice')))
     await assertSucceeds(setDoc(doc(dbAs('alice'), 'posts/p2'), newPost('alice', { board: 'review' })))
+    await assertSucceeds(setDoc(doc(dbAs('alice'), 'posts/p3'), newPost('alice', { board: 'recommend' })))
+    await assertSucceeds(setDoc(doc(dbAs('alice'), 'posts/p4'), newPost('alice', { board: 'question' })))
   })
 
   it('공지는 오너만 쓸 수 있다', async () => {
@@ -138,9 +140,10 @@ describe('글 수정·삭제', () => {
     )
   })
 
-  it('글을 공지 게시판으로 옮길 수 없다', async () => {
+  it('글의 카테고리는 바꿀 수 없다', async () => {
     await assertFails(updateDoc(doc(dbAs('alice'), 'posts/p1'), { board: 'notice', updatedAt: serverTimestamp() }))
     await assertFails(updateDoc(doc(ownerDb(), 'posts/p1'), { board: 'notice', updatedAt: serverTimestamp() }))
+    await assertFails(updateDoc(doc(dbAs('alice'), 'posts/p1'), { board: 'question', updatedAt: serverTimestamp() }))
   })
 
   it('고정은 오너만 바꿀 수 있다', async () => {

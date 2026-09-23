@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { tappableRow } from '@/lib/styles'
 import { cn } from '@/lib/utils'
 import type { ActivityItem } from '@/services/activity'
-import { BOARD_LABEL } from '@/types/post'
+import { CATEGORY_LABEL } from '@/types/post'
 
 const PAGE = 10
 
@@ -56,7 +56,7 @@ export function ActivityHistory({ items }: { items: ActivityItem[] }) {
 }
 
 function describe(item: ActivityItem) {
-  if (item.kind === 'post') return `${BOARD_LABEL[item.board]} 게시판에 글`
+  if (item.kind === 'post') return `게시판 · ${CATEGORY_LABEL[item.board]}`
   return item.attended ? '모임 출석' : '모임 주최'
 }
 

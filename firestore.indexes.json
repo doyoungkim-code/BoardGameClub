@@ -1,11 +1,20 @@
 {
   "indexes": [
     {
-      "//": "게시판 목록: 고정 글을 위로 올리고 최신순. where(board) + orderBy(pinned desc, createdAt desc)",
+      "//": "카테고리를 고른 목록: where(board) + orderBy(pinned desc, createdAt desc)",
       "collectionGroup": "posts",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "board", "order": "ASCENDING" },
+        { "fieldPath": "pinned", "order": "DESCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "//": "전체 보기: orderBy(pinned desc, createdAt desc)",
+      "collectionGroup": "posts",
+      "queryScope": "COLLECTION",
+      "fields": [
         { "fieldPath": "pinned", "order": "DESCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]

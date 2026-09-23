@@ -33,7 +33,8 @@ import {
 } from '@/services/posts'
 import { useAuth, useIsOwner } from '@/stores/auth'
 import { useMembers } from '@/stores/members'
-import { BOARD_LABEL, type Post, type PostComment } from '@/types/post'
+import { CategoryTag } from '@/features/board/CategoryTag'
+import type { Post, PostComment } from '@/types/post'
 
 export function PostDetailPage() {
   const { postId } = useParams()
@@ -58,7 +59,7 @@ export function PostDetailPage() {
       <div className="space-y-4 text-center">
         <p className="py-16 text-sm text-muted-foreground">글을 찾을 수 없어요</p>
         <Button asChild variant="outline">
-          <Link to="/board/notice">게시판으로</Link>
+          <Link to="/board">게시판으로</Link>
         </Button>
       </div>
     )
@@ -94,9 +95,9 @@ function PostDetail({ post }: { post: Post }) {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-1">
-        <BackButton fallback={`/board/${post.board}`} />
+        <BackButton fallback={`/board?c=${post.board}`} />
         <div className="flex flex-1 flex-wrap items-center gap-1.5">
-          <Badge variant={post.board === 'notice' ? 'default' : 'outline'}>{BOARD_LABEL[post.board]}</Badge>
+          <CategoryTag category={post.board} />
           {post.pinned && (
             <Badge variant="secondary" className="gap-1">
               <Pin className="size-3" />
@@ -175,7 +176,7 @@ function PostDetail({ post }: { post: Post }) {
           run(async () => {
             await deletePost(post.id)
             toast.success('글을 삭제했어요')
-            navigate(`/board/${post.board}`, { replace: true })
+            navigate(`/board?c=${post.board}`, { replace: true })
           })
         }
       />

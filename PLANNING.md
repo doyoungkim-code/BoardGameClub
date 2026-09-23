@@ -130,9 +130,10 @@ places/{카카오 장소 ID}              // 오너가 즐겨찾기한 보드게
 // plays/{playId} — 플레이 기록은 MVP에서 제외 (2026-09-14 결정). 11장 백로그 참고
 
 posts/{postId}
-  board: 'notice'|'free'|'review', title, content, authorId, authorNickname
+  board: 'notice'|'free'|'recommend'|'review'|'question'   // 게시판은 하나, 이 값이 카테고리 (2026-09-24)
+  title, content, authorId, authorNickname
   pinned, likeIds[], commentCount, createdAt, updatedAt
-  // board == 'notice' 글 작성과 pinned 설정은 오너만
+  // board == 'notice' 글 작성과 pinned 설정은 오너만. 글을 쓴 뒤 카테고리 변경은 금지(rules)
 posts/{postId}/comments/{id}        authorId, authorNickname, content, createdAt
 ```
 - **지인 표시 규칙**: `referrerId`가 있으면 그 회원의 현재 닉네임으로 "OO의 지인"을 표시(닉네임을 바꿔도 따라감). 없으면 `referrerName`으로 표시
@@ -142,8 +143,8 @@ posts/{postId}/comments/{id}        authorId, authorNickname, content, createdAt
 - `commentCount`, `lastMessageAt` 같은 집계 필드는 원래 쓰기와 같은 batch로 갱신. rules로 값이 +1/-1만 바뀌는지, 해당 필드만 바뀌는지 검증
 
 ## 6. 화면 & 라우트
-- 모바일: 하단 탭 **홈 / 모임 / 채팅 / 게임 / 더보기**
-- PC(md 이상): 좌측 사이드바
+- 모바일: 하단 탭 **홈 / 모임 / 게시판 / 게임 / 더보기**, **채팅은 화면 위쪽 프로필 사진 옆 아이콘**(안 읽음 배지)
+- PC(md 이상): 좌측 사이드바 (채팅도 메뉴로)
 
 | 경로 | 화면 |
 |---|---|
@@ -156,7 +157,7 @@ posts/{postId}/comments/{id}        authorId, authorNickname, content, createdAt
 | `/chat`, `/chat/:channelId`, `/dm/:dmId` | 채널·DM 목록(안 읽음 배지), 채팅방(최근 50개 표시, 위로 스크롤하면 더 불러오기). PC는 목록+대화방 2단, 모바일은 대화방에서 하단 탭 숨김. 오너는 채널 추가(+ 기본 채널 전체·모임·잡담 한 번에 만들기)·수정·삭제 |
 | `/games` | 보드게임 목록 (보기 전용): 표지, 인원, 한 줄 설명. 검색 + "몇 명이서" 필터 |
 | `/stats` | 모임 참석·출석 랭킹, 열린 모임 수, 평균 참석, 보유 게임 수 |
-| `/board/:board`, `/posts/:id`, `/posts/new` | 공지·자유·후기 게시판, 댓글·좋아요 |
+| `/board?c=<카테고리>`, `/posts/:id`, `/posts/new` | 게시판 하나 + 카테고리(공지·자유·보드게임 추천·모임 후기·질문)를 제목 앞 태그로, 댓글·좋아요 |
 | `/members`, `/members/:uid` | 회원 목록(닉네임 옆에 "OO의 지인"), 프로필(소개자, 소개한 회원, **티어·경험치**, **칭호**(본인은 대표 칭호 선택), **출석 업적**, **활동 기록**, DM 보내기). 닉네임은 앱 어디서나 [티어 방패] 대표 칭호 닉네임 |
 | `/places` | 카카오맵: 지도에 보이는 지역의 보드게임카페를 자동으로 핀·목록 표시, 지역 이름으로 이동, 카카오맵 길찾기. 오너는 다녀온 곳 즐겨찾기(★)·메모 |
 | `/me` | 닉네임 수정, 로그아웃 |

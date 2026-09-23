@@ -20,7 +20,7 @@ import {
   type QueryDocumentSnapshot,
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import type { BoardId, Post, PostComment } from '@/types/post'
+import type { Post, PostCategory, PostComment } from '@/types/post'
 
 export const POST_PAGE_SIZE = 20
 
@@ -36,24 +36,26 @@ export const toPost = (snap: DocumentSnapshot) =>
 export const toComment = (snap: DocumentSnapshot) =>
   ({ id: snap.id, ...snap.data({ serverTimestamps: 'estimate' }) }) as PostComment
 
-// 고정 글을 위로 올리고 최신순. firestore.indexes.json 의 posts 색인이 필요하다.
-const boardQuery = (board: BoardId) => [
-  where('board', '==', board),
+// 고정 글을 위로 올리고 최신순. 둘 다 firestore.indexes.json 의 posts 색인이 필요하다
+// (카테고리를 고르면 board 조건이 붙고, 전체 보기면 정렬만 한다)
+const listQuery = (category: PostCategory | null) => [
+  ...(category ? [where('board', '==', category)] : []),
   orderBy('pinned', 'desc'),
   orderBy('createdAt', 'desc'),
 ]
 
-export function fetchPosts(board: BoardId, cursor?: QueryDocumentSnapshot) {
+/** category 가 null 이면 전체 카테고리 */
+export function fetchPosts(category: PostCategory | null, cursor?: QueryDocumentSnapshot) {
   return getDocs(
     cursor
-      ? query(postsCol, ...boardQuery(board), startAfter(cursor), limit(POST_PAGE_SIZE))
-      : query(postsCol, ...boardQuery(board), limit(POST_PAGE_SIZE)),
+      ? query(postsCol, ...listQuery(category), startAfter(cursor), limit(POST_PAGE_SIZE))
+      : query(postsCol, ...listQuery(category), limit(POST_PAGE_SIZE)),
   )
 }
 
 /** 홈에 보여줄 공지 몇 개 (고정 글이 먼저 온다) */
 export function fetchTopNotices(count: number) {
-  return getDocs(query(postsCol, ...boardQuery('notice'), limit(count)))
+  return getDocs(query(postsCol, ...listQuery('notice'), limit(count)))
 }
 
 export async function fetchPost(postId: string) {
@@ -65,7 +67,7 @@ export const commentsQuery = (postId: string) => query(commentsCol(postId), orde
 
 // ---------- 글 ----------
 
-export type PostInput = { board: BoardId; title: string; content: string }
+export type PostInput = { board: PostCategory; title: string; content: string }
 
 export function createPost(author: { uid: string; nickname: string }, input: PostInput) {
   const ref = doc(postsCol)
@@ -81,7 +83,7 @@ export function createPost(author: { uid: string; nickname: string }, input: Pos
   }).then(() => ref.id)
 }
 
-/** 게시판 이동은 rules 가 막는다 */
+/** 카테고리 변경은 rules 가 막는다 (공지 권한 우회 방지) */
 export function updatePost(postId: string, input: Omit<PostInput, 'board'>) {
   return updateDoc(postRef(postId), { ...input, updatedAt: serverTimestamp() })
 }
@@ -128,4 +130,5 @@ export function removeComment(postId: string, commentId: string) {
 
 export const canEditPost = (post: Post, uid: string, isOwner: boolean) => post.authorId === uid || isOwner
 
-export const canWriteTo = (board: BoardId, isOwner: boolean) => board !== 'notice' || isOwner
+/** 공지는 오너만 쓴다 */
+export const canWriteTo = (category: PostCategory, isOwner: boolean) => category !== 'notice' || isOwner

@@ -45,8 +45,8 @@ export function HomePage() {
 
   const shortcuts = [
     {
-      title: '공지사항',
-      to: notice ? `/posts/${notice.id}` : '/board/notice',
+      title: '공지',
+      to: notice ? `/posts/${notice.id}` : '/board?c=notice',
       icon: Megaphone,
       text: notice === undefined ? '불러오는 중…' : (notice?.title ?? '아직 공지가 없어요'),
       highlight: !!notice?.pinned,

@@ -27,6 +27,7 @@ import {
   PostFormPage,
   StatsPage,
 } from '@/features/lazyPages'
+import { BoardRedirect } from '@/features/board/BoardRedirect'
 import { MorePage } from '@/features/more/MorePage'
 import { NotFoundPage } from '@/features/NotFoundPage'
 
@@ -62,7 +63,9 @@ export const router = createBrowserRouter([
           { path: 'games', element: <GamesPage /> },
           { path: 'places', element: <PlacesPage /> },
           { path: 'stats', element: <StatsPage /> },
-          { path: 'board/:board', element: <BoardPage /> },
+          { path: 'board', element: <BoardPage /> },
+          // 예전 주소(/board/notice 등)로 들어오면 카테고리를 쿼리로 옮겨 준다
+          { path: 'board/:board', element: <BoardRedirect /> },
           { path: 'posts/new', element: <PostFormPage /> },
           { path: 'posts/:postId', element: <PostDetailPage /> },
           { path: 'posts/:postId/edit', element: <PostFormPage /> },

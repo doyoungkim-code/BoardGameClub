@@ -5,7 +5,7 @@ import { AUTO_TITLES } from '@/data/titles'
 import { eventsCol, hasStarted, toEvent } from '@/services/events'
 import { postsCol, toPost } from '@/services/posts'
 import type { ClubEvent } from '@/types/event'
-import type { BoardId } from '@/types/post'
+import type { PostCategory } from '@/types/post'
 import type { UserProfile } from '@/types/user'
 
 /**
@@ -112,7 +112,7 @@ export type ActivityItem =
       attended: boolean
       hosted: boolean
     }
-  | { kind: 'post'; id: string; at: number; title: string; board: BoardId }
+  | { kind: 'post'; id: string; at: number; title: string; board: PostCategory }
 
 export type MemberActivity = { stats: ActivityStats; history: ActivityItem[] }
 

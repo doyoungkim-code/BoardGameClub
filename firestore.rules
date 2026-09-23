@@ -443,7 +443,7 @@ service cloud.firestore {
       }
     }
 
-    // ---------- posts: 공지·자유·후기 게시판 ----------
+    // ---------- posts: 게시판 하나 + 글마다 카테고리(board 필드) ----------
 
     match /posts/{postId} {
       allow read: if isMember();
@@ -466,7 +466,8 @@ service cloud.firestore {
 
       function validPostFields() {
         let d = request.resource.data;
-        return d.board in ['notice', 'free', 'review']
+        // board = 카테고리 (공지·자유·보드게임 추천·모임 후기·질문)
+        return d.board in ['notice', 'free', 'recommend', 'review', 'question']
           && d.title is string && d.title.size() >= 1 && d.title.size() <= 100
           && d.content is string && d.content.size() >= 1 && d.content.size() <= 10000;
       }
@@ -490,7 +491,7 @@ service cloud.firestore {
       }
 
       function validPostEdit() {
-        // 게시판 이동은 막는다 (공지 권한 우회 방지)
+        // 카테고리 변경은 막는다 (공지 권한 우회 방지)
         return changedOnly(['title', 'content', 'updatedAt'])
           && validPostFields()
           && request.resource.data.updatedAt == request.time;

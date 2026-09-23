@@ -2,7 +2,7 @@ import { Suspense, useEffect } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router'
 import { PageSpinner } from '@/components/PageSpinner'
 import { UserAvatar } from '@/components/UserAvatar'
-import { TAB_ITEMS, useMoreItems, type NavItem } from '@/components/layout/nav'
+import { CHAT_ITEM, TAB_ITEMS, useMoreItems, type NavItem } from '@/components/layout/nav'
 import { useRouteHandle } from '@/components/layout/routeHandle'
 import { useAppHistory, useTabNavigate } from '@/hooks/useAppHistory'
 import { useChatNotifications } from '@/hooks/useChatNotifications'
@@ -46,9 +46,20 @@ export function AppShell() {
             )}
           >
             <HomeLink className="font-bold text-primary" />
-            <Link to="/me" aria-label="내 정보">
-              <UserAvatar name={profile.nickname} photoURL={profile.photoURL} className="size-8" />
-            </Link>
+            <div className="flex items-center gap-1.5">
+              {/* 채팅은 하단 탭 대신 여기서 들어간다 */}
+              <Link
+                to={CHAT_ITEM.to}
+                aria-label={CHAT_ITEM.label}
+                className="relative flex size-9 items-center justify-center rounded-full text-foreground active:bg-accent"
+              >
+                <CHAT_ITEM.icon className="size-5" />
+                <UnreadBadge className="absolute top-1 right-0.5" />
+              </Link>
+              <Link to="/me" aria-label="내 정보">
+                <UserAvatar name={profile.nickname} photoURL={profile.photoURL} className="size-8" />
+              </Link>
+            </div>
           </header>
         )}
         <main
@@ -109,6 +120,8 @@ function Sidebar() {
         {TAB_ITEMS.filter((item) => item.to !== '/more').map((item) => (
           <SidebarLink key={item.to} item={item} tab />
         ))}
+        {/* PC 에서는 채팅도 메뉴로 (모바일은 헤더 아이콘) */}
+        <SidebarLink item={CHAT_ITEM} />
         <div className="my-3 border-t border-sidebar-border" />
         {moreItems.map((item) => (
           <SidebarLink key={item.to} item={item} />
