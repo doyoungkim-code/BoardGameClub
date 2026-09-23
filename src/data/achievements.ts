@@ -44,7 +44,8 @@ export type Tier = {
 
 /** 낮은 티어부터. 옆 주석은 대략 몇 번 출석하면 오르는지 */
 export const TIERS: Tier[] = [
-  { id: 'bronze', name: '브론즈', minXp: 0, color: '#a0643a' },
+  // 앱 기본색(따뜻한 주황갈색)과 겹쳐 보여서 더 진한 구리색으로
+  { id: 'bronze', name: '브론즈', minXp: 0, color: '#7f4522' },
   { id: 'silver', name: '실버', minXp: 40, color: '#94a3b8' }, // 2회
   { id: 'gold', name: '골드', minXp: 105, color: '#eab308' }, // 5회
   { id: 'platinum', name: '플래티넘', minXp: 210, color: '#14b8a6' }, // 10회

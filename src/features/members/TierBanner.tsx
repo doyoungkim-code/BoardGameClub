@@ -72,9 +72,10 @@ export function TierBanner({ member, progress, title, subtitle, stats, isNew, to
 
       <div className="mt-3 space-y-1">
         <div className="h-2 overflow-hidden rounded-full bg-background/70">
+          {/* 막대는 지금 티어 색으로 채운다 (다음 티어 색으로 채우면 아직 아닌 티어 색이 커 보인다) */}
           <div
             className="h-full rounded-full transition-[width]"
-            style={{ width: `${Math.min(ratio, 1) * 100}%`, background: next?.color ?? tier.color }}
+            style={{ width: `${Math.min(ratio, 1) * 100}%`, background: tier.color }}
           />
         </div>
         <p className="text-xs text-muted-foreground">
