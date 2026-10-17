@@ -31,8 +31,11 @@ export function PixelCanvas({ height, pixel = 3, fps = 12, draw, onPress, label,
   const canvasRef = useRef<HTMLCanvasElement>(null)
   // 그리기 함수는 매 렌더 바뀔 수 있어서 ref 로 최신 것을 쓴다 (루프를 다시 만들지 않게)
   const drawRef = useRef(draw)
+  // 그리기 함수가 바뀌면(장면 상태가 바뀌면) 루프를 기다리지 않고 바로 한 번 그린다 ('동작 줄이기'일 때도 결과가 보이게)
+  const paintRef = useRef<(() => void) | null>(null)
   useEffect(() => {
     drawRef.current = draw
+    paintRef.current?.()
   }, [draw])
 
   useEffect(() => {
@@ -53,6 +56,8 @@ export function PixelCanvas({ height, pixel = 3, fps = 12, draw, onPress, label,
       if (width === 0) return
       drawRef.current(ctx, { w: width, h: height }, (performance.now() - start) / 1000, frame)
     }
+
+    paintRef.current = paint
 
     const resize = () => {
       const next = Math.max(1, Math.floor(wrap.clientWidth / pixel))
@@ -90,6 +95,7 @@ export function PixelCanvas({ height, pixel = 3, fps = 12, draw, onPress, label,
     run()
 
     return () => {
+      paintRef.current = null
       cancelAnimationFrame(raf)
       resizeObserver.disconnect()
       io.disconnect()

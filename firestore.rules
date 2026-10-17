@@ -59,7 +59,9 @@ service cloud.firestore {
 
       // 본인은 닉네임·사진·최근 활동일만, 오너는 상태·승인일·소개자 연결만 바꿀 수 있다
       allow update: if (isSelf(uid) && validSelfUpdate())
-        || (isOwner() && validOwnerUpdate(uid));
+        || (isOwner() && validOwnerUpdate(uid))
+        // 주사위 보상 받기 (아래 rolls 와 같은 batch)
+        || (isSelf(uid) && isMember() && validRollClaim(uid));
 
       // 삭제를 막아서 거절·강퇴된 계정이 다시 신청하지 못하게 한다
       allow delete: if false;
@@ -117,6 +119,85 @@ service cloud.firestore {
           && unchangedOrNow('approvedAt')
           // 오너가 주는 칭호 ('granted:<이름>' 목록)
           && (!('grantedTitles' in d) || (d.grantedTitles is list && d.grantedTitles.size() <= 20));
+      }
+
+      // ---------- 주사위 (src/data/dice.ts 와 같은 계산식) ----------
+      //
+      // 규칙에는 무작위 함수가 없고, 기기가 적은 눈은 믿을 수 없다. 그래서 눈을 적지 않고
+      // '서버가 기록한 시각(밀리초)'으로 정한다: 주사위1 = ms % 6 + 1, 주사위2 = (ms / 6 의 몫) % 6 + 1.
+      // 회원은 서버 시각을 밀리초까지 맞출 수 없고, 굴림 문서는 기회마다 하나라 다시 굴릴 수도 없다.
+      // 기기는 굴리는 순간 서버 시각을 모르므로 두 번에 나눈다:
+      //   1) 굴리기: rolls/{rollId} 를 rolledAt = 서버 시각, claimed = false 로 만든다
+      //   2) 받기: 그 문서를 claimed = true 로 바꾸면서 같은 batch 로 users 의 diceXp·coins 를 올린다
+
+      function rollPath(uid, rollId) {
+        return /databases/$(database)/documents/users/$(uid)/rolls/$(rollId);
+      }
+
+      function diceFace(ms, n) {
+        return (n == 0 ? ms % 6 : int(ms / 6) % 6) + 1;
+      }
+
+      // 코인 = 눈의 합. 매일 주사위는 1개, 출석 주사위는 2개
+      function rollCoins(roll) {
+        let ms = roll.rolledAt.toMillis();
+        return roll.kind == 'day' ? diceFace(ms, 0) : diceFace(ms, 0) + diceFace(ms, 1);
+      }
+
+      function validRollClaim(uid) {
+        let d = request.resource.data;
+        let before = resource.data;
+        let path = rollPath(uid, d.lastRollId);
+        return changedOnly(['diceXp', 'coins', 'lastRollId'])
+          && d.lastRollId is string
+          && exists(path)
+          // 아직 안 받은 굴림을 지금 받는다 (같은 batch 에서 claimed 가 true 로 바뀐다)
+          && get(path).data.claimed == false
+          && getAfter(path).data.claimed == true
+          // 굴릴 때마다 경험치 2 (DICE_XP)
+          && d.diceXp == before.get('diceXp', 0) + 2
+          && d.coins == before.get('coins', 0) + rollCoins(get(path).data);
+      }
+
+      match /rolls/{rollId} {
+        allow read: if isSelf(uid) || isOwner();
+        allow create: if isSelf(uid) && isMember() && validNewRoll(uid, rollId);
+        allow update: if isSelf(uid) && isMember()
+          && resource.data.claimed == false
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['claimed'])
+          && request.resource.data.claimed == true
+          // users 의 보상 받기와 짝이어야 한다
+          && getAfter(/databases/$(database)/documents/users/$(uid)).data.lastRollId == rollId;
+        allow delete: if false;
+
+        // 매일 주사위: 한국 시각 오늘 날짜 문서 하나
+        function todayRollId() {
+          let k = request.time + duration.value(9, 'h');
+          return 'day-' + string(k.year() * 10000 + k.month() * 100 + k.day());
+        }
+
+        // 출석 주사위: 출석으로 인정되는 모임 (services/activity.ts 의 countsAsAttended 와 같은 조건)
+        function attended(uid, eventId) {
+          let e = get(/databases/$(database)/documents/events/$(eventId)).data;
+          return e.canceled == false
+            && e.startAt <= request.time
+            && uid in e.attendeeIds
+            && (e.attendedIds.size() == 0 || uid in e.attendedIds);
+        }
+
+        function validNewRoll(uid, rollId) {
+          let d = request.resource.data;
+          let keys = ['kind', 'eventId', 'rolledAt', 'claimed'];
+          return d.keys().hasOnly(keys) && d.keys().hasAll(keys)
+            && d.rolledAt == request.time
+            && d.claimed == false
+            && (
+              (d.kind == 'day' && d.eventId == null && rollId == todayRollId())
+              || (d.kind == 'event' && d.eventId is string && rollId == 'event-' + d.eventId
+                  && exists(/databases/$(database)/documents/events/$(d.eventId))
+                  && attended(uid, d.eventId))
+            );
+        }
       }
     }
 

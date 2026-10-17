@@ -37,6 +37,7 @@ export const CHAT_ITEM: NavItem = { to: '/chat', label: '채팅', icon: MessageC
 
 /** 하단 탭에 없는 메뉴 (모바일: 더보기 화면, PC: 사이드바 아래쪽) */
 export const MORE_ITEMS: NavItem[] = [
+  { to: '/dice', label: '주사위', icon: Dices },
   { to: '/places', label: '지도', icon: MapIcon },
   { to: '/stats', label: '통계', icon: ChartColumn },
   { to: '/members', label: '회원', icon: Users },

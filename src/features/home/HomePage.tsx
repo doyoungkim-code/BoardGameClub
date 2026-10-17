@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { ChartColumn, MapIcon, Megaphone, MessageCircle } from '@/components/icons'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { InstallAppCard } from '@/components/InstallAppCard'
 import { PageHeader } from '@/components/PageHeader'
 import { Card, CardContent } from '@/components/ui/card'
+import { useDiceReady } from '@/features/dice/useDiceReady'
 import { CafeScene } from '@/features/home/CafeScene'
 import { NextEventCard } from '@/features/home/NextEventCard'
 import { ProfileBanner } from '@/features/home/ProfileBanner'
@@ -28,6 +29,9 @@ function readInstallDismissed() {
 
 export function HomePage() {
   const nickname = useAuth((s) => s.profile?.nickname)
+  const uid = useAuth((s) => s.profile!.uid)
+  const navigate = useNavigate()
+  const diceReady = useDiceReady(uid)
   const unread = useUnreadCount()
   const [notice, setNotice] = useState<Post | null | undefined>(undefined)
   const [installDismissed, setInstallDismissed] = useState(readInstallDismissed)
@@ -67,8 +71,15 @@ export function HomePage() {
     <div className="space-y-6">
       <PageHeader eyebrow={APP_NAME} title={`${nickname}님, 오늘은 무슨 게임 할까요?`} />
 
-      {/* 움직이는 도트 장면: 보드게임 카페 창가 */}
-      <CafeScene />
+      {/* 움직이는 도트 장면: 보드게임 카페 창가. 테이블 주사위를 누르면 주사위 화면 */}
+      <div className="space-y-1.5">
+        <CafeScene diceReady={diceReady} onDice={() => navigate('/dice')} />
+        {diceReady && (
+          <Link to="/dice" className="block text-center text-xs text-primary">
+            굴릴 주사위가 있어요! 테이블 위 주사위를 눌러 보세요
+          </Link>
+        )}
+      </div>
 
       <ProfileBanner />
 

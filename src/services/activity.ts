@@ -48,8 +48,9 @@ export type Progress = AttendanceProgress & {
  * 출석 횟수만으로 계산되는 부분. 홈 배너는 이것만 쓴다
  * (출석 횟수는 stores/progress.ts 에 이미 있어서 Firestore 를 더 읽지 않는다)
  */
-export function attendanceProgress(attended: number): AttendanceProgress {
-  const xp = xpFor(attended)
+export function attendanceProgress(attended: number, diceXp = 0): AttendanceProgress {
+  // 전체 경험치 = 출석 경험치(출석 1회 10 + 업적 보너스) + 주사위로 얻은 경험치
+  const xp = xpFor(attended) + diceXp
   return {
     attended,
     xp,
@@ -59,9 +60,9 @@ export function attendanceProgress(attended: number): AttendanceProgress {
   }
 }
 
-export function progressFor(stats: ActivityStats): Progress {
+export function progressFor(stats: ActivityStats, diceXp = 0): Progress {
   return {
-    ...attendanceProgress(stats.attended),
+    ...attendanceProgress(stats.attended, diceXp),
     earnedAutoIds: new Set(AUTO_TITLES.filter((t) => stats[t.metric] >= t.goal).map((t) => t.id)),
   }
 }
@@ -75,7 +76,7 @@ export type XpRank = { member: UserProfile; xp: number; tier: Tier }
 export function xpRanking(members: UserProfile[], attendedById: Record<string, number>): XpRank[] {
   return members
     .map((member) => {
-      const xp = xpFor(attendedById[member.uid] ?? 0)
+      const xp = xpFor(attendedById[member.uid] ?? 0) + (member.diceXp ?? 0)
       return { member, xp, tier: tierFor(xp) }
     })
     .filter((row) => row.xp > 0)

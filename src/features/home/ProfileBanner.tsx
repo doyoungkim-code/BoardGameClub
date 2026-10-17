@@ -24,7 +24,7 @@ export function ProfileBanner() {
 
   if (!loaded) return <Skeleton className="h-[10.5rem] w-full rounded-2xl" />
 
-  const progress = attendanceProgress(attended)
+  const progress = attendanceProgress(attended, profile.diceXp ?? 0)
 
   return (
     <TierBanner
@@ -32,7 +32,7 @@ export function ProfileBanner() {
       progress={progress}
       title={titleText(profile.titleId, profile.grantedTitles)}
       to={`/members/${profile.uid}`}
-      isNew={hasUnseenAttendanceProgress(profile.uid, attended)}
+      isNew={hasUnseenAttendanceProgress(profile.uid, attended, profile.diceXp ?? 0)}
       stats={[
         { label: '출석', value: `${attended}회` },
         { label: '업적', value: `${progress.unlockedGoals.length}개` },

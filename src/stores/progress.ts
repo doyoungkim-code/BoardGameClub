@@ -3,6 +3,7 @@ import { create } from 'zustand'
 import { tierFor, xpFor, type Tier } from '@/data/achievements'
 import { countsAsAttended } from '@/services/activity'
 import { eventsCol, toEvent } from '@/services/events'
+import { useMembers } from '@/stores/members'
 
 /**
  * 모든 회원의 출석 횟수 → 티어. 채팅·게시판·회원 목록 등 닉네임 옆 티어 표시에 쓴다.
@@ -94,7 +95,9 @@ export function stopProgressSync() {
 export function useMemberTier(uid: string | undefined): { xp: number; tier: Tier } | null {
   const loaded = useProgress((s) => s.loaded)
   const attended = useProgress((s) => (uid ? (s.attendedById[uid] ?? 0) : 0))
+  // 주사위 경험치는 회원 문서에 있어서 회원 목록 구독으로 이미 받아 둔 값을 쓴다 (추가 읽기 없음)
+  const diceXp = useMembers((s) => (uid ? (s.byId[uid]?.diceXp ?? 0) : 0))
   if (!loaded || !uid) return null
-  const xp = xpFor(attended)
+  const xp = xpFor(attended) + diceXp
   return { xp, tier: tierFor(xp) }
 }

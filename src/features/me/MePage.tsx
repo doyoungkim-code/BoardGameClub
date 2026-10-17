@@ -34,7 +34,7 @@ export function MePage() {
   // 새로 달성한 출석 업적·티어가 있으면 점 표시 (칭호는 프로필에서만 확인)
   const progressLoaded = useProgress((s) => s.loaded)
   const attended = useProgress((s) => s.attendedById[profile.uid] ?? 0)
-  const hasNew = progressLoaded && hasUnseenAttendanceProgress(profile.uid, attended)
+  const hasNew = progressLoaded && hasUnseenAttendanceProgress(profile.uid, attended, profile.diceXp ?? 0)
 
   const {
     register,

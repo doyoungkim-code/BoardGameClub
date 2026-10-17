@@ -58,7 +58,8 @@ export function MemberProfilePage() {
     }
   }, [uid, loaded, joinedAt])
 
-  const progress = useMemo(() => (activity ? progressFor(activity.stats) : null), [activity])
+  const diceXp = (uid ? byId[uid]?.diceXp : 0) ?? 0
+  const progress = useMemo(() => (activity ? progressFor(activity.stats, diceXp) : null), [activity, diceXp])
 
   // 동호회 순위는 모든 회원의 출석 횟수(6시간 캐시)로 계산한다. 통계 화면의 티어 랭킹과 같은 함수
   const attendedById = useProgress((s) => s.attendedById)

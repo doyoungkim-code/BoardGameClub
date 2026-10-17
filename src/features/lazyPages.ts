@@ -58,3 +58,6 @@ export const MemberProfilePage = lazy(() =>
 export const MePage = lazy(() => import('@/features/me/MePage').then((m) => ({ default: m.MePage })))
 
 export const AdminPage = lazy(() => import('@/features/admin/AdminPage').then((m) => ({ default: m.AdminPage })))
+
+// 주사위 게임 (도트 장면을 쓴다)
+export const DicePage = lazy(() => import('@/features/dice/DicePage').then((m) => ({ default: m.DicePage })))

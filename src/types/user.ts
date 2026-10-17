@@ -26,6 +26,12 @@ export type UserProfile = {
   titleId?: string | null
   /** 오너가 준 칭호 목록 ('granted:<이름>'). 오너만 바꾼다. 예전 문서엔 없다 */
   grantedTitles?: string[]
+  /** 주사위로 얻은 경험치 합 (src/data/dice.ts). 없으면 0 */
+  diceXp?: number
+  /** 주사위로 얻은 코인 (상점에서 쓴다). 없으면 0 */
+  coins?: number
+  /** 마지막으로 보상을 받은 굴림 문서 id (규칙이 굴림과 짝을 맞추는 데 쓴다) */
+  lastRollId?: string
 }
 
 /** userPrivate/{uid} — 본인과 오너만 읽을 수 있는 정보 */

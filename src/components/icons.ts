@@ -86,3 +86,8 @@ export const CircleCheckIcon = icon('checkbox-on')
 export const InfoIcon = icon('info-box')
 export const TriangleAlertIcon = icon('square-alert')
 export const OctagonXIcon = icon('square-alert')
+
+// 주사위 게임·상점
+export const Coins = icon('coins')
+export const ShoppingBag = icon('shopping-bag')
+export const Gift = icon('gift')

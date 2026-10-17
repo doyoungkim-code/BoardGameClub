@@ -9,6 +9,7 @@ import { HomePage } from '@/features/home/HomePage'
 import {
   AdminPage,
   BoardPage,
+  DicePage,
   ChannelRoomPage,
   ChatIndexPage,
   ChatLayout,
@@ -61,6 +62,7 @@ export const router = createBrowserRouter([
           { path: 'polls/new', element: <PollFormPage /> },
           { path: 'polls/:pollId', element: <PollDetailPage /> },
           { path: 'games', element: <GamesPage /> },
+          { path: 'dice', element: <DicePage /> },
           { path: 'places', element: <PlacesPage /> },
           { path: 'stats', element: <StatsPage /> },
           { path: 'board', element: <BoardPage /> },

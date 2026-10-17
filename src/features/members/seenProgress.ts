@@ -39,9 +39,9 @@ export function progressKeys(progress: Pick<Progress, 'unlockedGoals' | 'tier'>,
  * 출석 횟수만으로 볼 수 있는 새 업적·티어가 있는지 (내 정보 화면의 점 표시용).
  * 칭호는 게시글 등 다른 기록이 필요해서 여기서는 보지 않는다
  */
-export function hasUnseenAttendanceProgress(uid: string, attended: number) {
+export function hasUnseenAttendanceProgress(uid: string, attended: number, diceXp = 0) {
   const seen = readSeen(uid)
-  const xp = xpFor(attended)
+  const xp = xpFor(attended) + diceXp
   const keys = [
     ...ATTENDANCE_ACHIEVEMENTS.filter((a) => attended >= a.goal).map((a) => `ach:${a.goal}`),
     `tier:${tierFor(xp).id}`,
