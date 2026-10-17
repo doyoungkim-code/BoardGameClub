@@ -36,7 +36,7 @@ export function TitleSection({ member, stats, progress, isMe, newKeys }: Props) 
   const lockedAuto = AUTO_TITLES.filter((t) => !progress.earnedAutoIds.has(t.id))
   const owned = [
     ...granted.map((key) => ({ key, text: grantedTitleName(key), description: '관리자가 준 칭호' })),
-    ...earnedAuto.map((t) => ({ key: autoTitleKey(t), text: t.text, description: t.description })),
+    ...earnedAuto.map((t) => ({ key: autoTitleKey(t), text: t.text, description: `${t.description} 달성` })),
   ]
   const current = member.titleId ?? null
 
@@ -63,7 +63,8 @@ export function TitleSection({ member, stats, progress, isMe, newKeys }: Props) 
       {owned.length === 0 ? (
         <EmptyState title="아직 얻은 칭호가 없어요" size="sm" />
       ) : (
-        <ul className="flex flex-wrap gap-2">
+        // 얻은 칭호: 그림 + 이름 + 무엇을 달성해서 얻었는지 (휴대폰에서도 보이게 글로 적는다)
+        <ul className="grid gap-2 sm:grid-cols-2">
           {owned.map((title) => {
             const selected = title.key === current
             return (
@@ -73,20 +74,27 @@ export function TitleSection({ member, stats, progress, isMe, newKeys }: Props) 
                   type="button"
                   disabled={!isMe || saving}
                   onClick={() => void choose(selected ? null : title.key)}
-                  title={title.description}
                   aria-pressed={isMe ? selected : undefined}
                   className={cn(
-                    'flex items-center gap-1 border px-3 py-1.5 text-sm disabled:cursor-default',
-                    selected ? 'font-bold' : 'bg-card',
+                    'flex w-full items-center gap-3 border-2 bg-card px-3 py-2 text-left disabled:cursor-default',
                     isMe && !selected && 'hover:border-primary/50',
                   )}
                   // 대표로 고른 칭호는 티어 색으로 (프로필 배너와 같은 결)
-                  style={
-                    selected ? { borderColor: tier.color, background: tierTint(tier.color, 18), color: tier.color } : undefined
-                  }
+                  style={selected ? { borderColor: tier.color, background: tierTint(tier.color, 18) } : undefined}
                 >
-                  {selected ? <Check className="size-3.5" /> : <PixelSprite sprite={titleArt(title.key)!} scale={2} />}
-                  {title.text}
+                  <PixelSprite sprite={titleArt(title.key)!} scale={3} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-bold" style={selected ? { color: tier.color } : undefined}>
+                      {title.text}
+                    </span>
+                    <span className="block text-xs text-muted-foreground">{title.description}</span>
+                  </span>
+                  {selected && (
+                    <span className="flex shrink-0 items-center gap-1 text-xs" style={{ color: tier.color }}>
+                      <Check className="size-3" />
+                      대표
+                    </span>
+                  )}
                 </button>
               </li>
             )
@@ -95,20 +103,24 @@ export function TitleSection({ member, stats, progress, isMe, newKeys }: Props) 
       )}
 
       {isMe && lockedAuto.length > 0 && (
-        <ul className="flex flex-wrap gap-2 pt-1">
-          {lockedAuto.map((t) => (
-            <li
-              key={t.id}
-              className="flex items-center gap-1 border border-dashed px-3 py-1.5 text-xs text-muted-foreground"
-            >
-              <Lock className="size-3" />
-              <PixelSprite sprite={titleArt(autoTitleKey(t))!} scale={1} className="opacity-50 grayscale" />
-              {t.text}
-              <span className="text-xs">
-                · {t.description} ({Math.min(stats[t.metric], t.goal)}/{t.goal})
-              </span>
-            </li>
-          ))}
+        <ul className="grid gap-2 pt-1 sm:grid-cols-2">
+          {lockedAuto.map((t) => {
+            const value = Math.min(stats[t.metric], t.goal)
+            return (
+              <li key={t.id} className="flex items-center gap-3 border-2 border-dashed px-3 py-2 text-muted-foreground">
+                <PixelSprite sprite={titleArt(autoTitleKey(t))!} scale={3} className="opacity-30 grayscale" />
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-1">
+                    <Lock className="size-3" />
+                    {t.text}
+                  </span>
+                  <span className="block text-xs">
+                    {t.description} ({value}/{t.goal})
+                  </span>
+                </span>
+              </li>
+            )
+          })}
         </ul>
       )}
     </section>
