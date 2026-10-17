@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { isSameDay } from 'date-fns'
-import { Copy, Loader2, Trash2 } from 'lucide-react'
+import { Copy, Trash2 } from '@/components/icons'
+import { PixelLoader } from '@/components/PixelIcon'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { MemberName } from '@/components/MemberName'
@@ -92,13 +93,13 @@ export function MessageList({
       <div ref={topRef} />
       {loadingOlder && (
         <div className="flex justify-center py-2">
-          <Loader2 className="size-4 animate-spin text-muted-foreground" />
+          <PixelLoader />
         </div>
       )}
 
       {!loaded ? (
         <div className="flex h-full items-center justify-center">
-          <Loader2 className="size-5 animate-spin text-muted-foreground" />
+          <PixelLoader />
         </div>
       ) : messages.length === 0 ? (
         <p className="flex h-full items-center justify-center text-sm text-muted-foreground">{emptyText}</p>
@@ -183,7 +184,7 @@ function MessageItem({ message, mine, sender, showSender, showTime, canDelete, o
         {/* min-w-0: 긴 글이 말풍선을 옆으로 밀어 늘리지 않게 */}
         <div className={cn('flex max-w-full min-w-0 items-end gap-1.5', mine && 'flex-row-reverse')}>
           {message.deleted ? (
-            <div className="rounded-2xl border border-dashed px-3.5 py-2 text-sm text-muted-foreground italic">
+            <div className="border-2 border-dashed px-3.5 py-2 text-sm text-muted-foreground">
               삭제된 메시지예요
             </div>
           ) : (
@@ -194,10 +195,10 @@ function MessageItem({ message, mine, sender, showSender, showTime, canDelete, o
                 // wrap-anywhere: 앱 전체가 한글 단어를 자르지 않게(keep-all) 되어 있어서, 띄어쓰기 없는 긴 글·주소는
                 // 말풍선 안에서만 필요할 때 아무 데서나 줄을 바꾼다
                 className={cn(
-                  'max-w-full min-w-0 cursor-pointer rounded-2xl px-3.5 py-2 text-[15px] leading-relaxed wrap-anywhere whitespace-pre-wrap outline-none focus-visible:ring-2 focus-visible:ring-ring/50 md:text-sm',
+                  'max-w-full min-w-0 cursor-pointer pixel-border border-foreground/70 px-3.5 py-2 text-sm wrap-anywhere whitespace-pre-wrap outline-none pixel-focus pixel-shadow-sm',
                   mine
-                    ? 'rounded-br-md bg-primary text-primary-foreground'
-                    : 'rounded-bl-md border bg-card text-card-foreground',
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-card text-card-foreground',
                   pending && 'opacity-60',
                 )}
               >
@@ -206,7 +207,7 @@ function MessageItem({ message, mine, sender, showSender, showTime, canDelete, o
             </MessageMenu>
           )}
           {showTime && message.createdAt && (
-            <span className="shrink-0 pb-0.5 text-[10px] text-muted-foreground">
+            <span className="shrink-0 pb-0.5 text-xs text-muted-foreground">
               {formatMessageTime(message.createdAt.toMillis())}
             </span>
           )}

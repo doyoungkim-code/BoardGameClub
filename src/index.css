@@ -3,9 +3,38 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * 픽셀 글꼴 Galmuri (OFL-1.1, Lee Minseo — public/fonts/OFL.txt). 한글 11,172자를 모두 담고 있다.
+ * 패키지의 galmuri.css 를 그대로 쓰면 글꼴마다 5MB 넘는 ttf 까지 빌드에 딸려 들어가서, 쓰는 woff2 3개만 직접 연결한다.
+ * block: 처음 받을 때 시스템 글꼴이 잠깐 보였다가 픽셀 글꼴로 바뀌며 줄이 흔들리는 것보다 잠깐 비어 있는 게 낫다.
+ * 서비스워커가 미리 받아 두므로(vite.config.ts 의 woff2) 두 번째부터는 바로 뜬다.
+ * 참고: README 에 일부 글자 모양이 닌텐도 글꼴에서 왔다는 안내가 있다 (동호회 내부용, 상업 사용 아님)
+ */
+@font-face {
+  font-family: Galmuri14;
+  font-weight: 400;
+  font-display: block;
+  src: url('/fonts/Galmuri14.woff2') format('woff2');
+}
+@font-face {
+  font-family: Galmuri11;
+  font-weight: 400;
+  font-display: block;
+  src: url('/fonts/Galmuri11.woff2') format('woff2');
+}
+@font-face {
+  font-family: Galmuri11;
+  font-weight: 700;
+  font-display: block;
+  src: url('/fonts/Galmuri11-Bold.woff2') format('woff2');
+}
+
 /* 보드게임 느낌의 따뜻한 톤: 원목(앰버/브라운) 계열 primary, 크림색 배경 */
 :root {
-  --radius: 0.75rem;
+  /* 픽셀 UI: 둥근 모서리 없음 */
+  --radius: 0;
+  /* 픽셀 그림자 색. 검정 대신 원목 톤의 어두운 색을 옅게 */
+  --pixel-shadow: oklch(0.24 0.02 50 / 0.3);
   --background: oklch(0.985 0.008 85);
   --foreground: oklch(0.24 0.02 50);
   --card: oklch(1 0 0);
@@ -75,11 +104,51 @@
 }
 
 @theme inline {
-  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  /* 기본 글꼴은 15px 짜리 Galmuri14. 뒤의 글꼴들은 받기 전이나 Galmuri 에 없는 글자(일부 기호)용 */
+  --font-sans: Galmuri14, "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --font-pixel-sm: Galmuri11, "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+
+  /*
+   * 비트맵 글꼴은 설계 크기의 정수배에서만 또렷하다: Galmuri14 = 15px(×2 = 30), Galmuri11 = 12px(×2 = 24).
+   * 그래서 글자 크기를 다섯 칸으로만 쓴다. 클래스 이름(text-xs …)은 그대로 두고 값만 바꾼다
+   * (새 이름을 만들면 cn() 의 tailwind-merge 가 글자색 클래스로 오해해서 text-muted-foreground 등을 지운다).
+   * 12·24px 칸이 Galmuri11 을 쓰도록 하는 건 아래 @layer utilities 에 있다.
+   */
+  --text-xs: 12px;
+  --text-xs--line-height: 18px;
+  --text-sm: 15px;
+  --text-sm--line-height: 24px;
+  --text-base: 15px;
+  --text-base--line-height: 24px;
+  --text-lg: 15px;
+  --text-lg--line-height: 24px;
+  --text-xl: 24px;
+  --text-xl--line-height: 30px;
+  --text-2xl: 24px;
+  --text-2xl--line-height: 30px;
+  --text-3xl: 30px;
+  --text-3xl--line-height: 36px;
+  --text-4xl: 30px;
+  --text-4xl--line-height: 36px;
+
+  /* --radius 를 0 으로 해도 xs·2xl·3xl 은 Tailwind 기본값이 남으므로 모두 0 으로 덮는다 */
+  --radius-xs: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-2xl: 0;
+  --radius-3xl: 0;
+
+  /* shadow-xs/sm/md/lg 를 쓰던 곳도 흐림 없는 픽셀 그림자로 */
+  --shadow-2xs: 1px 1px 0 0 var(--pixel-shadow);
+  --shadow-xs: 2px 2px 0 0 var(--pixel-shadow);
+  --shadow-sm: 2px 2px 0 0 var(--pixel-shadow);
+  --shadow-md: 4px 4px 0 0 var(--pixel-shadow);
+  --shadow-lg: 4px 4px 0 0 var(--pixel-shadow);
+  --shadow-xl: 6px 6px 0 0 var(--pixel-shadow);
+
+  --color-pixel-shadow: var(--pixel-shadow);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -121,9 +190,73 @@
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground;
     word-break: keep-all;
+    /* 픽셀 글꼴은 안티앨리어싱을 끄는 게 또렷하다 (맥만 적용. 다른 기기는 위 정수배 크기로 또렷함을 맞춘다) */
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: unset;
+    /* 가짜 굵게·기울임을 막는다. 브라우저가 픽셀을 문질러 두껍게 그리면 번져 보인다.
+       진짜 굵은 글꼴은 Galmuri11(12·24px)에만 있다 */
+    font-synthesis: none;
   }
+}
+
+/* 12·24px 칸은 Galmuri11 (12px 설계) 이어야 또렷하다. 같은 클래스에 글꼴만 덧붙인다 (나중 규칙이 이긴다) */
+@layer utilities {
+  .text-xs,
+  .text-xl,
+  .text-2xl {
+    font-family: var(--font-pixel-sm);
+  }
+}
+
+/* ── 픽셀 UI 공통 모양 ───────────────────────────────────────────── */
+
+/* 2px 테두리. border(1px) 는 구분선 등에 그대로 두고, 카드·버튼·입력칸처럼 '물건'에만 이걸 쓴다 */
+@utility pixel-border {
+  border-width: 2px;
+  border-style: solid;
+}
+
+/* 흐림 없이 오른쪽·아래로 뚝 떨어지는 그림자 (8비트 게임 UI 의 입체감) */
+@utility pixel-shadow {
+  box-shadow: 4px 4px 0 0 var(--pixel-shadow);
+}
+@utility pixel-shadow-sm {
+  box-shadow: 2px 2px 0 0 var(--pixel-shadow);
+}
+
+/* 누르면 그림자를 없애고 그만큼 오른쪽·아래로 내려간다. 탭 하이라이트를 껐기 때문에 이게 유일한 누름 반응 */
+@utility pixel-press {
+  &:active:not(:disabled) {
+    box-shadow: none;
+    translate: 2px 2px;
+  }
+}
+
+/* 키보드 초점: 번지는 ring 대신 흐림 없는 2px 실선 */
+@utility pixel-focus {
+  &:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+}
+
+/* 안으로 들어간 칸 (입력칸·진행 막대 홈) */
+@utility pixel-inset {
+  box-shadow: inset 2px 2px 0 0 var(--pixel-shadow);
+}
+
+/* 사진 액자: 사진은 그대로 두고 테두리·그림자만 픽셀로 (게임 표지·프로필 사진) */
+@utility pixel-frame {
+  border: 2px solid var(--border);
+  box-shadow: 2px 2px 0 0 var(--pixel-shadow);
+}
+
+/* 작은 비트맵을 '키울 때만' 뭉개지지 않게. 큰 사진을 줄일 때 쓰면 오히려 지저분해진다 */
+@utility pixel-crisp {
+  image-rendering: pixelated;
 }
 
 /* 아이폰 홈 인디케이터 영역만큼 하단 여백 */
@@ -131,64 +264,109 @@
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* 지도 핀 (features/places/PlaceMap.tsx). 네모의 한 모서리를 뾰족하게 두고 45도 돌려 물방울 모양을 만든다 */
+/*
+ * 지도 핀 (features/places/PlaceMap.tsx). 픽셀 핀: 네모 머리(가운데 흰 칸) + 계단 꼬리.
+ * 꼬리까지 버튼 안에 넣어서 yAnchor: 1 이면 꼬리 끝이 정확히 그 자리에 온다. 크기는 정수 단계(16/20/24px)
+ */
 .place-pin {
+  --pin: 20px;
+  position: relative;
   display: block;
-  width: 28px;
-  height: 28px;
+  width: var(--pin);
+  height: calc(var(--pin) + 6px);
   padding: 0;
+  border: 0;
+  background: none;
   cursor: pointer;
-  border: 3px solid white;
-  border-radius: 50% 50% 50% 0;
-  transform: rotate(-45deg);
-  box-shadow: 0 2px 6px rgb(0 0 0 / 0.35);
+}
+.place-pin::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--pin);
+  height: var(--pin);
+  background: white;
+  box-shadow:
+    inset 0 0 0 calc((var(--pin) - 6px) / 2) currentColor,
+    0 0 0 2px white,
+    3px 3px 0 2px rgb(0 0 0 / 0.3);
+}
+.place-pin::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  background: currentColor;
+  /* 위 2px 은 6칸, 아래 4px 은 가운데 2칸 → 계단 모양 꼬리 */
+  clip-path: polygon(0 0, 100% 0, 100% 33%, 66% 33%, 66% 100%, 33% 100%, 33% 33%, 0 33%);
 }
 /* 주변 보드게임카페: 작고 흐리게 */
 .place-pin-normal {
-  background: var(--muted-foreground);
-  transform: rotate(-45deg) scale(0.8);
+  --pin: 16px;
+  color: var(--muted-foreground);
 }
 /* 오너 즐겨찾기: 앱 기본색으로 눈에 띄게 */
 .place-pin-favorite {
-  background: var(--primary);
-  transform: rotate(-45deg) scale(1.1);
+  --pin: 20px;
+  color: var(--primary);
 }
 /* 지금 고른 곳 */
 .place-pin-active {
-  background: var(--destructive);
-  transform: rotate(-45deg) scale(1.25);
+  --pin: 24px;
+  color: var(--destructive);
 }
 
-/* 지도의 내 위치 (파란 점 + 퍼지는 원) */
+/* 지도의 내 위치: 파란 네모 + 3단계로 퍼지는 네모 테두리 (크기를 늘리지 않고 테두리 자리를 옮겨서 흐리지 않게) */
 .my-location-dot {
   position: relative;
-  width: 16px;
-  height: 16px;
-  border: 3px solid white;
-  border-radius: 9999px;
+  width: 14px;
+  height: 14px;
   background: #2563eb;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 0.4);
+  box-shadow:
+    0 0 0 2px white,
+    2px 2px 0 2px rgb(0 0 0 / 0.3);
 }
 .my-location-dot::after {
   content: '';
   position: absolute;
-  inset: -3px;
-  border-radius: 9999px;
-  background: rgb(37 99 235 / 0.35);
-  animation: my-location-pulse 2s ease-out infinite;
+  inset: -4px;
+  border: 2px solid rgb(37 99 235 / 0.6);
+  animation: my-location-ring 1.8s steps(3, end) infinite;
 }
-@keyframes my-location-pulse {
+@keyframes my-location-ring {
   from {
-    transform: scale(1);
+    inset: -4px;
     opacity: 1;
   }
   to {
-    transform: scale(3);
+    inset: -16px;
     opacity: 0;
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .my-location-dot::after {
+    animation: none;
+  }
+}
+
+/* 챌린저 방패(components/TierShield.tsx): 금테가 두 프레임으로 반짝인다 */
+.tier-shield-sparkle .tier-shield-edge {
+  animation: tier-shield-sparkle 1.2s steps(1, end) infinite;
+}
+@keyframes tier-shield-sparkle {
+  0% {
+    fill: #facc15;
+  }
+  50% {
+    fill: #fff7cc;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tier-shield-sparkle .tier-shield-edge {
     animation: none;
   }
 }
@@ -213,9 +391,46 @@
 @utility appear-delayed {
   animation: appear-delayed 0.2s ease-out 0.3s both;
 }
-/* 스켈레톤(회색 자리 표시): 늦게 나타난 뒤 은은하게 깜빡인다 */
+/* 스켈레톤(회색 자리 표시): 늦게 나타난 뒤 두 색으로 끊어 깜빡인다 (픽셀 UI 라 부드럽게 숨쉬지 않는다) */
 @utility skeleton-loading {
   animation:
     appear-delayed 0.2s ease-out 0.3s both,
-    skeleton-pulse 1.6s ease-in-out 0.5s infinite;
+    skeleton-pulse 1.6s steps(1, end) 0.5s infinite;
+}
+
+/* 알림 토스트(sonner)도 픽셀 상자로. sonner 가 자체 스타일을 주입해서 덮어쓴다 */
+[data-sonner-toast][data-styled='true'] {
+  border-width: 2px !important;
+  border-color: color-mix(in oklab, var(--foreground) 70%, transparent) !important;
+  box-shadow: 4px 4px 0 0 var(--pixel-shadow) !important;
+}
+
+/* 픽셀 로딩 표시 (components/PixelIcon.tsx 의 PixelLoader): 네모 3개가 차례로 켜진다. 돌리면 픽셀이 뭉개져서 이렇게 */
+.pixel-loader > i {
+  display: block;
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  opacity: 0.25;
+  animation: pixel-loader-step 0.9s steps(1, end) infinite;
+}
+.pixel-loader > i:nth-child(2) {
+  animation-delay: 0.3s;
+}
+.pixel-loader > i:nth-child(3) {
+  animation-delay: 0.6s;
+}
+@keyframes pixel-loader-step {
+  0% {
+    opacity: 1;
+  }
+  33% {
+    opacity: 0.25;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pixel-loader > i {
+    animation: none;
+    opacity: 0.6;
+  }
 }

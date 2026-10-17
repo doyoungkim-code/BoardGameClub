@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { endOfMonth, format, isSameDay, startOfMonth } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { CalendarDays, CalendarPlus, List, Plus, Vote } from 'lucide-react'
+import { CalendarDays, CalendarPlus, List, Plus, Vote } from '@/components/icons'
 import { Link } from 'react-router'
 import { EmptyState } from '@/components/EmptyState'
 import { PageHeader } from '@/components/PageHeader'
@@ -75,7 +75,7 @@ function ListView() {
       <OpenPolls />
 
       <section className="space-y-2">
-        <h2 className="font-semibold">다가오는 모임</h2>
+        <h2 className="font-bold">다가오는 모임</h2>
         {!loaded ? (
           <CardSkeleton />
         ) : upcoming.length === 0 ? (
@@ -139,7 +139,7 @@ function PastEvents() {
 
   return (
     <section className="space-y-2">
-      <h2 className="font-semibold">지난 모임</h2>
+      <h2 className="font-bold">지난 모임</h2>
       {events === null ? (
         <CardSkeleton />
       ) : events.length === 0 ? (
@@ -211,7 +211,7 @@ function CalendarView() {
       />
 
       <section className="space-y-2 border-t pt-4">
-        <h2 className="font-semibold">{format(selected, 'M월 d일 (E)', { locale: ko })}</h2>
+        <h2 className="font-bold">{format(selected, 'M월 d일 (E)', { locale: ko })}</h2>
         {events === null ? (
           <CardSkeleton />
         ) : selectedEvents.length === 0 ? (

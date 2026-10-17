@@ -1,6 +1,6 @@
 import { differenceInCalendarDays, format } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { CalendarPlus, MapPin } from 'lucide-react'
+import { CalendarPlus, MapPin } from '@/components/icons'
 import { Link } from 'react-router'
 import { EmptyState } from '@/components/EmptyState'
 import { UserAvatar } from '@/components/UserAvatar'
@@ -52,7 +52,7 @@ function EventHero({ event }: { event: ClubEvent }) {
 
   return (
     <Link to={`/events/${event.id}`} className="block">
-      <Card className="overflow-hidden py-0 transition-colors hover:border-primary/40 active:bg-muted">
+      <Card className="overflow-hidden py-0 hover:border-primary/40 active:bg-muted">
         <div className="flex items-stretch">
           <div className="flex w-20 shrink-0 flex-col items-center justify-center bg-primary/10 text-primary">
             <span className="text-xs">{format(date, 'M월', { locale: ko })}</span>
@@ -65,7 +65,7 @@ function EventHero({ event }: { event: ClubEvent }) {
               <Badge>{days <= 0 ? '오늘' : days === 1 ? '내일' : `D-${days}`}</Badge>
               {attending && <Badge variant="secondary">참석</Badge>}
             </div>
-            <p className="truncate font-semibold">{event.title}</p>
+            <p className="truncate font-bold">{event.title}</p>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
               <span>{format(date, 'a h:mm', { locale: ko })}</span>
               {event.location && (

@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight } from '@/components/icons'
 import { Link } from 'react-router'
 import { TierShield } from '@/components/TierShield'
 import { UserAvatar } from '@/components/UserAvatar'
 import { NewMark } from '@/features/members/AchievementList'
-import { tierEdge, tierGradient } from '@/lib/tier'
+import { pixelBlocks, tierOutline, tierPattern, tierTint } from '@/lib/tier'
 import { cn } from '@/lib/utils'
 import type { AttendanceProgress } from '@/services/activity'
 import type { UserProfile } from '@/types/user'
@@ -38,28 +38,32 @@ export function TierBanner({ member, progress, title, subtitle, stats, isNew, to
 
   const banner = (
     <section
-      className={cn('relative overflow-hidden rounded-2xl border p-4', to && 'transition-shadow group-hover:shadow-md')}
-      style={{ borderColor: tierEdge(tier.color), background: tierGradient(tier.color) }}
+      className={cn('relative overflow-hidden pixel-border pixel-shadow p-4', to && 'group-active:translate-x-0.5 group-active:translate-y-0.5 group-active:shadow-none')}
+      style={{
+        borderColor: tierOutline(tier.color),
+        backgroundColor: tierTint(tier.color, 16),
+        backgroundImage: tierPattern(tier.color),
+      }}
     >
       {isNew && <NewMark />}
 
       <div className="flex items-center gap-4">
         <span className="relative shrink-0">
-          <span className="block rounded-full border-2 p-0.5" style={{ borderColor: tier.color }}>
+          <span className="block border-2 p-0.5" style={{ borderColor: tier.color }}>
             <UserAvatar name={member.nickname} photoURL={member.photoURL} className="size-16" />
           </span>
           {/* 방패는 사진 오른쪽 아래에 걸쳐 놓는다 */}
-          <TierShield tier={tier} size="md" className="absolute -right-0.5 bottom-0 drop-shadow-sm" />
+          <TierShield tier={tier} size="md" className="absolute -right-1.5 -bottom-1" />
         </span>
 
         <div className="min-w-0 flex-1 space-y-0.5">
-          {title && <p className="truncate text-xs font-medium text-primary">{title}</p>}
+          {title && <p className="truncate text-xs font-normal text-primary">{title}</p>}
           <p className="flex min-w-0 items-center gap-1.5">
             <span className="truncate text-xl font-bold">{member.nickname}</span>
             {badge}
           </p>
           <p className="flex items-baseline gap-2">
-            <span className="text-sm font-semibold" style={{ color: tier.color }}>
+            <span className="text-sm font-bold" style={{ color: tier.color }}>
               {tier.name}
             </span>
             <span className="text-xs text-muted-foreground">{xp.toLocaleString()} XP</span>
@@ -71,11 +75,11 @@ export function TierBanner({ member, progress, title, subtitle, stats, isNew, to
       </div>
 
       <div className="mt-3 space-y-1">
-        <div className="h-2 overflow-hidden rounded-full bg-background/70">
-          {/* 막대는 지금 티어 색으로 채운다 (다음 티어 색으로 채우면 아직 아닌 티어 색이 커 보인다) */}
+        <div className="h-3 overflow-hidden border-2 border-foreground/70 bg-background">
+          {/* 지금 티어 색 블록으로 채운다. 5% 단위로 끊어서 칸이 반쯤 걸치지 않게 */}
           <div
-            className="h-full rounded-full transition-[width]"
-            style={{ width: `${Math.min(ratio, 1) * 100}%`, background: tier.color }}
+            className="h-full"
+            style={{ width: `${Math.round(Math.min(ratio, 1) * 20) * 5}%`, background: pixelBlocks(tier.color) }}
           />
         </div>
         <p className="text-xs text-muted-foreground">
@@ -85,13 +89,13 @@ export function TierBanner({ member, progress, title, subtitle, stats, isNew, to
 
       <div
         className={cn(
-          'mt-3 grid divide-x border-t pt-3 text-center',
+          'mt-3 grid divide-x-2 divide-foreground/20 border-t-2 border-foreground/20 pt-3 text-center',
           stats.length >= 4 ? 'grid-cols-4' : 'grid-cols-3',
         )}
       >
         {stats.map((stat) => (
           <div key={stat.label}>
-            <p className="text-sm font-semibold">{stat.value}</p>
+            <p className="text-sm font-bold">{stat.value}</p>
             <p className="text-xs text-muted-foreground">{stat.label}</p>
           </div>
         ))}

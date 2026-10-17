@@ -36,7 +36,8 @@ export default defineConfig({
       },
       workbox: {
         // 앱 화면(JS·CSS·아이콘·게임 표지)을 기기에 저장해 두고 빠르게 연다
-        globPatterns: ['**/*.{js,css,html,svg,png,jpg,ico}'],
+        // woff2: 픽셀 글꼴(public/fonts). 빠지면 오프라인에서 시스템 글꼴로 바뀐다
+        globPatterns: ['**/*.{js,css,html,svg,png,jpg,ico,woff2}'],
         // 새로고침·주소 직접 입력도 앱 화면으로. 단 Firebase 로그인 경로(/__/)는 서버로 보낸다
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/__\//],

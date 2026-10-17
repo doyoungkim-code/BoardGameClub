@@ -22,7 +22,7 @@ export function PageHeader({ title, eyebrow, subtitle, actions, backTo, classNam
       {backTo && <BackButton fallback={backTo} className="-ml-2 shrink-0" />}
       <div className="min-w-0 flex-1">
         {eyebrow && <p className="text-sm text-muted-foreground">{eyebrow}</p>}
-        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+        <h1 className="text-2xl font-bold">{title}</h1>
         {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
       </div>
       {actions && <div className="flex shrink-0 items-center gap-2 pt-1">{actions}</div>}

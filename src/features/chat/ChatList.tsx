@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Hash, Plus } from 'lucide-react'
+import { Hash, Plus } from '@/components/icons'
 import { NavLink } from 'react-router'
 import { toast } from 'sonner'
 import { EmptyState } from '@/components/EmptyState'
@@ -79,7 +79,7 @@ export function ChatList() {
                 key={c.id}
                 to={`/chat/${c.id}`}
                 icon={
-                  <span className="flex size-10 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
+                  <span className="flex size-10 items-center justify-center bg-secondary text-secondary-foreground">
                     <Hash className="size-4" />
                   </span>
                 }
@@ -139,7 +139,7 @@ export function ChatList() {
 function SectionHeader({ title, action, className }: { title: string; action?: ReactNode; className?: string }) {
   return (
     <div className={cn('flex h-9 items-center justify-between px-3', className)}>
-      <span className="text-xs font-semibold text-muted-foreground">{title}</span>
+      <span className="text-xs font-bold text-muted-foreground">{title}</span>
       {action}
     </div>
   )
@@ -159,18 +159,18 @@ function RoomLink({ to, icon, title, preview, time, unread }: RoomLinkProps) {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        cn('flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-muted', isActive && 'bg-muted')
+        cn('flex items-center gap-3 rounded-xl px-2 py-2.5 hover:bg-muted', isActive && 'bg-muted')
       }
     >
       {icon}
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-2">
-          <p className={cn('truncate', unread ? 'font-bold' : 'font-medium')}>{title}</p>
-          <span className="shrink-0 text-[11px] text-muted-foreground">{formatChatListTime(time)}</span>
+          <p className={cn('truncate', unread ? 'font-bold' : 'font-normal')}>{title}</p>
+          <span className="shrink-0 text-xs text-muted-foreground">{formatChatListTime(time)}</span>
         </div>
         <div className="flex items-center justify-between gap-2">
           <p className={cn('truncate text-sm', unread ? 'text-foreground' : 'text-muted-foreground')}>{preview || ' '}</p>
-          {unread && <span className="size-2 shrink-0 rounded-full bg-primary" aria-label="안 읽음" />}
+          {unread && <span className="size-2 shrink-0 bg-primary" aria-label="안 읽음" />}
         </div>
       </div>
     </NavLink>

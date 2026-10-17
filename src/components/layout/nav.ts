@@ -4,21 +4,20 @@ import {
   Dices,
   Ellipsis,
   House,
-  // JS 내장 Map 과 이름이 겹치지 않게
-  Map as MapIcon,
+  MapIcon,
   MessageCircle,
   Newspaper,
   ShieldCheck,
   UserRound,
   Users,
-  type LucideIcon,
-} from 'lucide-react'
+  type IconComponent,
+} from '@/components/icons'
 import { useIsOwner } from '@/stores/auth'
 
 export type NavItem = {
   to: string
   label: string
-  icon: LucideIcon
+  icon: IconComponent
   ownerOnly?: boolean
   /** 'chat': 안 읽은 대화방 개수 배지 */
   badge?: 'chat'

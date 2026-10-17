@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ChartColumn, Map as MapIcon, Megaphone, MessageCircle } from 'lucide-react'
+import { ChartColumn, MapIcon, Megaphone, MessageCircle } from '@/components/icons'
 import { Link } from 'react-router'
 import { InstallAppCard } from '@/components/InstallAppCard'
 import { PageHeader } from '@/components/PageHeader'
@@ -69,20 +69,20 @@ export function HomePage() {
       <ProfileBanner />
 
       <section className="space-y-2">
-        <h2 className="font-semibold">다가오는 모임</h2>
+        <h2 className="font-bold">다가오는 모임</h2>
         <NextEventCard />
       </section>
 
       <div className="grid grid-cols-2 gap-3">
         {shortcuts.map(({ title, to, icon: Icon, text, highlight }) => (
           <Link key={title} to={to} className="block">
-            <Card className="h-full py-0 transition-colors hover:border-primary/40 active:bg-muted">
+            <Card className="h-full py-0 hover:border-primary/40 active:bg-muted">
               <CardContent className="space-y-1 px-4 py-3.5">
-                <p className="flex items-center gap-1.5 text-sm font-semibold">
+                <p className="flex items-center gap-1.5 text-sm font-bold">
                   <Icon className="size-4 text-primary" />
                   {title}
                 </p>
-                <p className={cn('truncate text-xs', highlight ? 'font-medium text-primary' : 'text-muted-foreground')}>
+                <p className={cn('truncate text-xs', highlight ? 'font-normal text-primary' : 'text-muted-foreground')}>
                   {text}
                 </p>
               </CardContent>

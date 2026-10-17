@@ -59,7 +59,7 @@ export function SignupPage() {
           <div className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2.5">
             <UserAvatar name={user.displayName ?? '?'} photoURL={user.photoURL} />
             <div className="min-w-0 text-sm">
-              <p className="font-medium">{user.displayName}</p>
+              <p className="font-normal">{user.displayName}</p>
               <p className="truncate text-muted-foreground">{user.email}</p>
             </div>
           </div>

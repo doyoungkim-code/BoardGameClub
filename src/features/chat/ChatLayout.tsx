@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { MessageCircle } from 'lucide-react'
+import { MessageCircle } from '@/components/icons'
 import { Outlet } from 'react-router'
 import { PageSpinner } from '@/components/PageSpinner'
 import { useRouteHandle } from '@/components/layout/routeHandle'

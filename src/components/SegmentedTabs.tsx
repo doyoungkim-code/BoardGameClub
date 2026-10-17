@@ -1,11 +1,11 @@
-import type { LucideIcon } from 'lucide-react'
+import type { IconComponent } from '@/components/icons'
 import { Link } from 'react-router'
 import { cn } from '@/lib/utils'
 
 export type SegmentedItem = {
   key: string
   label: string
-  icon?: LucideIcon
+  icon?: IconComponent
   /** 주소가 있으면 링크로, 없으면 버튼으로 (onSelect 사용) */
   to?: string
 }
@@ -32,8 +32,8 @@ export function SegmentedTabs({ items, active, onSelect, className }: Props) {
           </>
         )
         const itemClass = cn(
-          'flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-sm transition-colors',
-          on ? 'bg-background font-semibold shadow-xs' : 'text-muted-foreground',
+          'flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-sm',
+          on ? 'bg-background font-bold shadow-xs' : 'text-muted-foreground',
         )
         return item.to ? (
           <Link key={item.key} to={item.to} aria-current={on ? 'page' : undefined} className={itemClass}>

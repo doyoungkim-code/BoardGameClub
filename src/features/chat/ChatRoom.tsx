@@ -56,7 +56,7 @@ export function ChatRoom({ type, roomId, title, subtitle, avatar, actions, disab
         <BackButton fallback="/chat" className="md:hidden" />
         {avatar}
         <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold">{title}</p>
+          <p className="truncate font-bold">{title}</p>
           {subtitle && <p className="truncate text-xs text-muted-foreground">{subtitle}</p>}
         </div>
         {actions}

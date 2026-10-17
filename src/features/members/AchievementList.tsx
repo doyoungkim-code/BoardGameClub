@@ -1,6 +1,6 @@
 import { SectionTitle } from '@/components/SectionTitle'
 import { ATTENDANCE_ACHIEVEMENTS } from '@/data/achievements'
-import { tierEdge, tierTint } from '@/lib/tier'
+import { pixelBlocks, tierEdge, tierTint } from '@/lib/tier'
 import { cn } from '@/lib/utils'
 import type { Progress } from '@/services/activity'
 
@@ -33,7 +33,7 @@ export function AchievementList({ progress, newGoals, compact }: Props) {
             <li
               key={achievement.goal}
               title={`출석 ${achievement.goal}회`}
-              className="flex shrink-0 items-center gap-1 rounded-full border px-3 py-1 text-sm"
+              className="flex shrink-0 items-center gap-1 border px-3 py-1 text-sm"
               style={doneStyle}
             >
               <span aria-hidden>{achievement.icon}</span>
@@ -65,19 +65,19 @@ export function AchievementList({ progress, newGoals, compact }: Props) {
               <span className={cn('text-3xl leading-none', !done && 'opacity-30 grayscale')} aria-hidden>
                 {achievement.icon}
               </span>
-              <span className={cn('text-xs font-semibold', !done && 'text-muted-foreground')}>{achievement.name}</span>
-              <span className="text-[11px] leading-tight text-muted-foreground">
+              <span className={cn('text-xs font-bold', !done && 'text-muted-foreground')}>{achievement.name}</span>
+              <span className="text-xs text-muted-foreground">
                 출석 {achievement.goal}회 · +{achievement.bonusXp}XP
               </span>
               {!done && (
                 <span className="mt-auto w-full pt-1">
-                  <span className="block h-1 overflow-hidden rounded-full bg-muted">
+                  <span className="block h-2 overflow-hidden border border-foreground/50 bg-background">
                     <span
-                      className="block h-full rounded-full"
-                      style={{ width: `${(value / achievement.goal) * 100}%`, background: color }}
+                      className="block h-full"
+                      style={{ width: `${(value / achievement.goal) * 100}%`, background: pixelBlocks(color) }}
                     />
                   </span>
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     {value} / {achievement.goal}
                   </span>
                 </span>
@@ -95,7 +95,7 @@ export function NewMark({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        'absolute -top-1.5 -right-1.5 rounded-full bg-destructive px-1.5 py-0.5 text-[9px] leading-none font-bold text-white',
+        'absolute -top-1.5 -right-1.5 bg-destructive px-1.5 py-0.5 text-xs leading-none font-bold text-white',
         className,
       )}
     >

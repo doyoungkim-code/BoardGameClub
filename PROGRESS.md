@@ -1,6 +1,6 @@
 # 진행 기록 & 개발 가이드
 
-> 마지막 업데이트: 2026-09-19 (지도, 관리자 참석자 관리, 업적·활동 기록 추가)
+> 마지막 업데이트: 2026-10-17 (픽셀아트 전환 1단계. 다음: 움직이는 도트 장면 → 주사위 게임 → 상점)
 > 기획 전체는 [PLANNING.md](PLANNING.md), 이 문서는 "어디까지 했고 다음에 뭘 하는지"와 "개발 환경 세팅"을 기록한다.
 
 ## 1. 진행 상황
@@ -21,7 +21,8 @@
 - Firestore 보안 규칙은 **전부 실제 프로젝트(`doyou-boardgame`)에 배포 완료**
 - **배포 주소: https://doyou-boardgame.web.app** — `main`에 push하면 자동 배포 (아래 2-1)
 - 규칙 테스트 155개 통과 (users 43 + chat 31 + events 32 + posts 28 + places 6 + polls 15)
-- `firestore.indexes.json`에 posts 복합 색인 1개 (board + pinned + createdAt)
+- `firestore.indexes.json`에 posts 복합 색인 2개
+  (board + pinned + createdAt / pinned + createdAt — 카테고리 전체 보기용)
 
 ## 2. 다음에 할 일
 
@@ -151,6 +152,31 @@ tests/rules/    보안 규칙 테스트
 ```
 - 라우트 `handle`: `{ layout: 'chat' }` = 여백 없이 화면 꽉 채움, `{ immersive: true }` = 모바일에서 헤더·하단 탭 숨김
 - 무료 한도(읽기 5만/일) 때문에 실시간 구독은 꼭 필요한 곳만. 회원 목록·채팅 목록은 `stores`에서 한 번만 구독해 공유
+
+### 픽셀아트 규칙 (2026-10-17 전환)
+앱 전체가 레트로 8비트 픽셀 모양이다. 새 화면도 아래를 지킨다.
+- **글씨**: Galmuri(OFL, `public/fonts/` + `OFL.txt`). 비트맵 글꼴은 **설계 크기의 정수배에서만 또렷**해서
+  글자 크기는 다섯 칸뿐: `text-xs` 12px(Galmuri11) · `text-sm/base/lg` 15px(Galmuri14) · `text-xl/2xl` 24px(Galmuri11) ·
+  `text-3xl/4xl` 30px(Galmuri14). 값은 `index.css` 의 `@theme` 에서 바꿨고 클래스 이름은 그대로다.
+  `text-[13px]` 같은 임의 크기·`leading-relaxed` 같은 배율 줄간격·`tracking-*` 는 쓰지 않는다
+  (새 `text-이름` 을 만들면 `cn()` 이 글자색으로 착각해 `text-muted-foreground` 를 지운다)
+- **굵게**: 진짜 Bold 는 Galmuri11(12·24px)뿐이고 가짜 굵게는 막혀 있다(`font-synthesis: none`). 15px 강조는 **색**으로.
+  `font-medium`/`font-semibold` 대신 `font-normal`/`font-bold`
+- **입력칸은 16px**(`text-[16px]`): 아이폰이 16px 미만 입력칸을 누르면 화면을 확대한다
+- **모서리 없음**: `--radius` 와 `rounded-*` 토큰이 모두 0. `rounded-full` 도 쓰지 않는다(동그라미 없음)
+- **픽셀 유틸**(`index.css`): `pixel-border`(2px 테두리) · `pixel-shadow`/`pixel-shadow-sm`(흐림 없는 4px/2px 그림자) ·
+  `pixel-press`(누르면 그림자 자리로 2px 들어감) · `pixel-focus`(2px 실선 초점) · `pixel-inset`(안으로 들어간 칸) ·
+  `pixel-frame`(사진 액자) · `pixel-crisp`(작은 그림을 **키울 때만**). `shadow-sm/md` 토큰도 흐림 없는 그림자로 바꿔 두었다
+- **흐림 금지**: `blur`·`backdrop-blur`·`drop-shadow`·부드러운 `transition-*` 를 쓰지 않는다. 움직임은 `steps()` 로 끊는다
+  (화면 전환 페이드, 스켈레톤 깜빡임, 지도 내 위치 퍼짐, 챌린저 방패 반짝임)
+- **아이콘**: `@/components/icons` 에서 가져온다(예전 lucide 이름 그대로, 그림은 픽셀). 그림 데이터는
+  `src/data/pixelIcons.ts`(pixelarticons, MIT + 직접 그린 주사위·달력). 24칸 그림이라 12px·24px 에서만 또렷해서
+  `PixelIcon` 이 `size-4`→`size-3`, `size-5`→`size-6` 으로 맞춘다. **`lucide-react` 는 지웠다** — shadcn 으로 부품을 새로 받으면
+  lucide import 가 생기니 `@/components/icons` 로 바꾼다
+- **로딩**: 돌리면 픽셀이 뭉개져서 `PixelLoader`(네모 3개가 차례로 켜짐)
+- **직접 그린 그림**: 티어 방패(`TierShield.tsx`, 12×14 칸), 앱 아이콘(`public/icon.svg` 32칸·`favicon.svg` 16칸 →
+  `npm run icons`), 지도 핀(`index.css` 의 `.place-pin*`), 배너 도트 무늬·블록 진행 막대(`lib/tier.ts`)
+- **예외(일부러 픽셀 아님)**: 구글 로그인 로고(상표), 업적 이모지(오너가 직접 입력), 게임 표지·프로필 사진(액자만 픽셀)
 
 ### 디자인 규칙 (2026-09-23 정리)
 화면을 새로 만들 때 이 규칙을 따른다. 같은 마크업을 또 복사하지 말고 공용 컴포넌트를 쓴다.

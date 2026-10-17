@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Search } from 'lucide-react'
+import { Search } from '@/components/icons'
 import { toast } from 'sonner'
 import { UserAvatar } from '@/components/UserAvatar'
 import { Button } from '@/components/ui/button'

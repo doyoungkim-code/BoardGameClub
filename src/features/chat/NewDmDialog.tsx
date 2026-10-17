@@ -67,7 +67,7 @@ export function NewDmDialog({ open, onOpenChange }: Props) {
               >
                 <UserAvatar name={m.nickname} photoURL={m.photoURL} />
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{m.nickname}</p>
+                  <p className="truncate text-sm font-normal">{m.nickname}</p>
                   <p className="truncate text-xs text-muted-foreground">{referrerLabel(m, byId)}</p>
                 </div>
               </button>

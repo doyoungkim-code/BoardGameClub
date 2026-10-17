@@ -1,4 +1,4 @@
-import { Download, EllipsisVertical, ExternalLink, Share, SquarePlus, X } from 'lucide-react'
+import { Download, EllipsisVertical, ExternalLink, Share, SquarePlus, X } from '@/components/icons'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -22,9 +22,10 @@ export function InstallAppCard({ onDismiss }: Props) {
     <Card className="relative border-primary/30 bg-primary/5 py-4">
       <CardContent className="space-y-3 px-4">
         <div className="flex items-center gap-3 pr-6">
-          <img src="/pwa-64x64.png" alt="" className="size-10 shrink-0 rounded-xl" />
+          {/* 64px 그림을 정확히 반(32px)으로: 픽셀 한 칸이 그대로 1px 이 된다 */}
+          <img src="/pwa-64x64.png" alt="" className="size-8 shrink-0 pixel-crisp pixel-shadow-sm" />
           <div className="min-w-0">
-            <p className="font-semibold">앱으로 설치하기</p>
+            <p className="font-bold">앱으로 설치하기</p>
             <p className="text-xs text-muted-foreground">홈 화면 아이콘으로 바로 열고, 주소창 없이 넓게 써요</p>
           </div>
         </div>
@@ -110,7 +111,7 @@ function Guide({ hasPrompt }: { hasPrompt: boolean }) {
 function Step({ n, children }: { n: number; children: React.ReactNode }) {
   return (
     <li className="flex items-start gap-2">
-      <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
+      <span className="flex size-5 shrink-0 items-center justify-center bg-primary text-xs font-bold text-primary-foreground">
         {n}
       </span>
       <span>{children}</span>

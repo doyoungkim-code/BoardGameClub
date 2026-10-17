@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, Lock } from 'lucide-react'
+import { Check, Lock } from '@/components/icons'
 import { toast } from 'sonner'
 import { EmptyState } from '@/components/EmptyState'
 import { SectionTitle } from '@/components/SectionTitle'
@@ -74,8 +74,8 @@ export function TitleSection({ member, stats, progress, isMe, newKeys }: Props) 
                   title={title.description}
                   aria-pressed={isMe ? selected : undefined}
                   className={cn(
-                    'flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm transition-colors disabled:cursor-default',
-                    selected ? 'font-semibold' : 'bg-card',
+                    'flex items-center gap-1 border px-3 py-1.5 text-sm disabled:cursor-default',
+                    selected ? 'font-bold' : 'bg-card',
                     isMe && !selected && 'hover:border-primary/50',
                   )}
                   // 대표로 고른 칭호는 티어 색으로 (프로필 배너와 같은 결)
@@ -97,11 +97,11 @@ export function TitleSection({ member, stats, progress, isMe, newKeys }: Props) 
           {lockedAuto.map((t) => (
             <li
               key={t.id}
-              className="flex items-center gap-1 rounded-full border border-dashed px-3 py-1.5 text-xs text-muted-foreground"
+              className="flex items-center gap-1 border border-dashed px-3 py-1.5 text-xs text-muted-foreground"
             >
               <Lock className="size-3" />
               {t.text}
-              <span className="text-[11px]">
+              <span className="text-xs">
                 · {t.description} ({Math.min(stats[t.metric], t.goal)}/{t.goal})
               </span>
             </li>

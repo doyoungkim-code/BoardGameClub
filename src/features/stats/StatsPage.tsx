@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { subMonths } from 'date-fns'
-import { CalendarDays, Dices, Trophy, Users } from 'lucide-react'
+import { CalendarDays, Dices, Trophy, Users } from '@/components/icons'
 import { Link } from 'react-router'
 import { EmptyState } from '@/components/EmptyState'
 import { MemberName } from '@/components/MemberName'
@@ -97,7 +97,7 @@ export function StatsPage() {
                     </span>
                     <UserAvatar name={member?.nickname ?? '?'} photoURL={member?.photoURL ?? null} className="size-8" />
                     <MemberName uid={uid} fallback="탈퇴한 회원" className="flex-1 text-sm" />
-                    <span className="text-sm font-medium">{times}회</span>
+                    <span className="text-sm font-normal">{times}회</span>
                   </li>
                 )
               })}
@@ -144,7 +144,7 @@ function TierRanking() {
                   <UserAvatar name={member.nickname} photoURL={member.photoURL} className="size-8" />
                   <MemberName uid={member.uid} className="flex-1 text-sm" />
                   <span className="shrink-0 text-right text-xs">
-                    <span className="block font-medium" style={{ color: tier.color }}>
+                    <span className="block font-normal" style={{ color: tier.color }}>
                       {tier.name}
                     </span>
                     <span className="text-muted-foreground">{xp.toLocaleString()} XP</span>

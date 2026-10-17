@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { ExternalLink, Loader2 } from 'lucide-react'
+import { ExternalLink } from '@/components/icons'
+import { PixelLoader } from '@/components/PixelIcon'
 import { Navigate, useLocation } from 'react-router'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -35,7 +36,7 @@ export function LoginPage() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-10 px-6">
       <div className="space-y-3 text-center">
-        <img src="/pwa-192x192.png" alt="" className="mx-auto size-20 rounded-3xl shadow-md" />
+        <img src="/pwa-192x192.png" alt="" className="mx-auto size-24 pixel-crisp pixel-shadow" />
         <h1 className="text-3xl font-bold text-primary">{APP_NAME}</h1>
         <p className="text-sm text-muted-foreground">회원 전용 공간이에요. 가입은 운영자 승인 후 이용할 수 있어요.</p>
       </div>
@@ -47,7 +48,7 @@ export function LoginPage() {
         onClick={handleLogin}
         disabled={pending}
       >
-        {pending ? <Loader2 className="size-5 animate-spin" /> : <GoogleIcon />}
+        {pending ? <PixelLoader className="text-current" /> : <GoogleIcon />}
         Google 계정으로 시작하기
       </Button>
     </div>
@@ -80,6 +81,7 @@ function InAppBrowserNotice() {
   return null
 }
 
+/** 구글 로고는 상표라 픽셀로 바꾸지 않고 그대로 둔다 (버튼 상자만 픽셀) */
 function GoogleIcon() {
   return (
     <svg className="size-5" viewBox="0 0 24 24" aria-hidden="true">

@@ -1,4 +1,4 @@
-import { Loader2 } from 'lucide-react'
+import { PixelLoader } from '@/components/PixelIcon'
 
 /**
  * 앱을 열 때 로그인 상태를 확인하는 동안.
@@ -7,8 +7,8 @@ import { Loader2 } from 'lucide-react'
 export function SplashScreen() {
   return (
     <div className="appear-delayed flex min-h-dvh flex-col items-center justify-center gap-5">
-      <img src="/pwa-192x192.png" alt="" className="size-20 rounded-3xl shadow-md" />
-      <Loader2 className="size-5 animate-spin text-muted-foreground" />
+      <img src="/pwa-192x192.png" alt="" className="size-24 pixel-crisp pixel-shadow" />
+      <PixelLoader />
     </div>
   )
 }

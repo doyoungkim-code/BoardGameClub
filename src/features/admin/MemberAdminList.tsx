@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { X } from 'lucide-react'
+import { X } from '@/components/icons'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { UserAvatar } from '@/components/UserAvatar'
@@ -31,7 +31,7 @@ export function MemberAdminList() {
 
   return (
     <section className="space-y-3">
-      <h2 className="flex items-center gap-2 font-semibold">
+      <h2 className="flex items-center gap-2 font-bold">
         회원 관리
         <Badge variant="secondary">{members.length}명</Badge>
         {idleCount > 0 && <span className="text-xs font-normal text-muted-foreground">{IDLE_WARN}일+ 미활동 {idleCount}명</span>}
@@ -48,7 +48,7 @@ export function MemberAdminList() {
             >
               <UserAvatar name={member.nickname} photoURL={member.photoURL} className="size-9" />
               <div className="min-w-0 flex-1">
-                <p className="flex items-center gap-1.5 truncate font-medium">
+                <p className="flex items-center gap-1.5 truncate font-normal">
                   {member.nickname}
                   {member.role === 'owner' && <Badge variant="secondary">오너</Badge>}
                 </p>
@@ -71,7 +71,7 @@ function IdleBadge({ member }: { member: UserProfile }) {
     <span
       className={cn(
         'shrink-0 text-xs',
-        days >= IDLE_ALERT ? 'font-medium text-destructive' : days >= IDLE_WARN ? 'text-primary' : 'text-muted-foreground',
+        days >= IDLE_ALERT ? 'font-normal text-destructive' : days >= IDLE_WARN ? 'text-primary' : 'text-muted-foreground',
       )}
     >
       {formatRelative(member.lastActiveAt)}
@@ -117,7 +117,7 @@ function GrantedTitlesEditor({ member }: { member: UserProfile }) {
 
   return (
     <div className="space-y-1.5">
-      <p className="text-xs font-medium text-muted-foreground">관리자가 주는 칭호</p>
+      <p className="text-xs font-normal text-muted-foreground">관리자가 주는 칭호</p>
       {granted.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {granted.map((key) => (
@@ -191,7 +191,7 @@ function MemberAdminPanel({ member }: { member: UserProfile }) {
   return (
     <div className="space-y-4 border-t bg-muted/40 px-4 py-4">
       <div className="space-y-1.5">
-        <p className="text-xs font-medium text-muted-foreground">소개한 회원</p>
+        <p className="text-xs font-normal text-muted-foreground">소개한 회원</p>
         <Select
           value={member.referrerId ?? NO_REFERRER}
           onValueChange={(value) =>
@@ -219,7 +219,7 @@ function MemberAdminPanel({ member }: { member: UserProfile }) {
       </div>
 
       <div className="space-y-1.5">
-        <p className="text-xs font-medium text-muted-foreground">메모 (오너만 볼 수 있어요)</p>
+        <p className="text-xs font-normal text-muted-foreground">메모 (오너만 볼 수 있어요)</p>
         <Textarea
           value={memo ?? ''}
           onChange={(e) => setMemo(e.target.value)}

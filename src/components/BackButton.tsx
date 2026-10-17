@@ -1,4 +1,4 @@
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft } from '@/components/icons'
 import { useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { historyIndex } from '@/hooks/useAppHistory'

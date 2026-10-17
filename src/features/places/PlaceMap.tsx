@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { LocateFixed } from 'lucide-react'
+import { LocateFixed } from '@/components/icons'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { loadKakaoMaps, type KakaoCafe } from '@/lib/kakaoMap'

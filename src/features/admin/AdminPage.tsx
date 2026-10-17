@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { onSnapshot, query, where } from 'firebase/firestore'
-import { UserCheck } from 'lucide-react'
+import { UserCheck } from '@/components/icons'
 import { toast } from 'sonner'
 import { EmptyState } from '@/components/EmptyState'
 import { PageHeader } from '@/components/PageHeader'
@@ -43,7 +43,7 @@ export function AdminPage() {
       <PageHeader title="관리자" />
 
       <section className="space-y-3">
-        <h2 className="flex items-center gap-2 font-semibold">
+        <h2 className="flex items-center gap-2 font-bold">
           가입 승인 대기
           {!!pending?.length && <Badge>{pending.length}</Badge>}
         </h2>
@@ -58,14 +58,14 @@ export function AdminPage() {
 
       {inactive.length > 0 && (
         <section className="space-y-3">
-          <h2 className="font-semibold">거절·이용 중지 계정</h2>
+          <h2 className="font-bold">거절·이용 중지 계정</h2>
           <Card className="py-2">
             <CardContent className="divide-y px-4">
               {inactive.map((u) => (
                 <div key={u.uid} className="flex items-center gap-3 py-2">
                   <UserAvatar name={u.nickname} photoURL={u.photoURL} className="size-8" />
                   <div className="min-w-0 flex-1 text-sm">
-                    <p className="truncate font-medium">{u.nickname}</p>
+                    <p className="truncate font-normal">{u.nickname}</p>
                     <p className="text-xs text-muted-foreground">{u.status === 'rejected' ? '가입 거절' : '이용 중지'}</p>
                   </div>
                   <Button size="sm" variant="outline" onClick={() => runAction(() => setUserStatus(u.uid, 'pending'), '대기 목록으로 옮겼어요')}>
@@ -110,7 +110,7 @@ function ApplicantCard({ applicant }: { applicant: UserProfile }) {
         <div className="flex items-center gap-3">
           <UserAvatar name={applicant.nickname} photoURL={applicant.photoURL} className="size-11" />
           <div className="min-w-0 flex-1">
-            <p className="truncate font-semibold">{applicant.nickname}</p>
+            <p className="truncate font-bold">{applicant.nickname}</p>
             <p className="truncate text-xs text-muted-foreground">
               {applicant.googleName}
               {email && ` · ${email}`}
@@ -122,7 +122,7 @@ function ApplicantCard({ applicant }: { applicant: UserProfile }) {
         <div className="space-y-2 rounded-lg bg-muted px-3 py-2.5 text-sm">
           <p>
             <span className="text-muted-foreground">입력한 소개자 </span>
-            <span className="font-medium">{applicant.referrerName || '-'}</span>
+            <span className="font-normal">{applicant.referrerName || '-'}</span>
           </p>
           <Select value={selected} onValueChange={setReferrerId}>
             <SelectTrigger className="w-full bg-card" aria-label="소개 회원 연결">

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { EllipsisVertical, Pencil, Trash2 } from 'lucide-react'
+import { EllipsisVertical, Pencil, Trash2 } from '@/components/icons'
 import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ConfirmDialog'

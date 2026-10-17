@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
-import type { LucideIcon } from 'lucide-react'
+import type { IconComponent } from '@/components/icons'
 import { cn } from '@/lib/utils'
 
 type Props = {
-  icon?: LucideIcon
+  icon?: IconComponent
   title: string
   description?: string
   /** 다음에 할 일 (버튼 등) */
@@ -24,11 +24,11 @@ export function EmptyState({ icon: Icon, title, description, action, size = 'md'
       )}
     >
       {Icon && (
-        <span className="flex size-10 items-center justify-center rounded-full bg-muted">
+        <span className="flex size-10 items-center justify-center bg-muted">
           <Icon className="size-5 text-muted-foreground" />
         </span>
       )}
-      <p className="text-sm font-medium">{title}</p>
+      <p className="text-sm font-normal">{title}</p>
       {description && <p className="max-w-xs text-xs text-muted-foreground">{description}</p>}
       {action && <div className="mt-1">{action}</div>}
     </div>

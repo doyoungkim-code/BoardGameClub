@@ -12,7 +12,7 @@ import {
   startOfWeek,
 } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from '@/components/icons'
 import { Button } from '@/components/ui/button'
 import { dayKey } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -49,7 +49,7 @@ export function EventCalendar({ month, onMonthChange, selected, onSelect, events
         <Button variant="ghost" size="icon" onClick={() => onMonthChange(addMonths(month, -1))} aria-label="이전 달">
           <ChevronLeft className="size-4" />
         </Button>
-        <p className="font-semibold">{format(month, 'yyyy년 M월', { locale: ko })}</p>
+        <p className="font-bold">{format(month, 'yyyy년 M월', { locale: ko })}</p>
         <Button variant="ghost" size="icon" onClick={() => onMonthChange(addMonths(month, 1))} aria-label="다음 달">
           <ChevronRight className="size-4" />
         </Button>
@@ -76,10 +76,10 @@ export function EventCalendar({ month, onMonthChange, selected, onSelect, events
               aria-pressed={isSelected}
               aria-label={`${format(day, 'M월 d일', { locale: ko })} 모임 ${events.length}개`}
               className={cn(
-                'mx-auto flex size-10 flex-col items-center justify-center rounded-lg text-sm transition-colors hover:bg-accent',
+                'mx-auto flex size-10 flex-col items-center justify-center rounded-lg text-sm hover:bg-accent',
                 outside && 'text-muted-foreground/50',
                 isToday(day) && !isSelected && 'font-bold text-primary',
-                isSelected && 'bg-primary font-semibold text-primary-foreground hover:bg-primary',
+                isSelected && 'bg-primary font-bold text-primary-foreground hover:bg-primary',
               )}
             >
               {day.getDate()}
@@ -88,7 +88,7 @@ export function EventCalendar({ month, onMonthChange, selected, onSelect, events
                   <span
                     key={event.id}
                     className={cn(
-                      'size-1 rounded-full',
+                      'size-1',
                       isSelected ? 'bg-primary-foreground' : event.canceled ? 'bg-muted-foreground/40' : 'bg-primary',
                     )}
                   />

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { onSnapshot } from 'firebase/firestore'
-import { CalendarDays, Check, EllipsisVertical, MapPin, UserPlus, Users } from 'lucide-react'
+import { CalendarDays, Check, EllipsisVertical, MapPin, UserPlus, Users } from '@/components/icons'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { BackButton } from '@/components/BackButton'
@@ -180,7 +180,7 @@ function EventDetail({ event }: { event: ClubEvent }) {
         </p>
       </div>
 
-      {event.description && <p className="text-sm leading-relaxed whitespace-pre-wrap">{event.description}</p>}
+      {event.description && <p className="text-sm whitespace-pre-wrap">{event.description}</p>}
 
       {!event.canceled && !past && (
         <Button
@@ -244,7 +244,7 @@ function Attendees({ event, manageable }: { event: ClubEvent; manageable: boolea
   return (
     <section className="space-y-2 border-t pt-5">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="font-semibold">참석자 {event.attendeeIds.length}명</h2>
+        <h2 className="font-bold">참석자 {event.attendeeIds.length}명</h2>
         {checking && <p className="flex-1 text-xs text-muted-foreground">눌러서 출석 체크</p>}
         {isOwner && (
           <Button variant="outline" size="sm" onClick={() => setManaging(true)}>
@@ -267,7 +267,7 @@ function Attendees({ event, manageable }: { event: ClubEvent; manageable: boolea
                 <MemberName uid={uid} className="flex-1 text-sm" />
                 {uid === event.hostId && <Badge variant="secondary">주최</Badge>}
                 {attended && (
-                  <span className="flex items-center gap-1 text-xs font-medium text-primary">
+                  <span className="flex items-center gap-1 text-xs font-normal text-primary">
                     <Check className="size-3.5" />
                     출석
                   </span>
@@ -281,7 +281,7 @@ function Attendees({ event, manageable }: { event: ClubEvent; manageable: boolea
                     type="button"
                     onClick={() => toggleAttended(uid, !attended)}
                     aria-pressed={attended}
-                    className="flex w-full items-center gap-3 rounded-lg py-2 text-left transition-colors hover:bg-accent"
+                    className="flex w-full items-center gap-3 rounded-lg py-2 text-left hover:bg-accent"
                   >
                     {row}
                   </button>

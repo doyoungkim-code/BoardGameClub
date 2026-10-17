@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { onSnapshot } from 'firebase/firestore'
-import { CalendarPlus, Check, ChevronRight, Crown, EllipsisVertical, MapPin } from 'lucide-react'
+import { CalendarPlus, Check, ChevronRight, Crown, EllipsisVertical, MapPin } from '@/components/icons'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { BackButton } from '@/components/BackButton'
@@ -152,12 +152,12 @@ function PollDetail({ poll }: { poll: Poll }) {
         </p>
       </div>
 
-      {poll.description && <p className="text-sm leading-relaxed whitespace-pre-wrap">{poll.description}</p>}
+      {poll.description && <p className="text-sm whitespace-pre-wrap">{poll.description}</p>}
 
       {!open && poll.eventId && (
         <Link
           to={`/events/${poll.eventId}`}
-          className="flex items-center gap-2 rounded-xl border border-primary/40 bg-primary/5 px-4 py-3 text-sm font-medium"
+          className="flex items-center gap-2 rounded-xl border border-primary/40 bg-primary/5 px-4 py-3 text-sm font-normal"
         >
           <CalendarPlus className="size-4 text-primary" />
           <span className="flex-1">이 투표로 모임이 만들어졌어요</span>
@@ -166,7 +166,7 @@ function PollDetail({ poll }: { poll: Poll }) {
       )}
 
       <section className="space-y-2">
-        <h2 className="flex items-baseline gap-2 font-semibold">
+        <h2 className="flex items-baseline gap-2 font-bold">
           후보 날짜
           {open && <span className="text-xs font-normal text-muted-foreground">되는 날짜를 모두 눌러 주세요</span>}
         </h2>
@@ -178,7 +178,7 @@ function PollDetail({ poll }: { poll: Poll }) {
             return (
               <li
                 key={option.id}
-                className={cn('rounded-xl border p-3 transition-colors', best && 'border-primary/50 bg-primary/5')}
+                className={cn('rounded-xl border p-3', best && 'border-primary/50 bg-primary/5')}
               >
                 <button
                   type="button"
@@ -196,13 +196,13 @@ function PollDetail({ poll }: { poll: Poll }) {
                     {picked && <Check className="size-4" />}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-1.5 font-medium">
+                    <span className="flex items-center gap-1.5 font-normal">
                       {optionLabel(option)}
                       {best && <Crown className="size-4 text-primary" aria-label="가장 많이 됨" />}
                     </span>
                     {!option.time && <span className="text-xs text-muted-foreground">시간 미정</span>}
                   </span>
-                  <span className="shrink-0 text-sm font-semibold">{list.length}명</span>
+                  <span className="shrink-0 text-sm font-bold">{list.length}명</span>
                 </button>
 
                 {list.length > 0 && (

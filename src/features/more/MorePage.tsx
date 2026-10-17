@@ -1,4 +1,4 @@
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight } from '@/components/icons'
 import { Link } from 'react-router'
 import { useMoreItems } from '@/components/layout/nav'
 import { PageHeader } from '@/components/PageHeader'

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { QueryDocumentSnapshot } from 'firebase/firestore'
-import { Heart, MessageSquare, Pin, Plus } from 'lucide-react'
+import { Heart, MessageSquare, Pin, Plus } from '@/components/icons'
 import { Link, useSearchParams } from 'react-router'
 import { EmptyState } from '@/components/EmptyState'
 import { MemberName } from '@/components/MemberName'
@@ -134,8 +134,8 @@ function CategoryTab({ to, label, on }: { to: string; label: string; on: boolean
       replace
       aria-current={on ? 'page' : undefined}
       className={cn(
-        'shrink-0 rounded-full border px-3 py-1.5 text-sm transition-colors',
-        on ? 'border-primary bg-primary font-semibold text-primary-foreground' : 'text-muted-foreground active:bg-muted',
+        'shrink-0 border px-3 py-1.5 text-sm',
+        on ? 'border-primary bg-primary font-bold text-primary-foreground' : 'text-muted-foreground active:bg-muted',
       )}
     >
       {label}
@@ -151,7 +151,7 @@ function PostRow({ post }: { post: Post }) {
           <div className="flex items-center gap-1.5">
             {post.pinned && <Pin className="size-3.5 shrink-0 text-primary" />}
             <CategoryTag category={post.board} />
-            <p className="min-w-0 flex-1 truncate font-semibold">{post.title}</p>
+            <p className="min-w-0 flex-1 truncate font-bold">{post.title}</p>
           </div>
           <p className="line-clamp-2 text-sm text-muted-foreground">{post.content}</p>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">

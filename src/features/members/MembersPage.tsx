@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Search, UserSearch } from 'lucide-react'
+import { Search, UserSearch } from '@/components/icons'
 import { Link } from 'react-router'
 import { EmptyState } from '@/components/EmptyState'
 import { MemberName } from '@/components/MemberName'
@@ -54,7 +54,7 @@ export function MembersPage() {
                 <Link to={`/members/${member.uid}`} className={cn('flex items-center gap-3 px-4 py-3', tappableRow)}>
                   <UserAvatar name={member.nickname} photoURL={member.photoURL} className="size-10" />
                   <div className="min-w-0 flex-1">
-                    <p className="flex min-w-0 items-center gap-1.5 font-medium">
+                    <p className="flex min-w-0 items-center gap-1.5 font-normal">
                       <MemberName uid={member.uid} />
                       {member.role === 'owner' && <Badge variant="secondary">오너</Badge>}
                     </p>

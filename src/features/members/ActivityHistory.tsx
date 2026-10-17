@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { CalendarCheck, CalendarDays, Megaphone, PenLine } from 'lucide-react'
+import { CalendarCheck, CalendarDays, Megaphone, PenLine } from '@/components/icons'
 import { Link } from 'react-router'
 import { EmptyState } from '@/components/EmptyState'
 import { SectionTitle } from '@/components/SectionTitle'
@@ -34,7 +34,7 @@ export function ActivityHistory({ items }: { items: ActivityItem[] }) {
                 >
                   <ItemIcon item={item} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">{item.title}</span>
+                    <span className="block truncate text-sm font-normal">{item.title}</span>
                     <span className="block text-xs text-muted-foreground">
                       {format(item.at, 'yyyy. M. d. (E)', { locale: ko })} · {describe(item)}
                     </span>
@@ -64,7 +64,7 @@ function ItemIcon({ item }: { item: ActivityItem }) {
   const Icon =
     item.kind === 'post' ? (item.board === 'notice' ? Megaphone : PenLine) : item.attended ? CalendarCheck : CalendarDays
   return (
-    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+    <span className="flex size-8 shrink-0 items-center justify-center bg-primary/10 text-primary">
       <Icon className="size-4" />
     </span>
   )

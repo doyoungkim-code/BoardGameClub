@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import { SendHorizontal } from 'lucide-react'
+import { SendHorizontal } from '@/components/icons'
 import { Button } from '@/components/ui/button'
 import { MAX_MESSAGE_LENGTH } from '@/services/chat'
 
@@ -49,12 +49,13 @@ export function Composer({ onSend }: { onSend: (text: string) => void }) {
           }}
           placeholder="메시지 보내기"
           aria-label="메시지"
-          className="min-h-10 flex-1 resize-none rounded-2xl border bg-card px-4 py-2 text-base leading-6 outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/50 md:text-sm"
+          // 16px: 아이폰은 16px 보다 작은 입력칸을 누르면 화면을 확대한다
+          className="min-h-10 flex-1 resize-none pixel-border border-foreground/70 bg-card px-4 py-2 text-[16px] outline-none pixel-inset placeholder:text-muted-foreground pixel-focus md:text-sm"
         />
         <Button
           type="submit"
           size="icon"
-          className="size-10 shrink-0 rounded-full"
+          className="size-10 shrink-0"
           disabled={!text.trim()}
           // 버튼을 눌러도 입력창 포커스(모바일 키보드)가 유지되도록
           onPointerDown={(e) => e.preventDefault()}

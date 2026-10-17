@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Trophy } from 'lucide-react'
+import { Trophy } from '@/components/icons'
 import { useForm } from 'react-hook-form'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
@@ -81,7 +81,7 @@ export function MePage() {
           <Trophy className="size-4" />
           내 티어·업적·칭호 보기
           {hasNew && (
-            <span className="absolute top-2 right-3 size-2 rounded-full bg-destructive" aria-label="새로 얻은 것이 있어요" />
+            <span className="absolute top-2 right-3 size-2 bg-destructive" aria-label="새로 얻은 것이 있어요" />
           )}
         </Link>
       </Button>
@@ -130,7 +130,7 @@ function NotificationSetting() {
     <Card>
       <CardContent className="flex items-center justify-between gap-4">
         <div className="min-w-0">
-          <p className="font-medium">브라우저 알림</p>
+          <p className="font-normal">브라우저 알림</p>
           <p className="text-xs text-muted-foreground">앱을 열어둔 채 다른 탭을 보고 있을 때 새 메시지를 알려드려요</p>
         </div>
         {permission === 'granted' ? (

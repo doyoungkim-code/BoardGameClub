@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { onSnapshot } from 'firebase/firestore'
-import { EllipsisVertical, Heart, Pin, Send } from 'lucide-react'
+import { EllipsisVertical, Heart, Pin, Send } from '@/components/icons'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { BackButton } from '@/components/BackButton'
@@ -142,7 +142,7 @@ function PostDetail({ post }: { post: Post }) {
             className="size-8"
           />
           <div className="text-xs">
-            <MemberName uid={post.authorId} fallback={post.authorNickname} className="font-medium" />
+            <MemberName uid={post.authorId} fallback={post.authorNickname} className="font-normal" />
             <p className="text-muted-foreground">
               {formatDateTime(post.createdAt)}
               {edited && ' (수정됨)'}
@@ -151,7 +151,7 @@ function PostDetail({ post }: { post: Post }) {
         </div>
       </div>
 
-      <p className="text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
+      <p className="text-sm whitespace-pre-wrap">{post.content}</p>
 
       <Button
         variant={liked ? 'default' : 'outline'}
@@ -223,7 +223,7 @@ function Comments({ postId, count }: { postId: string; count: number }) {
 
   return (
     <section className="space-y-3 border-t pt-5">
-      <h2 className="font-semibold">댓글 {count > 0 && count}</h2>
+      <h2 className="font-bold">댓글 {count > 0 && count}</h2>
 
       {comments === null ? (
         <p className="py-6 text-center text-sm text-muted-foreground">불러오는 중…</p>
@@ -243,7 +243,7 @@ function Comments({ postId, count }: { postId: string; count: number }) {
                 />
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center gap-2 text-xs">
-                    <MemberName uid={comment.authorId} fallback={comment.authorNickname} className="font-medium" />
+                    <MemberName uid={comment.authorId} fallback={comment.authorNickname} className="font-normal" />
                     <span className="text-muted-foreground">{formatRelative(comment.createdAt)}</span>
                   </p>
                   <p className="mt-0.5 text-sm whitespace-pre-wrap">{comment.content}</p>

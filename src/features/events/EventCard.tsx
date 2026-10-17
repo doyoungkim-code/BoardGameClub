@@ -1,4 +1,4 @@
-import { MapPin, Users } from 'lucide-react'
+import { MapPin, Users } from '@/components/icons'
 import { Link } from 'react-router'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -20,7 +20,7 @@ export function EventCard({ event }: { event: ClubEvent }) {
           <div className="flex flex-wrap items-center gap-1.5">
             {event.canceled && <Badge variant="destructive">취소됨</Badge>}
             {attending && !event.canceled && <Badge variant="secondary">참석</Badge>}
-            <p className={cn('min-w-0 flex-1 truncate font-semibold', event.canceled && 'line-through')}>
+            <p className={cn('min-w-0 flex-1 truncate font-bold', event.canceled && 'line-through')}>
               {event.title}
             </p>
           </div>

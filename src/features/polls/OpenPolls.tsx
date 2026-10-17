@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { onSnapshot } from 'firebase/firestore'
-import { Vote } from 'lucide-react'
+import { Vote } from '@/components/icons'
 import { Link } from 'react-router'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -35,16 +35,16 @@ export function OpenPolls() {
 
   return (
     <section className="space-y-2">
-      <h2 className="font-semibold">일정 투표 중</h2>
+      <h2 className="font-bold">일정 투표 중</h2>
       {polls.map((poll) => {
         const voted = !!uid && (poll.votes?.[uid]?.length ?? 0) > 0
         return (
           <Link key={poll.id} to={`/polls/${poll.id}`} className="block">
-            <Card className="border-primary/30 bg-primary/5 py-3 transition-colors hover:border-primary/60">
+            <Card className="border-primary/30 bg-primary/5 py-3 hover:border-primary/60">
               <CardContent className="flex items-center gap-3 px-4">
                 <Vote className="size-5 shrink-0 text-primary" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold">{poll.title}</p>
+                  <p className="truncate font-bold">{poll.title}</p>
                   <p className="text-xs text-muted-foreground">
                     후보 {poll.options.length}개 · {voterCount(poll)}명 투표
                   </p>

@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react'
-import { ExternalLink, MapPin, Navigation, Phone, Search, Star, X } from 'lucide-react'
+import { ExternalLink, MapPin, Navigation, Phone, Search, Star, X } from '@/components/icons'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import { EmptyState } from '@/components/EmptyState'
@@ -156,7 +156,7 @@ export function PlacesPage() {
 
       {favorites && favorites.length > 0 && (
         <section className="space-y-2">
-          <h2 className="flex items-center gap-1.5 font-semibold">
+          <h2 className="flex items-center gap-1.5 font-bold">
             <Star className="size-4 fill-primary text-primary" />
             즐겨찾기 {favorites.length}
           </h2>
@@ -165,7 +165,7 @@ export function PlacesPage() {
       )}
 
       <section className="space-y-2">
-        <h2 className="font-semibold">
+        <h2 className="font-bold">
           지도 안의 보드게임카페 {area === 'ready' && nearby.length > 0 && `${nearby.length}곳`}
         </h2>
         {area === 'tooWide' ? (
@@ -219,7 +219,7 @@ function SpotList({
               <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
             )}
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-medium">{spot.name}</span>
+              <span className="block truncate text-sm font-normal">{spot.name}</span>
               <span className="block truncate text-xs text-muted-foreground">{spot.address}</span>
               {'memo' in spot && spot.memo && (
                 <span className="mt-0.5 block truncate text-xs text-primary">{spot.memo}</span>
@@ -262,7 +262,7 @@ function SpotCard({ spot, favorite, isOwner, uid, onClose }: CardProps) {
     <div className="space-y-3 rounded-xl border bg-card p-4">
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-1.5 font-semibold">
+          <p className="flex items-center gap-1.5 font-bold">
             {spot.name}
             {favorite && (
               <Badge className="gap-1">

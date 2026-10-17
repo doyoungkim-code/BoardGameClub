@@ -18,7 +18,7 @@ export function RowSkeleton({ count = 3 }: { count?: number }) {
     <div className="space-y-1">
       {Array.from({ length: count }, (_, i) => (
         <div key={i} className="flex items-center gap-3 px-4 py-3">
-          <Skeleton className="size-10 rounded-full" />
+          <Skeleton className="size-10" />
           <div className="space-y-1.5">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-3 w-40" />

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { MessageCircle } from 'lucide-react'
+import { MessageCircle } from '@/components/icons'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { MemberName } from '@/components/MemberName'
@@ -126,7 +126,7 @@ export function MemberProfilePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="회원 프로필" backTo="/members" className="[&_h1]:text-lg [&_h1]:font-semibold" />
+      <PageHeader title="회원 프로필" backTo="/members" className="[&_h1]:text-lg [&_h1]:font-bold" />
 
       {progress ? (
         <TierBanner

@@ -1,4 +1,4 @@
-import { Clock, UserX } from 'lucide-react'
+import { Clock, UserX } from '@/components/icons'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { APP_NAME } from '@/lib/constants'
@@ -28,7 +28,7 @@ export function PendingPage() {
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-8 px-6 text-center">
-      <p className="text-sm font-semibold text-primary">{APP_NAME}</p>
+      <p className="text-sm font-bold text-primary">{APP_NAME}</p>
       <div className="space-y-3">
         <Icon className="mx-auto size-10 text-muted-foreground" />
         <h1 className="text-xl font-bold">{title}</h1>
@@ -55,7 +55,7 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-4">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium">{value}</span>
+      <span className="font-normal">{value}</span>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Dices, Search, Users, X } from 'lucide-react'
+import { Dices, Search, Users, X } from '@/components/icons'
 import { EmptyState } from '@/components/EmptyState'
 import { PageHeader } from '@/components/PageHeader'
 import { Badge } from '@/components/ui/badge'
@@ -58,7 +58,7 @@ export function GamesPage() {
       </div>
 
       <div className="space-y-1.5">
-        <p className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+        <p className="flex items-center gap-1 text-xs font-normal text-muted-foreground">
           <Users className="size-3" />
           몇 명이서 할까요?
         </p>
@@ -111,11 +111,11 @@ function GameItem({ game }: { game: CatalogGame }) {
     <li className="flex gap-3.5 rounded-xl border bg-card p-3.5">
       <Cover game={game} />
       <div className="min-w-0 flex-1 space-y-1.5">
-        <p className="leading-snug font-semibold">{game.name}</p>
+        <p className="font-bold">{game.name}</p>
         <Badge variant="secondary" className="font-normal">
           {game.players}
         </Badge>
-        <p className="text-sm leading-relaxed text-muted-foreground">{game.description}</p>
+        <p className="text-sm text-muted-foreground">{game.description}</p>
       </div>
     </li>
   )
@@ -125,7 +125,7 @@ function GameItem({ game }: { game: CatalogGame }) {
 function Cover({ game }: { game: CatalogGame }) {
   const [broken, setBroken] = useState(false)
   const box =
-    'flex h-28 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted ring-1 ring-border'
+    'flex h-28 w-24 shrink-0 items-center justify-center overflow-hidden bg-muted pixel-frame'
 
   if (!game.image || broken) {
     return (

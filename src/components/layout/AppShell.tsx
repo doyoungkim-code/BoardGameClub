@@ -41,8 +41,8 @@ export function AppShell() {
           <header
             className={cn(
               // 테두리 자리는 늘 잡아 두고 색만 바꾼다 (1px 씩 밀리지 않게)
-              'sticky top-0 z-30 flex h-14 items-center justify-between border-b border-transparent bg-background/90 px-4 backdrop-blur transition-shadow md:hidden',
-              headerSolid && 'border-border shadow-sm',
+              'sticky top-0 z-30 flex h-14 items-center justify-between border-b-2 border-transparent bg-background px-4 md:hidden',
+              headerSolid && 'border-foreground/70 shadow-sm',
             )}
           >
             <HomeLink className="font-bold text-primary" />
@@ -51,7 +51,7 @@ export function AppShell() {
               <Link
                 to={CHAT_ITEM.to}
                 aria-label={CHAT_ITEM.label}
-                className="relative flex size-9 items-center justify-center rounded-full text-foreground active:bg-accent"
+                className="relative flex size-9 items-center justify-center text-foreground active:bg-accent"
               >
                 <CHAT_ITEM.icon className="size-5" />
                 <UnreadBadge className="absolute top-1 right-0.5" />
@@ -76,7 +76,8 @@ export function AppShell() {
           <div
             key={pathname}
             className={cn(
-              'motion-safe:animate-in motion-safe:fade-in motion-safe:duration-200',
+              // 픽셀 UI 라 부드럽게 번지지 않고 3단계로 끊어 나타난다
+              'motion-safe:animate-in motion-safe:fade-in motion-safe:duration-200 motion-safe:ease-[steps(3,end)]',
               // 채팅은 남은 높이를 다 써야 한다
               fullHeight && 'flex min-h-0 flex-1 flex-col',
             )}
@@ -129,7 +130,7 @@ function Sidebar() {
       </nav>
       <Link to="/me" className="mt-3 flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-sidebar-accent">
         <UserAvatar name={profile.nickname} photoURL={profile.photoURL} className="size-8" />
-        <span className="truncate text-sm font-medium">{profile.nickname}</span>
+        <span className="truncate text-sm font-normal">{profile.nickname}</span>
       </Link>
     </aside>
   )
@@ -153,8 +154,8 @@ function SidebarLink({ item, tab }: { item: NavItem; tab?: boolean }) {
       }
       className={({ isActive }) =>
         cn(
-          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent',
-          isActive && 'bg-sidebar-accent font-semibold text-sidebar-accent-foreground',
+          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground hover:bg-sidebar-accent',
+          isActive && 'bg-sidebar-accent font-bold text-sidebar-accent-foreground',
         )
       }
     >
@@ -168,7 +169,7 @@ function SidebarLink({ item, tab }: { item: NavItem; tab?: boolean }) {
 function BottomTabs() {
   const goToTab = useTabNavigate()
   return (
-    <nav className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur md:hidden">
+    <nav className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t-2 border-foreground/70 bg-background md:hidden">
       <ul className="grid h-16 grid-cols-5">
         {TAB_ITEMS.map((item) => {
           const Icon = item.icon
@@ -182,21 +183,21 @@ function BottomTabs() {
                   e.preventDefault()
                   goToTab(item.to)
                 }}
-                className="flex h-full flex-col items-center justify-center gap-0.5 text-[11px]"
+                className="flex h-full flex-col items-center justify-center gap-0.5 text-xs"
               >
                 {({ isActive }) => (
                   <>
-                    {/* 켜진 탭은 아이콘 뒤에 알약 배경 */}
+                    {/* 켜진 탭은 아이콘 칸을 색으로 채우고 아래에 픽셀 선 */}
                     <span
                       className={cn(
-                        'relative flex items-center justify-center rounded-full px-4 py-1 transition-colors',
-                        isActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground',
+                        'relative flex items-center justify-center px-4 py-1',
+                        isActive ? 'border-b-2 border-primary bg-primary/15 text-primary' : 'border-b-2 border-transparent text-muted-foreground',
                       )}
                     >
                       <Icon className="size-5" />
                       {item.badge === 'chat' && <UnreadBadge className="absolute -top-1 right-1.5" />}
                     </span>
-                    <span className={isActive ? 'font-semibold text-primary' : 'text-muted-foreground'}>
+                    <span className={isActive ? 'font-bold text-primary' : 'text-muted-foreground'}>
                       {item.label}
                     </span>
                   </>
@@ -216,7 +217,7 @@ function UnreadBadge({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        'flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] leading-none font-bold text-primary-foreground',
+        'flex h-4 min-w-4 items-center justify-center bg-primary px-1 text-xs leading-none font-bold text-primary-foreground',
         className,
       )}
       aria-label={`안 읽은 대화방 ${count}개`}
