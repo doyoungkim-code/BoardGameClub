@@ -1,7 +1,9 @@
 import { SectionTitle } from '@/components/SectionTitle'
 import { ATTENDANCE_ACHIEVEMENTS } from '@/data/achievements'
+import { achievementArt } from '@/data/badgeArt'
 import { pixelBlocks, tierEdge, tierTint } from '@/lib/tier'
 import { cn } from '@/lib/utils'
+import { PixelSprite } from '@/pixel/PixelSprite'
 import type { Progress } from '@/services/activity'
 
 type Props = {
@@ -36,7 +38,7 @@ export function AchievementList({ progress, newGoals, compact }: Props) {
               className="flex shrink-0 items-center gap-1 border px-3 py-1 text-sm"
               style={doneStyle}
             >
-              <span aria-hidden>{achievement.icon}</span>
+              <PixelSprite sprite={achievementArt(achievement.goal)} scale={2} />
               {achievement.name}
             </li>
           ))}
@@ -62,9 +64,11 @@ export function AchievementList({ progress, newGoals, compact }: Props) {
               style={done ? doneStyle : undefined}
             >
               {newGoals?.has(achievement.goal) && <NewMark />}
-              <span className={cn('text-3xl leading-none', !done && 'opacity-30 grayscale')} aria-hidden>
-                {achievement.icon}
-              </span>
+              <PixelSprite
+                sprite={achievementArt(achievement.goal)}
+                scale={3}
+                className={cn(!done && 'opacity-30 grayscale')}
+              />
               <span className={cn('text-xs font-bold', !done && 'text-muted-foreground')}>{achievement.name}</span>
               <span className="text-xs text-muted-foreground">
                 출석 {achievement.goal}회 · +{achievement.bonusXp}XP

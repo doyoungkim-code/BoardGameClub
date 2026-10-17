@@ -8,8 +8,9 @@ import type { ActivityStats } from '@/services/activity'
  *  ■ 업적 (ACHIEVEMENT_LIST) — 출석 횟수로 달성
  *    goal    : 이만큼 출석하면 달성
  *    bonusXp : 달성하면 더 받는 경험치 (출석 1회 기본 10XP 와 별개)
- *    icon    : 이모지 한 개 (비워 두면 🎲)
  *    name    : 업적 이름 (비워 두면 "출석 5회" 처럼 나온다)
+ *
+ *  그림(도트)은 src/data/badgeArt.ts 에 있다 — 업적은 goal, 칭호는 id 로 찾는다
  *
  *  ■ 칭호 (TITLE_LIST) — 조건을 채우면 자동으로 얻는다. 닉네임 앞에 붙는다 ("○○○ 홍길동")
  *    id      : 영문 소문자·숫자·- 만. 회원이 고른 칭호로 저장되니 한 번 정하면 바꾸지 말 것
@@ -34,7 +35,6 @@ import type { ActivityStats } from '@/services/activity'
 export type AchievementEntry = {
   goal: number
   bonusXp: number
-  icon: string
   name: string
 }
 
@@ -46,20 +46,20 @@ export type TitleEntry = {
 }
 
 export const ACHIEVEMENT_LIST: AchievementEntry[] = [
-  { goal: 1, bonusXp: 10, icon: '🎲', name: '첫 턴' },
-  { goal: 2, bonusXp: 10, icon: '👋', name: '또 왔어요' },
-  { goal: 3, bonusXp: 15, icon: '🃏', name: '세 장의 카드' },
-  { goal: 5, bonusXp: 20, icon: '🧩', name: '단골 플레이어' },
-  { goal: 7, bonusXp: 25, icon: '🍀', name: '럭키 세븐' },
-  { goal: 10, bonusXp: 30, icon: '🏁', name: '열 번째 라운드' },
-  { goal: 15, bonusXp: 40, icon: '🎯', name: '보드게임 중독' },
-  { goal: 20, bonusXp: 50, icon: '🏠', name: '카페 지박령' },
-  { goal: 25, bonusXp: 60, icon: '⭐', name: '반오십' },
-  { goal: 30, bonusXp: 70, icon: '🏛️', name: '동호회의 기둥' },
-  { goal: 40, bonusXp: 90, icon: '🎖️', name: '노련한 전략가' },
-  { goal: 50, bonusXp: 110, icon: '👑', name: '살아있는 전설' },
-  { goal: 70, bonusXp: 150, icon: '🏆', name: '명예의 전당' },
-  { goal: 100, bonusXp: 200, icon: '💯', name: '백 판의 달인' },
+  { goal: 1, bonusXp: 10, name: '첫 턴' },
+  { goal: 2, bonusXp: 10, name: '또 왔어요' },
+  { goal: 3, bonusXp: 15, name: '세 장의 카드' },
+  { goal: 5, bonusXp: 20, name: '단골 플레이어' },
+  { goal: 7, bonusXp: 25, name: '럭키 세븐' },
+  { goal: 10, bonusXp: 30, name: '열 번째 라운드' },
+  { goal: 15, bonusXp: 40, name: '보드게임 중독' },
+  { goal: 20, bonusXp: 50, name: '카페 지박령' },
+  { goal: 25, bonusXp: 60, name: '반오십' },
+  { goal: 30, bonusXp: 70, name: '동호회의 기둥' },
+  { goal: 40, bonusXp: 90, name: '노련한 전략가' },
+  { goal: 50, bonusXp: 110, name: '살아있는 전설' },
+  { goal: 70, bonusXp: 150, name: '명예의 전당' },
+  { goal: 100, bonusXp: 200, name: '백 판의 달인' },
 ]
 
 export const TITLE_LIST: TitleEntry[] = [

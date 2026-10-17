@@ -4,10 +4,12 @@ import { toast } from 'sonner'
 import { EmptyState } from '@/components/EmptyState'
 import { SectionTitle } from '@/components/SectionTitle'
 import { NewMark } from '@/features/members/AchievementList'
+import { titleArt } from '@/data/badgeArt'
 import { AUTO_TITLES, autoTitleKey, grantedTitleName } from '@/data/titles'
 import { toErrorMessage } from '@/lib/format'
 import { tierTint } from '@/lib/tier'
 import { cn } from '@/lib/utils'
+import { PixelSprite } from '@/pixel/PixelSprite'
 import type { ActivityStats, Progress } from '@/services/activity'
 import { setMyTitle } from '@/services/users'
 import type { UserProfile } from '@/types/user'
@@ -83,7 +85,7 @@ export function TitleSection({ member, stats, progress, isMe, newKeys }: Props) 
                     selected ? { borderColor: tier.color, background: tierTint(tier.color, 18), color: tier.color } : undefined
                   }
                 >
-                  {selected && <Check className="size-3.5" />}
+                  {selected ? <Check className="size-3.5" /> : <PixelSprite sprite={titleArt(title.key)!} scale={2} />}
                   {title.text}
                 </button>
               </li>
@@ -100,6 +102,7 @@ export function TitleSection({ member, stats, progress, isMe, newKeys }: Props) 
               className="flex items-center gap-1 border border-dashed px-3 py-1.5 text-xs text-muted-foreground"
             >
               <Lock className="size-3" />
+              <PixelSprite sprite={titleArt(autoTitleKey(t))!} scale={1} className="opacity-50 grayscale" />
               {t.text}
               <span className="text-xs">
                 · {t.description} ({Math.min(stats[t.metric], t.goal)}/{t.goal})

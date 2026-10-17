@@ -3,6 +3,7 @@ import { ChevronRight } from '@/components/icons'
 import { Link } from 'react-router'
 import { TierShield } from '@/components/TierShield'
 import { UserAvatar } from '@/components/UserAvatar'
+import { titleArt } from '@/data/badgeArt'
 import { ITEM_BY_ID } from '@/data/shopItems'
 import { NewMark } from '@/features/members/AchievementList'
 import { pixelBlocks, tierOutline, tierPattern, tierTint } from '@/lib/tier'
@@ -45,17 +46,26 @@ export function TierBanner({ member, progress, title, subtitle, stats, isNew, to
   // 상점에서 산 배경 무늬·도트 소품. 회원 문서에 있어서 다른 회원 배너에도 추가 읽기 없이 보인다
   const background = ITEM_BY_ID[(decor ? decor.background : member.bannerBackground) ?? '']
   const prop = ITEM_BY_ID[(decor ? decor.prop : member.bannerProp) ?? '']
+  // 대표 칭호 그림을 배너 바탕에 흐릿하게 (칭호가 확인됐을 때만. title 은 부르는 쪽이 검사한 값)
+  const watermark = title ? titleArt(member.titleId) : null
   const ratio = next ? (xp - tier.minXp) / (next.minXp - tier.minXp) : 1
 
   const banner = (
     <section
-      className={cn('relative overflow-hidden pixel-border pixel-shadow p-4', to && 'group-active:translate-x-0.5 group-active:translate-y-0.5 group-active:shadow-none')}
+      className={cn('relative isolate overflow-hidden pixel-border pixel-shadow p-4', to && 'group-active:translate-x-0.5 group-active:translate-y-0.5 group-active:shadow-none')}
       style={{
         borderColor: tierOutline(tier.color),
         backgroundColor: tierTint(tier.color, 16),
         backgroundImage: background ? tileBackground(background.sprite) : tierPattern(tier.color),
       }}
     >
+      {watermark && (
+        <PixelSprite
+          sprite={watermark}
+          scale={8}
+          className="pointer-events-none absolute top-1/2 -right-3 -z-10 -translate-y-1/2 opacity-[0.13]"
+        />
+      )}
       {isNew && <NewMark />}
       {prop && (
         <PixelSprite sprite={prop.sprite} scale={3} label={prop.name} className="absolute top-2 right-2" />

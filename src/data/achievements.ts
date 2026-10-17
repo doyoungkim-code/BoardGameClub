@@ -15,19 +15,17 @@ export const XP_PER_ATTENDANCE = 10
 export type AttendanceAchievement = {
   /** 이만큼 출석하면 달성 */
   goal: number
-  icon: string
   name: string
   /** 달성하면 한 번 더 받는 경험치 */
   bonusXp: number
 }
 
-/** 이름·아이콘을 아직 안 정한 업적은 기본값으로 채운다 */
+/** 이름을 아직 안 정한 업적은 "출석 N회" 로 채운다 (그림은 src/data/badgeArt.ts) */
 export const ATTENDANCE_ACHIEVEMENTS: AttendanceAchievement[] = [...ACHIEVEMENT_LIST]
   .sort((a, b) => a.goal - b.goal)
   .map((entry) => ({
     goal: entry.goal,
     bonusXp: entry.bonusXp,
-    icon: entry.icon.trim() || '🎲',
     name: entry.name.trim() || `출석 ${entry.goal}회`,
   }))
 
