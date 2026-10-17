@@ -46,39 +46,39 @@ export type TitleEntry = {
 }
 
 export const ACHIEVEMENT_LIST: AchievementEntry[] = [
-  { goal: 1, bonusXp: 10, icon: '', name: '' },
-  { goal: 2, bonusXp: 10, icon: '', name: '' },
-  { goal: 3, bonusXp: 15, icon: '', name: '' },
-  { goal: 5, bonusXp: 20, icon: '', name: '' },
-  { goal: 7, bonusXp: 25, icon: '', name: '' },
-  { goal: 10, bonusXp: 30, icon: '', name: '' },
-  { goal: 15, bonusXp: 40, icon: '', name: '' },
-  { goal: 20, bonusXp: 50, icon: '', name: '' },
-  { goal: 25, bonusXp: 60, icon: '', name: '' },
-  { goal: 30, bonusXp: 70, icon: '', name: '' },
-  { goal: 40, bonusXp: 90, icon: '', name: '' },
-  { goal: 50, bonusXp: 110, icon: '', name: '' },
-  { goal: 70, bonusXp: 150, icon: '', name: '' },
-  { goal: 100, bonusXp: 200, icon: '', name: '' },
+  { goal: 1, bonusXp: 10, icon: '🎲', name: '첫 턴' },
+  { goal: 2, bonusXp: 10, icon: '👋', name: '또 왔어요' },
+  { goal: 3, bonusXp: 15, icon: '🃏', name: '세 장의 카드' },
+  { goal: 5, bonusXp: 20, icon: '🧩', name: '단골 플레이어' },
+  { goal: 7, bonusXp: 25, icon: '🍀', name: '럭키 세븐' },
+  { goal: 10, bonusXp: 30, icon: '🏁', name: '열 번째 라운드' },
+  { goal: 15, bonusXp: 40, icon: '🎯', name: '보드게임 중독' },
+  { goal: 20, bonusXp: 50, icon: '🏠', name: '카페 지박령' },
+  { goal: 25, bonusXp: 60, icon: '⭐', name: '반오십' },
+  { goal: 30, bonusXp: 70, icon: '🏛️', name: '동호회의 기둥' },
+  { goal: 40, bonusXp: 90, icon: '🎖️', name: '노련한 전략가' },
+  { goal: 50, bonusXp: 110, icon: '👑', name: '살아있는 전설' },
+  { goal: 70, bonusXp: 150, icon: '🏆', name: '명예의 전당' },
+  { goal: 100, bonusXp: 200, icon: '💯', name: '백 판의 달인' },
 ]
 
 export const TITLE_LIST: TitleEntry[] = [
   // 모임을 연 횟수
-  { id: 'host-1', metric: 'hosted', goal: 1, text: '' },
-  { id: 'host-5', metric: 'hosted', goal: 5, text: '' },
-  { id: 'host-20', metric: 'hosted', goal: 20, text: '' },
+  { id: 'host-1', metric: 'hosted', goal: 1, text: '용감한' },
+  { id: 'host-5', metric: 'hosted', goal: 5, text: '든든한' },
+  { id: 'host-20', metric: 'hosted', goal: 20, text: '위대한' },
   // 모임 출석 횟수
-  { id: 'attend-10', metric: 'attended', goal: 10, text: '' },
-  { id: 'attend-30', metric: 'attended', goal: 30, text: '' },
+  { id: 'attend-10', metric: 'attended', goal: 10, text: '성실한' },
+  { id: 'attend-30', metric: 'attended', goal: 30, text: '열정적인' },
   // 게시판
-  { id: 'posts-10', metric: 'posts', goal: 10, text: '' },
-  { id: 'reviews-5', metric: 'reviews', goal: 5, text: '' },
+  { id: 'posts-10', metric: 'posts', goal: 10, text: '수다스러운' },
+  { id: 'reviews-5', metric: 'reviews', goal: 5, text: '꼼꼼한' },
   // 함께한 시간·꾸준함
-  { id: 'year-1', metric: 'memberDays', goal: 365, text: '' },
-  { id: 'streak-4', metric: 'longestWeekStreak', goal: 4, text: '' },
+  { id: 'year-1', metric: 'memberDays', goal: 365, text: '정다운' },
+  { id: 'streak-4', metric: 'longestWeekStreak', goal: 4, text: '꾸준한' },
   // 주사위·코인
-  { id: 'dice-30', metric: 'rolls', goal: 30, text: '' },
-  { id: 'dice-100', metric: 'rolls', goal: 100, text: '' },
-  { id: 'coins-300', metric: 'coinsEarned', goal: 300, text: '' },
-  { id: 'coins-1000', metric: 'coinsEarned', goal: 1000, text: '' },
+  { id: 'dice-30', metric: 'rolls', goal: 30, text: '대담한' },
+  { id: 'dice-100', metric: 'rolls', goal: 100, text: '끈질긴' },
+  { id: 'coins-300', metric: 'coinsEarned', goal: 300, text: '알뜰한' },
+  { id: 'coins-1000', metric: 'coinsEarned', goal: 1000, text: '부유한' },
 ]
