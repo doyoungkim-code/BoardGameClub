@@ -1,6 +1,6 @@
 # 진행 기록 & 개발 가이드
 
-> 마지막 업데이트: 2026-10-17 (픽셀아트 전환 1단계. 다음: 움직이는 도트 장면 → 주사위 게임 → 상점)
+> 마지막 업데이트: 2026-10-17 (픽셀아트 전환, 움직이는 도트 장면, 주사위 게임, 코인 상점)
 > 기획 전체는 [PLANNING.md](PLANNING.md), 이 문서는 "어디까지 했고 다음에 뭘 하는지"와 "개발 환경 세팅"을 기록한다.
 
 ## 1. 진행 상황
@@ -20,7 +20,7 @@
 
 - Firestore 보안 규칙은 **전부 실제 프로젝트(`doyou-boardgame`)에 배포 완료**
 - **배포 주소: https://doyou-boardgame.web.app** — `main`에 push하면 자동 배포 (아래 2-1)
-- 규칙 테스트 171개 통과 (users 43 + chat 31 + events 32 + posts 28 + places 6 + polls 15 + dice 16)
+- 규칙 테스트 182개 통과 (users 43 + chat 31 + events 32 + posts 28 + places 6 + polls 15 + dice 16 + shop 11)
 - `firestore.indexes.json`에 posts 복합 색인 2개
   (board + pinned + createdAt / pinned + createdAt — 카테고리 전체 보기용)
 
@@ -366,7 +366,17 @@ tests/rules/    보안 규칙 테스트
 - 읽기 비용: 다른 회원의 주사위 경험치는 users 문서(회원 목록 구독)에 있어 **추가 읽기 0**.
   주사위 화면은 열 때만 내 굴림·참석 모임을 읽는다. 홈의 "굴릴 주사위 있음" 반짝임은 기기 저장값(`features/dice/diceCache.ts`)으로
   판단하고 오늘 기록만 많아야 1번 확인한다
-- 다음: 4단계 상점 — 코인으로 배너 배경 무늬·도트 소품 사기
+- 코인 상점은 아래 "코인 상점" 참고
+
+### 코인 상점 (2026-10-17, `/dice?tab=shop`)
+- 주사위로 모은 코인으로 **배너 배경 무늬**(6종)와 **배너 위 도트 소품**(6종)을 산다. 사면 바로 배너에 단다.
+  목록·가격·그림은 `src/data/shopItems.ts` — **가격을 바꾸면 `firestore.rules` 의 `itemPrices()` 도 같이** 바꾼다
+- 저장: `users` 의 `items`(가진 것), `lastPurchase`(방금 산 것 — 규칙이 무엇을 샀는지 알아보는 데 씀),
+  `bannerBackground`·`bannerProp`(단 것). 규칙이 가격표와 비교해 **정확히 그 가격만큼만** 코인이 빠지고, 0 아래로 못 가고,
+  이미 가진 걸 다시 못 사고, 가진 것만 달 수 있게 검사한다 (`tests/rules/shop.test.ts` 11개)
+- 그림은 코드로: 배경은 8×8 무늬를 SVG data URI 로 반복(`pixel/tile.ts`, 글자가 읽히게 옅은 반투명색만),
+  소품은 `pixel/PixelSprite.tsx`(SVG 사각형). 아이템 id 는 회원 문서에 남으니 바꾸지 않는다. 배경은 `bg-`, 소품은 `prop-` 로 시작
+- `TierBanner` 가 회원 문서의 값으로 그리므로 **다른 회원 프로필에서도 추가 읽기 없이** 보인다. 상점에서는 `decor` 로 미리 입혀 본다
 
 ### 움직이는 도트 장면 (2026-10-17, `src/pixel/`)
 - 이미지 없이 코드로 그린다. `draw.ts`(사각형·스프라이트·Bayer 디더링), `palette.ts`(캔버스용 hex 팔레트, 앱 색과 맞춰 둠),

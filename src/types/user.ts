@@ -32,6 +32,13 @@ export type UserProfile = {
   coins?: number
   /** 마지막으로 보상을 받은 굴림 문서 id (규칙이 굴림과 짝을 맞추는 데 쓴다) */
   lastRollId?: string
+  /** 상점에서 산 아이템 id (src/data/shopItems.ts) */
+  items?: string[]
+  /** 규칙이 '방금 산 것'을 알아보는 데 쓴다 */
+  lastPurchase?: string
+  /** 배너에 단 배경 무늬·도트 소품 (없으면 null) */
+  bannerBackground?: string | null
+  bannerProp?: string | null
 }
 
 /** userPrivate/{uid} — 본인과 오너만 읽을 수 있는 정보 */

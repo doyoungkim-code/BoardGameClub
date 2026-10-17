@@ -61,7 +61,9 @@ service cloud.firestore {
       allow update: if (isSelf(uid) && validSelfUpdate())
         || (isOwner() && validOwnerUpdate(uid))
         // 주사위 보상 받기 (아래 rolls 와 같은 batch)
-        || (isSelf(uid) && isMember() && validRollClaim(uid));
+        || (isSelf(uid) && isMember() && validRollClaim(uid))
+        // 코인 상점: 사기, 배너에 달기
+        || (isSelf(uid) && isMember() && (validPurchase() || validEquip()));
 
       // 삭제를 막아서 거절·강퇴된 계정이 다시 신청하지 못하게 한다
       allow delete: if false;
@@ -157,6 +159,40 @@ service cloud.firestore {
           // 굴릴 때마다 경험치 2 (DICE_XP)
           && d.diceXp == before.get('diceXp', 0) + 2
           && d.coins == before.get('coins', 0) + rollCoins(get(path).data);
+      }
+
+      // ---------- 코인 상점 (src/data/shopItems.ts 와 같은 가격표) ----------
+
+      function itemPrices() {
+        return {
+          'bg-checker': 30, 'bg-pips': 30, 'bg-bricks': 40, 'bg-waves': 40, 'bg-wood': 50, 'bg-stars': 60,
+          'prop-coffee': 20, 'prop-meeple': 30, 'prop-cards': 40, 'prop-hourglass': 50, 'prop-cat': 60, 'prop-crown': 100
+        };
+      }
+
+      // 사기: 가진 목록 끝에 하나 붙이고(arrayUnion), 정확히 그 가격만큼 코인을 뺀다. 0 아래로는 못 간다
+      function validPurchase() {
+        let d = request.resource.data;
+        let before = resource.data;
+        let owned = before.get('items', []);
+        return changedOnly(['coins', 'items', 'lastPurchase'])
+          && d.lastPurchase is string
+          && d.lastPurchase in itemPrices()
+          && !(d.lastPurchase in owned)
+          && d.items == owned.concat([d.lastPurchase])
+          && d.coins == before.get('coins', 0) - itemPrices()[d.lastPurchase]
+          && d.coins >= 0;
+      }
+
+      // 배너에 달기: 가진 것만, 배경 칸엔 'bg-', 소품 칸엔 'prop-'. null 은 떼기
+      function validEquip() {
+        let d = request.resource.data;
+        let owned = d.get('items', []);
+        let bg = d.get('bannerBackground', null);
+        let prop = d.get('bannerProp', null);
+        return changedOnly(['bannerBackground', 'bannerProp'])
+          && (bg == null || (bg is string && bg.matches('bg-.+') && bg in owned))
+          && (prop == null || (prop is string && prop.matches('prop-.+') && prop in owned));
       }
 
       match /rolls/{rollId} {

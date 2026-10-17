@@ -3,9 +3,12 @@ import { ChevronRight } from '@/components/icons'
 import { Link } from 'react-router'
 import { TierShield } from '@/components/TierShield'
 import { UserAvatar } from '@/components/UserAvatar'
+import { ITEM_BY_ID } from '@/data/shopItems'
 import { NewMark } from '@/features/members/AchievementList'
 import { pixelBlocks, tierOutline, tierPattern, tierTint } from '@/lib/tier'
 import { cn } from '@/lib/utils'
+import { PixelSprite } from '@/pixel/PixelSprite'
+import { tileBackground } from '@/pixel/tile'
 import type { AttendanceProgress } from '@/services/activity'
 import type { UserProfile } from '@/types/user'
 
@@ -26,14 +29,22 @@ type Props = {
   to?: string
   /** 오너 배지 등 닉네임 옆에 붙일 것 */
   badge?: ReactNode
+  /** 상점 미리보기: 회원이 단 것 대신 이 배경 무늬·소품으로 그린다 */
+  decor?: BannerDecor
 }
+
+/** 배너 꾸미기 (상점 아이템 id. src/data/shopItems.ts) */
+export type BannerDecor = { background: string | null; prop: string | null }
 
 /**
  * 티어 색을 입은 프로필 배너. 홈(내 요약)과 회원 프로필 상세가 같은 모습을 쓴다.
  * 값 계산은 부르는 쪽에서 한다 (홈은 캐시된 출석 횟수, 프로필은 불러온 활동 기록).
  */
-export function TierBanner({ member, progress, title, subtitle, stats, isNew, to, badge }: Props) {
+export function TierBanner({ member, progress, title, subtitle, stats, isNew, to, badge, decor }: Props) {
   const { tier, next, xp } = progress
+  // 상점에서 산 배경 무늬·도트 소품. 회원 문서에 있어서 다른 회원 배너에도 추가 읽기 없이 보인다
+  const background = ITEM_BY_ID[(decor ? decor.background : member.bannerBackground) ?? '']
+  const prop = ITEM_BY_ID[(decor ? decor.prop : member.bannerProp) ?? '']
   const ratio = next ? (xp - tier.minXp) / (next.minXp - tier.minXp) : 1
 
   const banner = (
@@ -42,10 +53,13 @@ export function TierBanner({ member, progress, title, subtitle, stats, isNew, to
       style={{
         borderColor: tierOutline(tier.color),
         backgroundColor: tierTint(tier.color, 16),
-        backgroundImage: tierPattern(tier.color),
+        backgroundImage: background ? tileBackground(background.sprite) : tierPattern(tier.color),
       }}
     >
       {isNew && <NewMark />}
+      {prop && (
+        <PixelSprite sprite={prop.sprite} scale={3} label={prop.name} className="absolute top-2 right-2" />
+      )}
 
       <div className="flex items-center gap-4">
         <span className="relative shrink-0">
@@ -56,7 +70,7 @@ export function TierBanner({ member, progress, title, subtitle, stats, isNew, to
           <TierShield tier={tier} size="md" className="absolute -right-1.5 -bottom-1" />
         </span>
 
-        <div className="min-w-0 flex-1 space-y-0.5">
+        <div className={cn('min-w-0 flex-1 space-y-0.5', prop && 'pr-8')}>
           {title && <p className="truncate text-xs font-normal text-primary">{title}</p>}
           <p className="flex min-w-0 items-center gap-1.5">
             <span className="truncate text-xl font-bold">{member.nickname}</span>
@@ -71,7 +85,8 @@ export function TierBanner({ member, progress, title, subtitle, stats, isNew, to
           {subtitle && <p className="truncate text-xs text-muted-foreground">{subtitle}</p>}
         </div>
 
-        {to && <ChevronRight className="size-5 shrink-0 text-muted-foreground" />}
+        {/* 소품이 오른쪽 위를 차지하면 화살표는 뺀다 (배너 전체를 눌러도 된다) */}
+        {to && !prop && <ChevronRight className="size-5 shrink-0 text-muted-foreground" />}
       </div>
 
       <div className="mt-3 space-y-1">

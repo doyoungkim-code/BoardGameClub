@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { titleText } from '@/data/titles'
 import { hasUnseenAttendanceProgress } from '@/features/members/seenProgress'
-import { TierBanner } from '@/features/members/TierBanner'
+import { TierBanner, type BannerDecor } from '@/features/members/TierBanner'
 import { attendanceProgress, rankOf, xpRanking } from '@/services/activity'
 import { useAuth } from '@/stores/auth'
 import { useMembers } from '@/stores/members'
@@ -13,7 +13,7 @@ import { useProgress } from '@/stores/progress'
  * 출석 횟수(stores/progress.ts 의 6시간 캐시)만으로 계산해서 Firestore 를 더 읽지 않는다.
  * 주최·게시글 수처럼 따로 읽어야 하는 값은 프로필 화면에만 둔다.
  */
-export function ProfileBanner() {
+export function ProfileBanner({ preview }: { preview?: BannerDecor } = {}) {
   const profile = useAuth((s) => s.profile)!
   const loaded = useProgress((s) => s.loaded)
   const attendedById = useProgress((s) => s.attendedById)
@@ -31,7 +31,9 @@ export function ProfileBanner() {
       member={profile}
       progress={progress}
       title={titleText(profile.titleId, profile.grantedTitles)}
-      to={`/members/${profile.uid}`}
+      // 상점 미리보기에서는 누를 일이 없다
+      to={preview ? undefined : `/members/${profile.uid}`}
+      decor={preview}
       isNew={hasUnseenAttendanceProgress(profile.uid, attended, profile.diceXp ?? 0)}
       stats={[
         { label: '출석', value: `${attended}회` },

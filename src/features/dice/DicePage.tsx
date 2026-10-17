@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { FirebaseError } from 'firebase/app'
+import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import { EmptyState } from '@/components/EmptyState'
-import { CalendarCheck, Coins, Dices } from '@/components/icons'
+import { CalendarCheck, Coins, Dices, ShoppingBag } from '@/components/icons'
 import { PageHeader } from '@/components/PageHeader'
+import { SegmentedTabs } from '@/components/SegmentedTabs'
 import { SectionTitle } from '@/components/SectionTitle'
 import { CardSkeleton } from '@/components/Skeletons'
 import { Button } from '@/components/ui/button'
@@ -13,6 +15,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { coinsOf, DICE_XP, diceCount, type RollKind } from '@/data/dice'
 import { markTodayRolled, saveEventRollCount } from '@/features/dice/diceCache'
 import { DiceTray } from '@/features/dice/DiceTray'
+import { ShopPanel } from '@/features/dice/ShopPanel'
 import { toErrorMessage } from '@/lib/format'
 import type { TrayState } from '@/pixel/scenes/diceTray'
 import { claimRoll, facesOf, fetchDiceStatus, rollDice, type DiceStatus, type RollResult } from '@/services/dice'
@@ -26,7 +29,8 @@ const KIND_LABEL: Record<RollKind, string> = { day: '오늘의 주사위', event
 /** 굴리다 난 오류를 회원에게 보여줄 말로 */
 function rollErrorMessage(error: unknown) {
   if (error instanceof Error && error.message === 'offline') return '인터넷에 연결되면 굴릴 수 있어요'
-  if (error instanceof FirebaseError && error.code === 'permission-denied') return '이미 굴렸거나 굴릴 수 없는 주사위예요'
+  if (error instanceof FirebaseError && error.code === 'permission-denied')
+    return '이미 굴렸거나 굴릴 수 없는 주사위예요'
   return toErrorMessage(error)
 }
 
@@ -47,6 +51,8 @@ async function loadDiceStatus(uid: string) {
 export function DicePage() {
   const profile = useAuth((s) => s.profile)!
   const uid = profile.uid
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tab = searchParams.get('tab') === 'shop' ? 'shop' : 'dice'
   const [status, setStatus] = useState<DiceStatus | null>(null)
   const [tray, setTray] = useState<TrayState>({ mode: 'idle', faces: [5, 3], since: 0 })
   const [busy, setBusy] = useState(false)
@@ -147,86 +153,106 @@ export function DicePage() {
         }
       />
 
-      <div className="space-y-2">
-        <DiceTray state={tray} />
-        <p className="min-h-6 text-center text-sm text-primary" aria-live="polite">
-          {message ?? (busy ? '굴리는 중…' : '')}
-        </p>
-      </div>
+      <SegmentedTabs
+        items={TABS}
+        active={tab}
+        // 탭은 주소(?tab=shop)에 둔다: 뒤로가기·새로고침해도 보던 탭 그대로
+        onSelect={(key) => setSearchParams(key === 'shop' ? { tab: 'shop' } : {}, { replace: true })}
+      />
 
-      {!status ? (
-        <CardSkeleton count={2} />
+      {tab === 'shop' ? (
+        <ShopPanel />
       ) : (
         <>
-          <Card className="py-4">
-            <CardContent className="flex items-center gap-3 px-4">
-              <Dices className="size-6 text-primary" />
-              <div className="min-w-0 flex-1">
-                <p className="font-bold">오늘의 주사위</p>
-                <p className="text-xs text-muted-foreground">
-                  {status.todayRolled ? '오늘은 굴렸어요. 내일 또 굴릴 수 있어요' : '하루 한 번, 주사위 1개'}
-                </p>
-              </div>
-              <Button disabled={busy || status.todayRolled} onClick={() => void rollToday()}>
-                굴리기
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="space-y-2">
+            <DiceTray state={tray} />
+            <p className="min-h-6 text-center text-sm text-primary" aria-live="polite">
+              {message ?? (busy ? '굴리는 중…' : '')}
+            </p>
+          </div>
 
-          <section className="space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <SectionTitle count={pending.length > 0 ? `${pending.length}개` : undefined}>출석 주사위</SectionTitle>
-              {pending.length > 1 && (
-                <Button size="sm" variant="outline" disabled={busy} onClick={() => void rollAll(pending)}>
-                  모두 굴리기
-                </Button>
-              )}
-            </div>
-            {pending.length === 0 ? (
-              <EmptyState
-                icon={CalendarCheck}
-                title="굴릴 출석 주사위가 없어요"
-                description="모임에 출석하면 주사위 2개를 굴릴 수 있어요"
-                size="sm"
-              />
-            ) : (
-              <ul className="divide-y overflow-hidden pixel-border bg-card">
-                {pending.map((event) => (
-                  <li key={event.id} className="flex items-center gap-3 px-4 py-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm">{event.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {format(event.startAt.toDate(), 'yyyy. M. d. (E)', { locale: ko })}
-                      </p>
-                    </div>
-                    <Button size="sm" disabled={busy} onClick={() => void rollEvent(event)}>
-                      굴리기
+          {!status ? (
+            <CardSkeleton count={2} />
+          ) : (
+            <>
+              <Card className="py-4">
+                <CardContent className="flex items-center gap-3 px-4">
+                  <Dices className="size-6 text-primary" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold">오늘의 주사위</p>
+                    <p className="text-xs text-muted-foreground">
+                      {status.todayRolled ? '오늘은 굴렸어요. 내일 또 굴릴 수 있어요' : '하루 한 번, 주사위 1개'}
+                    </p>
+                  </div>
+                  <Button disabled={busy || status.todayRolled} onClick={() => void rollToday()}>
+                    굴리기
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <section className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <SectionTitle count={pending.length > 0 ? `${pending.length}개` : undefined}>
+                    출석 주사위
+                  </SectionTitle>
+                  {pending.length > 1 && (
+                    <Button size="sm" variant="outline" disabled={busy} onClick={() => void rollAll(pending)}>
+                      모두 굴리기
                     </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+                  )}
+                </div>
+                {pending.length === 0 ? (
+                  <EmptyState
+                    icon={CalendarCheck}
+                    title="굴릴 출석 주사위가 없어요"
+                    description="모임에 출석하면 주사위 2개를 굴릴 수 있어요"
+                    size="sm"
+                  />
+                ) : (
+                  <ul className="divide-y overflow-hidden pixel-border bg-card">
+                    {pending.map((event) => (
+                      <li key={event.id} className="flex items-center gap-3 px-4 py-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm">{event.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {format(event.startAt.toDate(), 'yyyy. M. d. (E)', { locale: ko })}
+                          </p>
+                        </div>
+                        <Button size="sm" disabled={busy} onClick={() => void rollEvent(event)}>
+                          굴리기
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
 
-          <section className="space-y-2">
-            <SectionTitle>내 기록</SectionTitle>
-            <div className="grid grid-cols-2 gap-2 text-center">
-              <div className="pixel-border bg-card py-3">
-                <p className="text-xl font-bold text-primary">{(profile.coins ?? 0).toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground">코인</p>
-              </div>
-              <div className="pixel-border bg-card py-3">
-                <p className="text-xl font-bold">{(profile.diceXp ?? 0).toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground">주사위 경험치</p>
-              </div>
-            </div>
-            <RecentRolls fresh={fresh} status={status} />
-          </section>
+              <section className="space-y-2">
+                <SectionTitle>내 기록</SectionTitle>
+                <div className="grid grid-cols-2 gap-2 text-center">
+                  <div className="pixel-border bg-card py-3">
+                    <p className="text-xl font-bold text-primary">{(profile.coins ?? 0).toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">코인</p>
+                  </div>
+                  <div className="pixel-border bg-card py-3">
+                    <p className="text-xl font-bold">{(profile.diceXp ?? 0).toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">주사위 경험치</p>
+                  </div>
+                </div>
+                <RecentRolls fresh={fresh} status={status} />
+              </section>
+            </>
+          )}
         </>
       )}
     </div>
   )
 }
+
+const TABS = [
+  { key: 'dice', label: '주사위', icon: Dices },
+  { key: 'shop', label: '상점', icon: ShoppingBag },
+]
 
 /** 최근 굴림: 이번에 굴린 것 + 서버에서 읽은 최근 10개 */
 function RecentRolls({ fresh, status }: { fresh: RollResult[]; status: DiceStatus }) {
