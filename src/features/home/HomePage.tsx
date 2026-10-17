@@ -4,6 +4,7 @@ import { Link } from 'react-router'
 import { InstallAppCard } from '@/components/InstallAppCard'
 import { PageHeader } from '@/components/PageHeader'
 import { Card, CardContent } from '@/components/ui/card'
+import { CafeScene } from '@/features/home/CafeScene'
 import { NextEventCard } from '@/features/home/NextEventCard'
 import { ProfileBanner } from '@/features/home/ProfileBanner'
 import { useUnreadCount } from '@/hooks/useUnreadCount'
@@ -65,6 +66,9 @@ export function HomePage() {
   return (
     <div className="space-y-6">
       <PageHeader eyebrow={APP_NAME} title={`${nickname}님, 오늘은 무슨 게임 할까요?`} />
+
+      {/* 움직이는 도트 장면: 보드게임 카페 창가 */}
+      <CafeScene />
 
       <ProfileBanner />
 
