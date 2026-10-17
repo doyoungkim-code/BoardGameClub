@@ -1,18 +1,59 @@
 import { useMemo, useState } from 'react'
-import { Dices, Search, Users, X } from '@/components/icons'
+import { useSearchParams } from 'react-router'
+import { Dices, Notebook, Plus, Search, Users, X } from '@/components/icons'
 import { EmptyState } from '@/components/EmptyState'
 import { PageHeader } from '@/components/PageHeader'
+import { SegmentedTabs } from '@/components/SegmentedTabs'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { GAMES, supportsPlayers, type CatalogGame } from '@/data/games'
+import { SuggestGameDialog } from '@/features/games/SuggestGameDialog'
+import { SuggestionList } from '@/features/games/SuggestionList'
 import { cn } from '@/lib/utils'
 
 /** "몇 명이서 할 수 있어?" 필터 버튼 */
 const PLAYER_CHOICES = [2, 3, 4, 5, 6, 7, 8, 10]
 
-/** 동호회에 있는 보드게임 목록 (보기 전용. 목록은 src/data/games.ts) */
+const TABS = [
+  { key: 'catalog', label: '보유 게임', icon: Dices },
+  { key: 'suggest', label: '추천 메모', icon: Notebook },
+]
+
+/**
+ * 동호회 보드게임 목록(보기 전용, src/data/games.ts) + 회원이 들여 놓고 싶은 게임을 적어 두는 추천 메모.
+ * 탭은 주소(?tab=suggest)에 둔다
+ */
 export function GamesPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tab = searchParams.get('tab') === 'suggest' ? 'suggest' : 'catalog'
+  const [suggesting, setSuggesting] = useState(false)
+  const showSuggestions = () => setSearchParams({ tab: 'suggest' }, { replace: true })
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="보드게임"
+        actions={
+          <Button size="sm" onClick={() => setSuggesting(true)}>
+            <Plus />
+            추천하기
+          </Button>
+        }
+      />
+      <SegmentedTabs
+        items={TABS}
+        active={tab}
+        onSelect={(key) => setSearchParams(key === 'suggest' ? { tab: 'suggest' } : {}, { replace: true })}
+      />
+      {tab === 'suggest' ? <SuggestionList onAdd={() => setSuggesting(true)} /> : <CatalogView />}
+      <SuggestGameDialog open={suggesting} onOpenChange={setSuggesting} onAdded={showSuggestions} />
+    </div>
+  )
+}
+
+/** 보유 게임: 검색 + "몇 명이서" 필터 */
+function CatalogView() {
   const [keyword, setKeyword] = useState('')
   const [players, setPlayers] = useState<number | null>(null)
 
@@ -27,14 +68,6 @@ export function GamesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="보드게임"
-        actions={
-          <span className="text-sm text-muted-foreground">
-            {shown.length === GAMES.length ? `${GAMES.length}개` : `${shown.length} / ${GAMES.length}개`}
-          </span>
-        }
-      />
 
       <div className="relative">
         <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -96,11 +129,16 @@ export function GamesPage() {
           }
         />
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2">
-          {shown.map((game) => (
-            <GameItem key={game.name} game={game} />
-          ))}
-        </ul>
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">
+            {shown.length === GAMES.length ? `${GAMES.length}개` : `${shown.length} / ${GAMES.length}개`}
+          </p>
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {shown.map((game) => (
+              <GameItem key={game.name} game={game} />
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   )

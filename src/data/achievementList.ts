@@ -24,6 +24,8 @@ import type { ActivityStats } from '@/services/activity'
  *      reviews             후기 게시판 글 수
  *      memberDays          가입한 지 며칠
  *      longestWeekStreak   몇 주 연속으로 매주 출석했는지 (가장 길었던 기록)
+ *      rolls               주사위를 굴린 횟수 (오늘의 주사위 + 출석 주사위)
+ *      coinsEarned         지금까지 모은 코인 (가진 코인 + 상점에서 쓴 코인. 써도 줄지 않는다)
  *
  *  줄을 더하거나 지워도 된다. 순서대로 화면에 나온다.
  *  관리자가 직접 주는 칭호는 여기 적지 않고 앱의 관리자 화면에서 준다.
@@ -74,4 +76,9 @@ export const TITLE_LIST: TitleEntry[] = [
   // 함께한 시간·꾸준함
   { id: 'year-1', metric: 'memberDays', goal: 365, text: '' },
   { id: 'streak-4', metric: 'longestWeekStreak', goal: 4, text: '' },
+  // 주사위·코인
+  { id: 'dice-30', metric: 'rolls', goal: 30, text: '' },
+  { id: 'dice-100', metric: 'rolls', goal: 100, text: '' },
+  { id: 'coins-300', metric: 'coinsEarned', goal: 300, text: '' },
+  { id: 'coins-1000', metric: 'coinsEarned', goal: 1000, text: '' },
 ]

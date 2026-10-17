@@ -32,6 +32,10 @@ function describeCondition(metric: keyof ActivityStats, goal: number) {
       return goal % 365 === 0 ? `가입한 지 ${goal / 365}년` : `가입한 지 ${goal}일`
     case 'longestWeekStreak':
       return `${goal}주 연속 매주 출석`
+    case 'rolls':
+      return `주사위 ${goal}번 굴리기`
+    case 'coinsEarned':
+      return `코인 ${goal}개 모으기`
   }
 }
 

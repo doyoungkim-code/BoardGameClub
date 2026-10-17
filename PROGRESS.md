@@ -20,7 +20,7 @@
 
 - Firestore 보안 규칙은 **전부 실제 프로젝트(`doyou-boardgame`)에 배포 완료**
 - **배포 주소: https://doyou-boardgame.web.app** — `main`에 push하면 자동 배포 (아래 2-1)
-- 규칙 테스트 182개 통과 (users 43 + chat 31 + events 32 + posts 28 + places 6 + polls 15 + dice 16 + shop 11)
+- 규칙 테스트 188개 통과 (users 43 + chat 31 + events 32 + posts 28 + places 6 + polls 15 + dice 16 + shop 11 + gameSuggestions 6)
 - `firestore.indexes.json`에 posts 복합 색인 2개
   (board + pinned + createdAt / pinned + createdAt — 카테고리 전체 보기용)
 
@@ -367,6 +367,16 @@ tests/rules/    보안 규칙 테스트
   주사위 화면은 열 때만 내 굴림·참석 모임을 읽는다. 홈의 "굴릴 주사위 있음" 반짝임은 기기 저장값(`features/dice/diceCache.ts`)으로
   판단하고 오늘 기록만 많아야 1번 확인한다
 - 코인 상점은 아래 "코인 상점" 참고
+
+### 게임 추천 메모 (2026-10-18, `/games?tab=suggest`)
+- 게임 화면의 "추천하기"로 들여 놓고 싶은 게임(이름·인원·메모)을 남긴다 → `gameSuggestions` 컬렉션
+- 앱이 게임 목록에 자동으로 넣지는 않는다. **오너가 보고 `src/data/games.ts` 에 직접 넣은 뒤 '넣었음'** 표시
+- 쓴 사람·오너만 지운다. 이 탭을 열었을 때만 실시간 구독한다
+
+### 칭호 조건: 주사위·코인 (2026-10-18)
+- `ActivityStats` 에 `rolls`(굴린 횟수 = diceXp / 2), `coinsEarned`(가진 코인 + 산 아이템 가격 합 — 써도 줄지 않음) 추가.
+  회원 문서 값으로 계산하므로 추가 읽기 없음 (`services/activity.ts` 의 `diceStats`)
+- `achievementList.ts` 에 조건 4줄 추가(주사위 30·100번, 코인 300·1000개). **이름은 비워 둠** → 오너가 채우면 나타난다
 
 ### 코인 상점 (2026-10-17, `/dice?tab=shop`)
 - 주사위로 모은 코인으로 **배너 배경 무늬**(6종)와 **배너 위 도트 소품**(6종)을 산다. 사면 바로 배너에 단다.

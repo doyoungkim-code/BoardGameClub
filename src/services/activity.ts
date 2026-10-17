@@ -1,6 +1,8 @@
 import { differenceInCalendarWeeks, startOfWeek } from 'date-fns'
 import { getDocs, query, where } from 'firebase/firestore'
 import { ATTENDANCE_ACHIEVEMENTS, nextTier, tierFor, xpFor, type Tier } from '@/data/achievements'
+import { DICE_XP } from '@/data/dice'
+import { ITEM_BY_ID } from '@/data/shopItems'
 import { AUTO_TITLES } from '@/data/titles'
 import { eventsCol, hasStarted, toEvent } from '@/services/events'
 import { postsCol, toPost } from '@/services/posts'
@@ -25,6 +27,20 @@ export type ActivityStats = {
   memberDays: number
   /** 가장 길게 이어진 주 단위 연속 출석 (월요일 시작 주마다 한 번 이상 출석) */
   longestWeekStreak: number
+  /** 주사위를 굴린 횟수 (회원 문서의 diceXp 로 계산. diceStats) */
+  rolls: number
+  /** 지금까지 모은 코인 = 가진 코인 + 상점에서 쓴 코인 (diceStats) */
+  coinsEarned: number
+}
+
+/**
+ * 주사위·상점 기록. 회원 문서에 있는 값으로 계산해서 Firestore 를 더 읽지 않는다.
+ * 굴린 횟수 = 주사위 경험치 / 굴릴 때마다 받는 경험치, 모은 코인 = 가진 코인 + 산 아이템 가격 합
+ */
+export function diceStats(member: Pick<UserProfile, 'diceXp' | 'coins' | 'items'>) {
+  const rolls = Math.floor((member.diceXp ?? 0) / DICE_XP)
+  const spent = (member.items ?? []).reduce((sum, id) => sum + (ITEM_BY_ID[id]?.price ?? 0), 0)
+  return { rolls, coinsEarned: (member.coins ?? 0) + spent }
 }
 
 /** 출석 횟수만으로 정해지는 성장 상태 (티어 배너가 쓰는 값) */
@@ -156,6 +172,9 @@ export async function fetchMemberActivity(uid: string, joinedAt: number | null):
     reviews: posts.filter((p) => p.board === 'review').length,
     memberDays: joinedAt ? Math.floor((Date.now() - joinedAt) / DAY) : 0,
     longestWeekStreak: longestWeekStreak(attendedEvents.map((e) => e.startAt.toDate())),
+    // 주사위 기록은 회원 문서에 있어서 화면에서 diceStats 로 채운다 (회원 문서가 바뀌어도 다시 읽지 않게)
+    rolls: 0,
+    coinsEarned: 0,
   }
 
   // 활동 기록: 이미 시작한 모임(출석했거나 연 것)과 쓴 글. 최근 것부터

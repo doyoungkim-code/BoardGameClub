@@ -136,6 +136,9 @@ places/{카카오 장소 ID}              // 오너가 즐겨찾기한 보드게
 
 // plays/{playId} — 플레이 기록은 MVP에서 제외 (2026-09-14 결정). 11장 백로그 참고
 
+gameSuggestions/{id}                 // 게임 추천 메모 (2026-10-18). 회원 누구나 쓰고, 쓴 사람·오너가 지움
+  name, players(선택), note(선택), createdBy, createdAt, status: 'open'|'added'(오너만 바꿈)
+
 posts/{postId}
   board: 'notice'|'free'|'recommend'|'review'|'question'   // 게시판은 하나, 이 값이 카테고리 (2026-09-24)
   title, content, authorId, authorNickname
@@ -162,7 +165,7 @@ posts/{postId}/comments/{id}        authorId, authorNickname, content, createdAt
 | `/events`, `/events/new`, `/events/:id` | 캘린더·리스트 전환, 참석 신청, 출석 체크. 목록 맨 위에 진행 중인 일정 투표 |
 | `/polls/new`, `/polls/:id` | 일정 투표: 후보 날짜 올리기, 되는 날짜 모두 고르기, 가장 많이 되는 날 표시, "이 날짜로 모임 만들기" |
 | `/chat`, `/chat/:channelId`, `/dm/:dmId` | 채널·DM 목록(안 읽음 배지), 채팅방(최근 50개 표시, 위로 스크롤하면 더 불러오기). PC는 목록+대화방 2단, 모바일은 대화방에서 하단 탭 숨김. 오너는 채널 추가(+ 기본 채널 전체·모임·잡담 한 번에 만들기)·수정·삭제 |
-| `/games` | 보드게임 목록 (보기 전용): 표지, 인원, 한 줄 설명. 검색 + "몇 명이서" 필터 |
+| `/games` | 보드게임 목록 (보기 전용): 표지, 인원, 한 줄 설명. 검색 + "몇 명이서" 필터. `?tab=suggest` 는 **추천 메모**: 회원이 들여 놓고 싶은 게임을 적고, 오너가 보고 목록에 직접 넣은 뒤 '넣었음' 표시 |
 | `/dice` | 주사위: 오늘의 주사위(하루 1번, 1개) + 출석 주사위(출석 인정 모임마다 1번, 2개). 굴릴 때마다 경험치 2 + 코인(눈의 합). 도트 펠트 판에서 굴러간다. `?tab=shop` 은 코인 상점(배너 배경 무늬·도트 소품) |
 | `/stats` | 모임 참석·출석 랭킹, 열린 모임 수, 평균 참석, 보유 게임 수 |
 | `/board?c=<카테고리>`, `/posts/:id`, `/posts/new` | 게시판 하나 + 카테고리(공지·자유·보드게임 추천·모임 후기·질문)를 제목 앞 태그로, 댓글·좋아요 |

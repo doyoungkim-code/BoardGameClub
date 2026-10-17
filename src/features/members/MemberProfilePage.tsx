@@ -20,7 +20,7 @@ import { TitleSection } from '@/features/members/TitleSection'
 import { formatDateTime, referrerLabel, toErrorMessage } from '@/lib/format'
 import { tappableRow } from '@/lib/styles'
 import { cn } from '@/lib/utils'
-import { fetchMemberActivity, progressFor, rankOf, xpRanking, type MemberActivity } from '@/services/activity'
+import { diceStats, fetchMemberActivity, progressFor, rankOf, xpRanking, type MemberActivity } from '@/services/activity'
 import { openDm } from '@/services/chat'
 import { introducedBy } from '@/services/members'
 import { useAuth } from '@/stores/auth'
@@ -59,7 +59,15 @@ export function MemberProfilePage() {
   }, [uid, loaded, joinedAt])
 
   const diceXp = (uid ? byId[uid]?.diceXp : 0) ?? 0
-  const progress = useMemo(() => (activity ? progressFor(activity.stats, diceXp) : null), [activity, diceXp])
+  // 주사위 굴린 횟수·모은 코인은 회원 문서 값으로 채운다 (칭호 조건)
+  const member0 = uid ? byId[uid] : undefined
+  const rolls = member0 ? diceStats(member0).rolls : 0
+  const coinsEarned = member0 ? diceStats(member0).coinsEarned : 0
+  const stats = useMemo(
+    () => (activity ? { ...activity.stats, rolls, coinsEarned } : null),
+    [activity, rolls, coinsEarned],
+  )
+  const progress = useMemo(() => (stats ? progressFor(stats, diceXp) : null), [stats, diceXp])
 
   // 동호회 순위는 모든 회원의 출석 횟수(6시간 캐시)로 계산한다. 통계 화면의 티어 랭킹과 같은 함수
   const attendedById = useProgress((s) => s.attendedById)
@@ -161,7 +169,7 @@ export function MemberProfilePage() {
 
       {activity && progress ? (
         <>
-          <TitleSection member={member} stats={activity.stats} progress={progress} isMe={isMe} newKeys={newTitleKeys} />
+          <TitleSection member={member} stats={stats ?? activity.stats} progress={progress} isMe={isMe} newKeys={newTitleKeys} />
           <AchievementList progress={progress} newGoals={newGoals} compact={!isMe} />
           <ActivityHistory items={activity.history} />
         </>
