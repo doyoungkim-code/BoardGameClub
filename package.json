@@ -11,7 +11,8 @@
     "lint": "oxlint",
     "test:rules": "firebase emulators:exec --only firestore --project demo-doyou-boardgame \"vitest run\"",
     "preview": "vite preview",
-    "icons": "pwa-assets-generator"
+    "icons": "pwa-assets-generator",
+    "wolf:bots": "node scripts/wolf-bots.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

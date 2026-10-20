@@ -19,7 +19,7 @@
 | + | 홈 화면 앱(PWA): 앱 아이콘, 설치 안내, 오프라인 캐시, 카카오톡 브라우저 안내 | ✅ 구현 완료 · ⚠️ 실사용 확인 전 | |
 | 늑대 1 | 「한밤의 늑대」 준비: 관리자가 회원 실명 등록 (게임 안에서만 실명 표시) | ✅ 배포 완료 | `87ed553` |
 | 늑대 2 | 역할 12종 정보(`roles.ts`) + 역할 카드 그림 64×64 SD 도트 12장(`public/wolf/cards`) | ✅ 오너 확인 | `2ea974f` |
-| 늑대 3~6 | 게임 계산(`engine.ts`) + 단위 테스트 38개, 규칙·규칙 테스트, 서버 시각, 대기실·밤·낮·투표·결과 화면, 자동 딜러, 전적 | ✅ 구현 · ⚠️ 여러 폰으로 실제 한 판 확인 전 | |
+| 늑대 3~6 | 게임 계산(`engine.ts`) + 단위 테스트 38개, 규칙·규칙 테스트, 서버 시각, 대기실·밤·낮·투표·결과 화면, 자동 딜러, 전적 | ✅ 에뮬레이터에서 오너 + 봇 2명으로 4판 확인 · ⚠️ 실제 폰 여러 대로는 확인 전 | `42133c2` |
 
 - Firestore 보안 규칙은 **전부 실제 프로젝트(`doyou-boardgame`)에 배포 완료**
 - **배포 주소: https://doyou-boardgame.web.app** — `main`에 push하면 자동 배포 (아래 2-1)
@@ -120,14 +120,17 @@ copy .env.example .env.local
 
 > 배포하려면 `npx firebase login`으로 **kwat09k@gmail.com** 로그인이 되어 있어야 한다.
 
-### 포트 8080이 이미 쓰이고 있을 때
-다른 프로그램이 8080을 잡고 있으면 에뮬레이터가 뜨지 않는다. 그 경우 `firebase.json`의
-`emulators.firestore.port`와 `tests/rules/helpers.ts`의 `port`를 **같은 값**(예: 8085)으로
-함께 바꿔서 돌리고, 끝나면 되돌린다.
+### Firestore 에뮬레이터 포트는 8085
+오너 PC 에서 다른 프로그램(ApplicationWebServer)이 8080을 잡고 있어서 8085로 옮겼다 (2026-10-20).
+바꿀 때는 `firebase.json`의 `emulators.firestore.port`, `tests/rules/helpers.ts`의 `port`,
+`src/lib/firebase.ts`의 `connectFirestoreEmulator` 세 곳을 **같은 값**으로.
 
 ### 에뮬레이터로 테스트
 - 터미널 1: `npm run emulators`, 터미널 2: `npm run dev:emu`
 - 로그인 창에서 "Add new account"로 가짜 계정 생성. 이메일을 `kwat09k@gmail.com`으로 하면 오너
+- **한밤의 늑대 혼자 테스트**: 터미널 3에서 `npm run wolf:bots` (봇 수를 바꾸려면 `npm run wolf:bots -- 4`).
+  봇이 가입·승인(실명 "봇1"…)되고, 내가 대기실에 먼저 들어가 방장이 되면 따라 들어와 준비한다.
+  밤에는 자기 역할 행동을 아무렇게나, 낮에는 토론 끝, 투표도 알아서 한다. 봇이 한 일은 터미널에 찍힌다
 
 ### Java 버전이 여러 개일 때
 PATH에 낮은 버전(17 등)이 먼저 잡혀 있으면 에뮬레이터가 실행되지 않는다. 그 터미널에서만 21을 지정:
