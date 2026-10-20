@@ -20,7 +20,7 @@
 
 - Firestore 보안 규칙은 **전부 실제 프로젝트(`doyou-boardgame`)에 배포 완료**
 - **배포 주소: https://doyou-boardgame.web.app** — `main`에 push하면 자동 배포 (아래 2-1)
-- 규칙 테스트 188개 통과 (users 43 + chat 31 + events 32 + posts 28 + places 6 + polls 15 + dice 16 + shop 11 + gameSuggestions 6)
+- 규칙 테스트 190개 통과 (users 45 + chat 31 + events 32 + posts 28 + places 6 + polls 15 + dice 16 + shop 11 + gameSuggestions 6)
 - `firestore.indexes.json`에 posts 복합 색인 2개
   (board + pinned + createdAt / pinned + createdAt — 카테고리 전체 보기용)
 

@@ -36,6 +36,8 @@ export type UserProfile = {
   items?: string[]
   /** 규칙이 '방금 산 것'을 알아보는 데 쓴다 */
   lastPurchase?: string
+  /** 실명. 관리자가 등록하고 게임(한밤의 늑대)에서 닉네임 대신 보인다. 없으면 닉네임 */
+  realName?: string | null
   /** 배너에 단 배경 무늬·도트 소품 (없으면 null) */
   bannerBackground?: string | null
   bannerProp?: string | null

@@ -211,6 +211,18 @@ describe('users 오너 관리', () => {
     await assertFails(updateDoc(doc(ownerDb(), 'users/referrer'), { role: 'owner' }))
   })
 
+  it('실명은 오너만 등록·삭제할 수 있다', async () => {
+    await assertSucceeds(updateDoc(doc(ownerDb(), 'users/referrer'), { realName: '김철수' }))
+    await assertSucceeds(updateDoc(doc(ownerDb(), 'users/referrer'), { realName: null }))
+    await assertFails(updateDoc(doc(dbAs('referrer'), 'users/referrer'), { realName: '김철수' }))
+    await assertFails(updateDoc(doc(dbAs('applicant'), 'users/referrer'), { realName: '김철수' }))
+  })
+
+  it('실명은 1~20자여야 한다', async () => {
+    await assertFails(updateDoc(doc(ownerDb(), 'users/referrer'), { realName: '' }))
+    await assertFails(updateDoc(doc(ownerDb(), 'users/referrer'), { realName: '가'.repeat(21) }))
+  })
+
   it('오너 자신의 상태는 바꿀 수 없다', async () => {
     await assertFails(updateDoc(doc(ownerDb(), 'users/owner'), { status: 'removed' }))
   })

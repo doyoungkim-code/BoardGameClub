@@ -12,7 +12,7 @@ import { grantedTitleKey, grantedTitleName, MAX_GRANTED_TITLE_LENGTH } from '@/d
 import { formatRelative, referrerLabel, toErrorMessage } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { daysSinceActive, fetchAdminMemo, saveAdminMemo } from '@/services/members'
-import { setGrantedTitles, setUserStatus, updateReferrer } from '@/services/users'
+import { setGrantedTitles, setRealName, setUserStatus, updateReferrer } from '@/services/users'
 import { useMembers } from '@/stores/members'
 import { FOUNDER_REFERRER, type UserProfile } from '@/types/user'
 
@@ -50,6 +50,12 @@ export function MemberAdminList() {
               <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-1.5 truncate font-normal">
                   {member.nickname}
+                  {/* 한밤의 늑대에서 쓰는 실명. 비어 있으면 눈에 띄게 */}
+                  {member.realName ? (
+                    <span className="truncate text-xs text-muted-foreground">({member.realName})</span>
+                  ) : (
+                    <Badge variant="outline" className="text-muted-foreground">실명 없음</Badge>
+                  )}
                   {member.role === 'owner' && <Badge variant="secondary">오너</Badge>}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">{referrerLabel(member, byId) ?? '소개자 없음'}</p>
@@ -190,6 +196,8 @@ function MemberAdminPanel({ member }: { member: UserProfile }) {
 
   return (
     <div className="space-y-4 border-t bg-muted/40 px-4 py-4">
+      <RealNameField member={member} run={run} />
+
       <div className="space-y-1.5">
         <p className="text-xs font-normal text-muted-foreground">소개한 회원</p>
         <Select
@@ -261,5 +269,47 @@ function MemberAdminPanel({ member }: { member: UserProfile }) {
         onConfirm={() => run(() => setUserStatus(member.uid, 'removed'), `${member.nickname}님을 이용 중지했어요`)}
       />
     </div>
+  )
+}
+
+/** 실명: 게임(한밤의 늑대)에서 닉네임 대신 보여 준다. 오너만 등록한다 */
+function RealNameField({
+  member,
+  run,
+}: {
+  member: UserProfile
+  run: (fn: () => Promise<unknown>, message: string) => Promise<void>
+}) {
+  const [value, setValue] = useState(member.realName ?? '')
+  const [saving, setSaving] = useState(false)
+  const changed = value.trim() !== (member.realName ?? '')
+
+  return (
+    <form
+      className="space-y-1.5"
+      onSubmit={async (e) => {
+        e.preventDefault()
+        setSaving(true)
+        await run(() => setRealName(member.uid, value), value.trim() ? '실명을 저장했어요' : '실명을 지웠어요')
+        setSaving(false)
+      }}
+    >
+      <label htmlFor={`real-name-${member.uid}`} className="text-xs font-normal text-muted-foreground">
+        실명 (게임에서 닉네임 대신 보여요)
+      </label>
+      <div className="flex gap-2">
+        <Input
+          id={`real-name-${member.uid}`}
+          value={value}
+          maxLength={20}
+          placeholder="예: 홍길동"
+          onChange={(e) => setValue(e.target.value)}
+          className="bg-card"
+        />
+        <Button type="submit" variant="outline" disabled={saving || !changed}>
+          저장
+        </Button>
+      </div>
+    </form>
   )
 }

@@ -110,7 +110,9 @@ service cloud.firestore {
 
       function validOwnerUpdate(uid) {
         let d = request.resource.data;
-        return changedOnly(['status', 'approvedAt', 'referrerId', 'grantedTitles'])
+        return changedOnly(['status', 'approvedAt', 'referrerId', 'grantedTitles', 'realName'])
+          // 실명: 게임(한밤의 늑대)에서 닉네임 대신 보여 준다. 오너가 등록한다
+          && (!('realName' in d) || d.realName == null || (d.realName is string && d.realName.size() >= 1 && d.realName.size() <= 20))
           && d.status in ['pending', 'approved', 'rejected', 'removed']
           // 오너 자신의 상태는 바꿀 수 없다
           && (uid != request.auth.uid || d.status == resource.data.status)

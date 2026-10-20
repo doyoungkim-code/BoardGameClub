@@ -89,6 +89,7 @@ users/{uid}                        // 공개 프로필: 승인된 회원 전체�
   diceXp?, coins?  // 주사위로 얻은 경험치 합·코인 (2026-10-17). 본인이 주사위 보상을 받을 때 규칙이 정한 양만큼만 오른다
   lastRollId?      // 마지막으로 보상을 받은 굴림 id (규칙이 굴림 문서와 짝을 맞추는 데 쓴다)
   items?, lastPurchase?               // 코인 상점에서 산 아이템 id 목록, 방금 산 것 (가격표: src/data/shopItems.ts = 규칙 itemPrices())
+  realName?        // 실명 (2026-10-20). 오너만 등록(관리자 화면), 게임 「한밤의 늑대」에서 닉네임 대신 보인다. 회원 모두가 읽을 수 있음
   bannerBackground?, bannerProp?      // 배너에 단 배경 무늬('bg-…')·도트 소품('prop-…'), 없으면 null
   // 티어 경험치 = 출석 경험치(출석 기록으로 매번 계산, src/data/achievements.ts) + diceXp
 users/{uid}/rolls/{rollId}           // 주사위 굴림 (본인·오너만 읽음. 만들기와 '받음' 표시만 가능, 지우기 불가)

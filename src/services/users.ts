@@ -74,6 +74,11 @@ export function updateReferrer(uid: string, referrerId: string | null) {
   return updateDoc(userRef(uid), { referrerId })
 }
 
+/** 관리자가 등록하는 실명 (게임에서 닉네임 대신 보인다). 빈 값이면 지운다 */
+export function setRealName(uid: string, realName: string | null) {
+  return updateDoc(userRef(uid), { realName: realName?.trim() || null })
+}
+
 /** 관리자가 주는 칭호 목록 ('granted:<이름>') 통째로 저장 */
 export function setGrantedTitles(uid: string, grantedTitles: string[]) {
   return updateDoc(userRef(uid), { grantedTitles })
