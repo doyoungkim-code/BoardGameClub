@@ -19,5 +19,7 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["vite.config.ts", "vitest.config.ts", "tests"]
+  "include": ["vite.config.ts", "vitest.config.ts", "tests"],
+  /* 앱 코드를 @/ 로 불러오는 단위 테스트는 tsconfig.app.json 에서 검사한다 */
+  "exclude": ["tests/unit"]
 }

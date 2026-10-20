@@ -27,6 +27,7 @@ import {
   PostDetailPage,
   PostFormPage,
   StatsPage,
+  WolfPage,
 } from '@/features/lazyPages'
 import { BoardRedirect } from '@/features/board/BoardRedirect'
 import { MorePage } from '@/features/more/MorePage'
@@ -63,6 +64,7 @@ export const router = createBrowserRouter([
           { path: 'polls/:pollId', element: <PollDetailPage /> },
           { path: 'games', element: <GamesPage /> },
           { path: 'dice', element: <DicePage /> },
+          { path: 'wolf', element: <WolfPage /> },
           { path: 'places', element: <PlacesPage /> },
           { path: 'stats', element: <StatsPage /> },
           { path: 'board', element: <BoardPage /> },

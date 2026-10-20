@@ -103,6 +103,13 @@ export type CatalogGame = {
   description: string
   /** 표지 이미지 경로. 없으면 null */
   image: string | null
+  /** 앱에서 같이 할 수 있으면 그 화면 주소 */
+  playRoute: string | null
+}
+
+/** 앱 안에서 각자 폰으로 할 수 있는 게임 */
+const PLAY_ROUTES: Record<string, string> = {
+  '한밤의 늑대인간': '/wolf',
 }
 
 // "이름 (인원) - 설명". 이름에 괄호가 들어가도 되게 마지막 "(…인…) - " 를 기준으로 자른다
@@ -137,6 +144,7 @@ function parseGames(list: string): CatalogGame[] {
           ...parsePlayers(players),
           description,
           image: file ? `/games/${file}` : null,
+          playRoute: PLAY_ROUTES[name] ?? null,
         },
       ]
     })

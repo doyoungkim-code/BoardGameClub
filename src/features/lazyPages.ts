@@ -61,3 +61,6 @@ export const AdminPage = lazy(() => import('@/features/admin/AdminPage').then((m
 
 // 주사위 게임 (도트 장면을 쓴다)
 export const DicePage = lazy(() => import('@/features/dice/DicePage').then((m) => ({ default: m.DicePage })))
+
+// 한밤의 늑대 (각자 폰으로 하는 한밤의 늑대인간)
+export const WolfPage = lazy(() => import('@/features/wolf/WolfPage').then((m) => ({ default: m.WolfPage })))

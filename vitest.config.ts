@@ -1,6 +1,11 @@
+import path from 'node:path'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
+  resolve: {
+    // 단위 테스트(tests/unit)가 앱 코드를 @/ 로 불러온다
+    alias: { '@': path.resolve(import.meta.dirname, './src') },
+  },
   test: {
     include: ['tests/**/*.test.ts'],
     environment: 'node',

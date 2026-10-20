@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router'
 import { Dices, Notebook, Plus, Search, Users, X } from '@/components/icons'
 import { EmptyState } from '@/components/EmptyState'
 import { PageHeader } from '@/components/PageHeader'
@@ -11,6 +11,7 @@ import { GAMES, supportsPlayers, type CatalogGame } from '@/data/games'
 import { SuggestGameDialog } from '@/features/games/SuggestGameDialog'
 import { SuggestionList } from '@/features/games/SuggestionList'
 import { cn } from '@/lib/utils'
+import { subscribeRoom } from '@/services/wolf'
 
 /** "몇 명이서 할 수 있어?" 필터 버튼 */
 const PLAYER_CHOICES = [2, 3, 4, 5, 6, 7, 8, 10]
@@ -154,9 +155,25 @@ function GameItem({ game }: { game: CatalogGame }) {
           {game.players}
         </Badge>
         <p className="text-sm text-muted-foreground">{game.description}</p>
+        {game.playRoute && (
+          <Button asChild size="sm" className="mt-1">
+            <Link to={game.playRoute}>
+              <Users />
+              같이 하기
+              <WolfRoomCount />
+            </Link>
+          </Button>
+        )}
       </div>
     </li>
   )
+}
+
+/** 한밤의 늑대 대기실에 지금 몇 명 있는지 */
+function WolfRoomCount() {
+  const [count, setCount] = useState(0)
+  useEffect(() => subscribeRoom((room) => setCount(room?.seats.length ?? 0)), [])
+  return count > 0 ? <span className="text-xs opacity-80">({count}명 모임)</span> : null
 }
 
 /** 표지. 이미지가 없거나 못 불러오면 이름 첫 글자로 대신한다 */

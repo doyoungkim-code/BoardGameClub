@@ -140,6 +140,21 @@ places/{카카오 장소 ID}              // 오너가 즐겨찾기한 보드게
 gameSuggestions/{id}                 // 게임 추천 메모 (2026-10-18). 회원 누구나 쓰고, 쓴 사람·오너가 지움
   name, players(선택), note(선택), createdBy, createdAt, status: 'open'|'added'(오너만 바꿈)
 
+wolfRooms/main                       // 한밤의 늑대 (2026-10-20). 방은 하나 (한자리에 모여 각자 폰으로)
+  hostId, seats[](들어온 순서, 최대 10), readyIds[], status: 'lobby'|'playing',
+  roles[](인원+3장), stepSec, discussSec, gameId, updatedAt
+  // 들어가기·나가기·준비는 본인만, 구성·시간·시작·내보내기는 방장만 (rules)
+wolfRooms/main/games/{gameId}        // 판. 방장 폰이 자동 딜러(src/features/wolf/hostRunner.ts)
+  hostId, players[](자리 순서), roles[], steps[], stepSec, discussSec,
+  phase: 'deal'|'night'|'day'|'vote'|'result'|'aborted', startedAt(서버 시각), dayEndAt, voteEndAt,
+  readyIds[](토론 끝), result(결과 단계에 모두에게 공개: 처음·마지막 카드, 사망, 투표, 승자, 밤 기록), createdAt
+  private/{uid}                      // 본인·방장만: seat, dealt(처음 카드), info[](밤에 알게 된 것)
+  actions/{uid_종류}                 // 밤에 본인만 한 번씩 씀, 본인·방장만 읽음
+  votes/{uid}                        // 투표 중 본인만, 결과 단계에는 모두 읽음
+  secret/state                       // 방장만: 딜러 계산 상태(전체 카드·밤 기록)
+users/{uid}/wolfGames/{gameId}       // 전적: role, won(결과와 같아야 함), playedAt. 결과 단계에 본인이 한 번
+clockPings/{uid}                     // 서버 시각 맞추기용 (본인만)
+
 posts/{postId}
   board: 'notice'|'free'|'recommend'|'review'|'question'   // 게시판은 하나, 이 값이 카테고리 (2026-09-24)
   title, content, authorId, authorNickname
@@ -168,6 +183,7 @@ posts/{postId}/comments/{id}        authorId, authorNickname, content, createdAt
 | `/chat`, `/chat/:channelId`, `/dm/:dmId` | 채널·DM 목록(안 읽음 배지), 채팅방(최근 50개 표시, 위로 스크롤하면 더 불러오기). PC는 목록+대화방 2단, 모바일은 대화방에서 하단 탭 숨김. 오너는 채널 추가(+ 기본 채널 전체·모임·잡담 한 번에 만들기)·수정·삭제 |
 | `/games` | 보드게임 목록 (보기 전용): 표지, 인원, 한 줄 설명. 검색 + "몇 명이서" 필터. `?tab=suggest` 는 **추천 메모**: 회원이 들여 놓고 싶은 게임을 적고, 오너가 보고 목록에 직접 넣은 뒤 '넣었음' 표시 |
 | `/dice` | 주사위: 오늘의 주사위(하루 1번, 1개) + 출석 주사위(출석 인정 모임마다 1번, 2개). 굴릴 때마다 경험치 2 + 코인(눈의 합). 도트 펠트 판에서 굴러간다. `?tab=shop` 은 코인 상점(배너 배경 무늬·도트 소품) |
+| `/wolf` | **한밤의 늑대**: 게임 목록의 「한밤의 늑대인간」 "같이 하기"로 들어온다. 대기실(실명·준비·방장의 카드 구성/시간) → 카드 확인 → 밤(서버 시각으로 모든 폰이 같은 단계, 행동 없는 사람도 같은 모양의 가짜 선택) → 낮 토론 → 투표 → 결과(모두의 카드·밤 기록). 프로필에 "N판 M승" |
 | `/stats` | 모임 참석·출석 랭킹, 열린 모임 수, 평균 참석, 보유 게임 수 |
 | `/board?c=<카테고리>`, `/posts/:id`, `/posts/new` | 게시판 하나 + 카테고리(공지·자유·보드게임 추천·모임 후기·질문)를 제목 앞 태그로, 댓글·좋아요 |
 | `/members`, `/members/:uid` | 회원 목록(닉네임 옆에 "OO의 지인"), 프로필(소개자, 소개한 회원, **티어·경험치**, **칭호**(본인은 대표 칭호 선택), **출석 업적**, **활동 기록**, DM 보내기). 닉네임은 앱 어디서나 [티어 방패] 대표 칭호 닉네임 |

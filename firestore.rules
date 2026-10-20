@@ -701,6 +701,256 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time;
     }
 
+    // ---------- 한밤의 늑대: 방 하나(wolfRooms/main) + 판(games) ----------
+    // 카드를 섞고 밤 행동을 계산하는 건 방장 폰(자동 딜러). 규칙은 "남의 비밀을 못 읽음 / 내 것만 씀 /
+    // 결과 단계에서만 공개"를 지킨다. 계산 코드: src/games/wolf/engine.ts
+
+    function wolfRoles() {
+      return ['doppelganger', 'werewolf', 'minion', 'mason', 'seer', 'robber',
+              'troublemaker', 'drunk', 'insomniac', 'villager', 'hunter', 'tanner'];
+    }
+
+    function wolfRoomPath() {
+      return /databases/$(database)/documents/wolfRooms/main;
+    }
+
+    function wolfGamePath(gameId) {
+      return /databases/$(database)/documents/wolfRooms/main/games/$(gameId);
+    }
+
+    match /wolfRooms/{roomId} {
+      allow read: if isMember();
+
+      // 처음 들어온 사람이 방을 만들고 방장이 된다
+      allow create: if isMember() && roomId == 'main' && validNewRoom();
+
+      allow update: if isMember() && request.resource.data.updatedAt == request.time && (
+        validJoin() || validLeave() || validReady() || validClaimHost() || validReset()
+        || (resource.data.hostId == request.auth.uid && validHostEdit())
+      );
+
+      allow delete: if false;
+
+      function validRoomShape() {
+        let d = request.resource.data;
+        let keys = ['hostId', 'seats', 'readyIds', 'status', 'roles', 'stepSec', 'discussSec', 'gameId', 'updatedAt'];
+        return d.keys().hasOnly(keys) && d.keys().hasAll(keys)
+          && (d.hostId == null || d.hostId is string)
+          && d.seats is list && d.seats.size() <= 10
+          && d.readyIds is list && d.readyIds.size() <= 10
+          && d.status in ['lobby', 'playing']
+          && d.roles is list && d.roles.size() <= 13 && d.roles.toSet().difference(wolfRoles().toSet()).size() == 0
+          && d.stepSec is int && d.stepSec >= 5 && d.stepSec <= 30
+          && d.discussSec is int && d.discussSec >= 60 && d.discussSec <= 900
+          && (d.gameId == null || d.gameId is string);
+      }
+
+      function validNewRoom() {
+        let d = request.resource.data;
+        return validRoomShape()
+          && d.hostId == request.auth.uid
+          && d.seats == [request.auth.uid]
+          && d.readyIds == []
+          && d.status == 'lobby'
+          && d.gameId == null
+          && d.updatedAt == request.time;
+      }
+
+      // 들어가기: 대기 중에만, 맨 뒤에 나만 추가. 방장이 없으면 내가 방장
+      function validJoin() {
+        let me = request.auth.uid;
+        let before = resource.data;
+        let after = request.resource.data;
+        return changedOnly(['seats', 'hostId', 'updatedAt'])
+          && before.status == 'lobby'
+          && !(me in before.seats)
+          && after.seats == before.seats.concat([me])
+          && after.seats.size() <= 10
+          && (after.hostId == before.hostId
+            || ((before.hostId == null || !(before.hostId in before.seats)) && after.hostId == me));
+      }
+
+      // 나가기: 나만 빠진다. 방장이 나가면 남은 첫 사람이 방장
+      function validLeave() {
+        let me = request.auth.uid;
+        let before = resource.data;
+        let after = request.resource.data;
+        return changedOnly(['seats', 'readyIds', 'hostId', 'updatedAt'])
+          && me in before.seats
+          && after.seats == before.seats.removeAll([me])
+          && after.readyIds == before.readyIds.removeAll([me])
+          && (before.hostId != me
+            ? after.hostId == before.hostId
+            : after.hostId == (after.seats.size() > 0 ? after.seats[0] : null));
+      }
+
+      // 준비 켜고 끄기 (대기 중, 방에 있는 사람만)
+      function validReady() {
+        let me = request.auth.uid;
+        let before = resource.data;
+        let after = request.resource.data;
+        return changedOnly(['readyIds', 'updatedAt'])
+          && before.status == 'lobby'
+          && me in before.seats
+          && ((!(me in before.readyIds) && after.readyIds == before.readyIds.concat([me]))
+            || (me in before.readyIds && after.readyIds == before.readyIds.removeAll([me])));
+      }
+
+      // 방장이 응답이 없을 때 대기 중인 방의 방장을 넘겨받기
+      function validClaimHost() {
+        let me = request.auth.uid;
+        return changedOnly(['hostId', 'updatedAt'])
+          && resource.data.status == 'lobby'
+          && me in resource.data.seats
+          && request.resource.data.hostId == me;
+      }
+
+      // 판 도중 방장 폰이 꺼졌을 때, 방에 있는 사람이 방을 대기 상태로 되돌리고 방장이 된다
+      function validReset() {
+        let me = request.auth.uid;
+        let after = request.resource.data;
+        return changedOnly(['status', 'gameId', 'readyIds', 'hostId', 'updatedAt'])
+          && me in resource.data.seats
+          && after.status == 'lobby' && after.gameId == null && after.readyIds == []
+          && after.hostId == me;
+      }
+
+      // 방장: 구성·시간 설정, 시작(playing + gameId), 내보내기, 방장 넘기기, 대기로 되돌리기
+      function validHostEdit() {
+        let before = resource.data;
+        let after = request.resource.data;
+        return validRoomShape()
+          && after.seats.toSet().difference(before.seats.toSet()).size() == 0
+          && (after.hostId == null || after.hostId in after.seats)
+          && (after.status == 'lobby' || after.gameId != null);
+      }
+
+      // ----- 판 -----
+      match /games/{gameId} {
+        allow read: if isMember();
+
+        allow create: if isMember() && roomId == 'main' && validNewGame();
+
+        allow update: if isMember() && (
+          (resource.data.hostId == request.auth.uid && validGameEdit())
+          // 낮: "토론 끝" 누르기 (나만 추가)
+          || (resource.data.phase == 'day'
+            && request.auth.uid in resource.data.players
+            && !(request.auth.uid in resource.data.readyIds)
+            && changedOnly(['readyIds'])
+            && request.resource.data.readyIds == resource.data.readyIds.concat([request.auth.uid]))
+        );
+
+        allow delete: if false;
+
+        function validNewGame() {
+          let d = request.resource.data;
+          let keys = ['hostId', 'players', 'roles', 'steps', 'stepSec', 'discussSec', 'phase',
+                      'startedAt', 'dayEndAt', 'voteEndAt', 'readyIds', 'result', 'createdAt'];
+          return d.keys().hasOnly(keys) && d.keys().hasAll(keys)
+            && d.hostId == request.auth.uid
+            && get(wolfRoomPath()).data.hostId == request.auth.uid
+            && d.players is list && d.players.size() >= 3 && d.players.size() <= 10
+            && request.auth.uid in d.players
+            && d.roles is list && d.roles.size() == d.players.size() + 3
+            && d.phase == 'deal'
+            && d.readyIds == []
+            && d.result == null
+            && d.createdAt == request.time;
+        }
+
+        function validGameEdit() {
+          let d = request.resource.data;
+          return d.diff(resource.data).affectedKeys()
+              .hasOnly(['phase', 'startedAt', 'dayEndAt', 'voteEndAt', 'readyIds', 'result'])
+            && d.phase in ['deal', 'night', 'day', 'vote', 'result', 'aborted'];
+        }
+
+        function wolfGame() {
+          return get(wolfGamePath(gameId)).data;
+        }
+
+        function isWolfHost() {
+          return wolfGame().hostId == request.auth.uid;
+        }
+
+        // 처음 카드와 밤에 알게 된 것: 본인과 방장(딜러)만
+        match /private/{uid} {
+          allow read: if isMember() && (request.auth.uid == uid || isWolfHost());
+          allow create, update: if isMember() && isWolfHost()
+            && uid in wolfGame().players
+            && request.resource.data.keys().hasOnly(['seat', 'dealt', 'info'])
+            && request.resource.data.seat is int
+            && request.resource.data.dealt in wolfRoles()
+            && request.resource.data.info is list;
+          allow delete: if false;
+        }
+
+        // 밤 행동: 본인이 밤에만 한 번씩 (id = uid_종류). 본인과 방장만 읽는다
+        match /actions/{actionId} {
+          allow read: if isMember() && (resource.data.uid == request.auth.uid || isWolfHost());
+          allow create: if isMember() && validNewAction();
+          allow update, delete: if false;
+
+          function validNewAction() {
+            let d = request.resource.data;
+            return d.keys().hasOnly(['uid', 'kind', 'targets', 'at']) && d.keys().hasAll(['uid', 'kind', 'targets', 'at'])
+              && d.uid == request.auth.uid
+              && actionId == d.uid + '_' + d.kind
+              && d.kind in ['copy', 'doppelAct', 'loneWolf', 'seer', 'robber', 'troublemaker', 'drunk']
+              && d.targets is list && d.targets.size() <= 2
+              && d.at == request.time
+              && wolfGame().phase == 'night'
+              && request.auth.uid in wolfGame().players;
+          }
+        }
+
+        // 투표: 본인이 투표 시간에만. 결과가 나오면 모두 읽는다
+        match /votes/{uid} {
+          allow read: if isMember() && (request.auth.uid == uid || isWolfHost() || wolfGame().phase == 'result');
+          allow create, update: if isMember() && request.auth.uid == uid
+            && wolfGame().phase == 'vote'
+            && uid in wolfGame().players
+            && request.resource.data.keys().hasOnly(['target', 'at'])
+            && request.resource.data.target in wolfGame().players
+            && request.resource.data.target != uid
+            && request.resource.data.at == request.time;
+          allow delete: if false;
+        }
+
+        // 전체 카드·밤 기록 (딜러 계산 상태): 방장만
+        match /secret/{docId} {
+          allow read, write: if isMember() && isWolfHost();
+        }
+      }
+    }
+
+    // 전적: 판이 끝난 뒤 본인이 한 번 남긴다 (이겼는지는 결과와 같아야 한다)
+    match /users/{uid}/wolfGames/{gameId} {
+      allow read: if isMember();
+      allow create: if isSelf(uid) && isMember() && validWolfRecord(uid, gameId);
+      allow update, delete: if false;
+
+      function validWolfRecord(uid, gameId) {
+        let d = request.resource.data;
+        let game = get(wolfGamePath(gameId)).data;
+        return d.keys().hasOnly(['role', 'won', 'playedAt']) && d.keys().hasAll(['role', 'won', 'playedAt'])
+          && game.phase == 'result'
+          && uid in game.players
+          && d.won == (uid in game.result.winnerIds)
+          && d.role in wolfRoles()
+          && d.playedAt == request.time;
+      }
+    }
+
+    // 서버 시각 맞추기: 내 문서에 서버 시각을 쓰고 다시 읽는다
+    match /clockPings/{uid} {
+      allow read: if isSelf(uid);
+      allow create, update: if isSelf(uid)
+        && request.resource.data.keys().hasOnly(['at'])
+        && request.resource.data.at == request.time;
+    }
+
     // ---------- readStates: 방별 마지막으로 읽은 시각 (안 읽음 표시용) ----------
 
     match /users/{uid}/readStates/{roomKey} {
