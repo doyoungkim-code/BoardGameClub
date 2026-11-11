@@ -27,7 +27,6 @@ import {
   PostDetailPage,
   PostFormPage,
   StatsPage,
-  WolfPage,
 } from '@/features/lazyPages'
 import { BoardRedirect } from '@/features/board/BoardRedirect'
 import { MorePage } from '@/features/more/MorePage'
@@ -64,7 +63,7 @@ export const router = createBrowserRouter([
           { path: 'polls/:pollId', element: <PollDetailPage /> },
           { path: 'games', element: <GamesPage /> },
           { path: 'dice', element: <DicePage /> },
-          { path: 'wolf', element: <WolfPage /> },
+          // 한밤의 늑대(/wolf, WolfPage)는 당분간 숨김 (2026-11-11)
           { path: 'places', element: <PlacesPage /> },
           { path: 'stats', element: <StatsPage /> },
           { path: 'board', element: <BoardPage /> },

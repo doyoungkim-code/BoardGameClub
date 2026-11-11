@@ -17,7 +17,6 @@ import { ActivityHistory } from '@/features/members/ActivityHistory'
 import { progressKeys, readSeen, writeSeen } from '@/features/members/seenProgress'
 import { TierBanner } from '@/features/members/TierBanner'
 import { TitleSection } from '@/features/members/TitleSection'
-import { WolfStats } from '@/features/wolf/WolfStats'
 import { formatDateTime, referrerLabel, toErrorMessage } from '@/lib/format'
 import { tappableRow } from '@/lib/styles'
 import { cn } from '@/lib/utils'
@@ -173,7 +172,6 @@ export function MemberProfilePage() {
           <TitleSection member={member} stats={stats ?? activity.stats} progress={progress} isMe={isMe} newKeys={newTitleKeys} />
           <AchievementList progress={progress} newGoals={newGoals} compact={!isMe} />
           <ActivityHistory items={activity.history} />
-          <WolfStats uid={member.uid} />
         </>
       ) : (
         <CardSkeleton count={2} className="h-32" />

@@ -8,8 +8,10 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { GAMES, supportsPlayers, type CatalogGame } from '@/data/games'
+import { GameRuleDialog } from '@/features/games/GameRuleDialog'
 import { SuggestGameDialog } from '@/features/games/SuggestGameDialog'
 import { SuggestionList } from '@/features/games/SuggestionList'
+import { tappableCard } from '@/lib/styles'
 import { cn } from '@/lib/utils'
 import { subscribeRoom } from '@/services/wolf'
 
@@ -57,6 +59,8 @@ export function GamesPage() {
 function CatalogView() {
   const [keyword, setKeyword] = useState('')
   const [players, setPlayers] = useState<number | null>(null)
+  // 누르면 간단 룰을 보여 줄 게임
+  const [ruleOf, setRuleOf] = useState<CatalogGame | null>(null)
 
   const shown = useMemo(() => {
     const clean = keyword.trim().toLowerCase()
@@ -136,35 +140,42 @@ function CatalogView() {
           </p>
           <ul className="grid gap-3 sm:grid-cols-2">
             {shown.map((game) => (
-              <GameItem key={game.name} game={game} />
+              <GameItem key={game.name} game={game} onOpen={() => setRuleOf(game)} />
             ))}
           </ul>
+          <GameRuleDialog game={ruleOf} onOpenChange={(open) => !open && setRuleOf(null)} />
         </div>
       )}
     </div>
   )
 }
 
-function GameItem({ game }: { game: CatalogGame }) {
+/** 게임 한 칸. 누르면 간단 룰 */
+function GameItem({ game, onOpen }: { game: CatalogGame; onOpen: () => void }) {
   return (
-    <li className="flex gap-3.5 rounded-xl border bg-card p-3.5">
-      <Cover game={game} />
-      <div className="min-w-0 flex-1 space-y-1.5">
-        <p className="font-bold">{game.name}</p>
-        <Badge variant="secondary" className="font-normal">
-          {game.players}
-        </Badge>
-        <p className="text-sm text-muted-foreground">{game.description}</p>
-        {game.playRoute && (
-          <Button asChild size="sm" className="mt-1">
-            <Link to={game.playRoute}>
-              <Users />
-              같이 하기
-              <WolfRoomCount />
-            </Link>
-          </Button>
-        )}
-      </div>
+    <li className="space-y-2">
+      <button type="button" onClick={onOpen} className="group block w-full text-left">
+        <div className={cn('flex gap-3.5 rounded-xl border bg-card p-3.5', tappableCard)}>
+          <Cover game={game} />
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <p className="font-bold">{game.name}</p>
+            <Badge variant="secondary" className="font-normal">
+              {game.players}
+            </Badge>
+            <p className="text-sm text-muted-foreground">{game.description}</p>
+            <p className="text-xs text-primary">룰 보기</p>
+          </div>
+        </div>
+      </button>
+      {game.playRoute && (
+        <Button asChild size="sm">
+          <Link to={game.playRoute}>
+            <Users />
+            같이 하기
+            <WolfRoomCount />
+          </Link>
+        </Button>
+      )}
     </li>
   )
 }

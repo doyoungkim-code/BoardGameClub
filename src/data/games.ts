@@ -108,9 +108,8 @@ export type CatalogGame = {
 }
 
 /** 앱 안에서 각자 폰으로 할 수 있는 게임 */
-const PLAY_ROUTES: Record<string, string> = {
-  '한밤의 늑대인간': '/wolf',
-}
+// 한밤의 늑대(/wolf)는 당분간 숨김 (2026-11-11). 다시 열 때: '한밤의 늑대인간': '/wolf'
+const PLAY_ROUTES: Record<string, string> = {}
 
 // "이름 (인원) - 설명". 이름에 괄호가 들어가도 되게 마지막 "(…인…) - " 를 기준으로 자른다
 const LINE = /^(.+?)\s*\(([^()]*인[^()]*)\)\s*-\s*(.+)$/
